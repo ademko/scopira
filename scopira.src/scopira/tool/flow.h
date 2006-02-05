@@ -1,0 +1,490 @@
+
+/*
+ *  Copyright (c) 2002-2003    National Research Council
+ *
+ *  All rights reserved.
+ *
+ *  This material is confidential and proprietary information of
+ *  National Research Council Canada ("Confidential Information").
+ *  This Confidential Information may only be used and reproduced
+ *  in accordance with the terms of the license agreement.
+ *
+ */
+ 
+#ifndef __INCLUDED_SCOPIRA_TOOL_FLOW_H__
+#define __INCLUDED_SCOPIRA_TOOL_FLOW_H__
+
+#include <string>
+
+#include <scopira/tool/object.h>
+#include <scopira/tool/export.h>
+
+// THIS FILE HAS BEEN FULLY DOCUMENTED
+
+//
+// the *file_i* based streams provide "simple persistance" (rouge wave
+// guide, ver 7, p124). conceptually then are somewhere above
+// C FILE and slightly below iostreams (although theyre more
+// virtual/runtime polymorphic than iostrmea). theyre modeled after
+// Java File.
+//
+// @author Aleksander Demko
+//
+
+//
+// the flow_i interfaces allow polymorphic persinance, often wrapped
+// around a file_i based driver. depending on the driver (see polyflow.h)
+//
+// @author Aleksander Demko
+//
+
+
+namespace scopira
+{
+  namespace tool
+  {
+    class flow_i;
+    class iflow_i;
+    class oflow_i;
+    class otflow_i;
+    class itflow_i;
+    class iobjflow_i;
+    class oobjflow_i;
+
+    typedef unsigned char byte_t;
+  }
+}
+
+/**
+ * This is the base of all flows (both input and output).
+ * It introduced a few constants, inheritance from object
+ * and a failed state checking method.
+ *
+ * @author Aleksander Demko
+ */
+class scopira::tool::flow_i :  public virtual scopira::tool::object
+{
+  public:
+    /**
+     * An 8-bit octect/byte.
+     *
+     * @author Aleksander Demko
+     */
+    typedef scopira::tool::byte_t byte_t;
+    /**
+     * A bit mask of modes.
+     * @author Aleksander Demko
+     */ 
+    typedef int mode_t;
+
+    enum {
+      /// Open flow for input
+      input_c = 1,
+      /// Open flow for output
+      output_c = 2
+    };
+
+      // by powers of 2. bits 0-9 are reserved by this
+      // header file. your first bit should be 10 (2^10 == 1024)
+      // other decentdants may reserve
+      // more
+      
+    // common methods... seek, close, eof-testing, size ?
+
+    /**
+     * Is the stream in a failed state?
+     *
+     * @return true if it is in a failed state
+     * @author Aleksander Demko
+     */
+    SCOPIRA_EXPORT virtual bool failed(void) const = 0;
+};
+
+/**
+ * A raw input stream of bytes
+ *
+ * @author Aleksander Demko
+ */
+class scopira::tool::iflow_i : public virtual scopira::tool::flow_i
+{
+  public:
+    /**
+     * Read a raw block of bytes.
+     *
+     * @param _buf the buffer to write out to
+     * @param _maxsize the maximume number of bytes to read into the buffer
+     * @return the number of bytes actually read
+     * @author Aleksander Demko
+     */ 
+    SCOPIRA_EXPORT virtual size_t read(byte_t *_buf, size_t _maxsize) = 0;
+    /**
+     * Reads one byte
+     *
+     * @param out where to write the byte
+     * @return 1 if a byte was read, 0 if not
+     * @author Aleksander Demko
+     */ 
+    virtual size_t read_byte(byte_t &out) {
+      return read(&out, 1);
+    }
+
+    /**
+     * Nice wrapper around the raw read() method.
+     * Lets you read raw arrays of a particular type.
+     * POD types only. Returns the number of elelments actually read.
+     *
+     * @author Aleksander Demko
+     */
+    template <class TT>
+      size_t read_array(TT *_buf, size_t _numelem) {
+        return read(reinterpret_cast<byte_t*>(_buf), _numelem*sizeof(TT))/sizeof(TT);
+      }
+
+    /**
+     * Reads a raw block of bytes, using a void*
+     *
+     * @param _buf the buffer to write out to
+     * @param _maxsize the maximume number of bytes to read into the buffer
+     * @return the number of bytes actually read
+     * @author Aleksander Demko
+     */ 
+    inline size_t read_void(void *_buf, size_t _maxsize) { return read(reinterpret_cast<byte_t*>(_buf), _maxsize); }
+};
+
+/**
+ * A raw output stream of bytes
+ *
+ * @author Aleksander Demko
+ */
+class scopira::tool::oflow_i : public virtual scopira::tool::flow_i
+{
+  public:
+    /**
+     * Writes a block of bytes
+     *
+     * @param _buf the bytes
+     * @param _size the size of the above buffer
+     * @return the number of bytes actually written
+     * @author Aleksander Demko
+     */ 
+    SCOPIRA_EXPORT virtual size_t write(const byte_t *_buf, size_t _size) = 0;
+    /**
+     * Writes one byte
+     *
+     * @param b the byte to write
+     * @return 1 if the byte was written to the flow, 0 if not
+     * @author Aleksander Demko
+     */ 
+    virtual size_t write_byte(byte_t b) {
+      return write(&b, sizeof(b));
+    }
+
+    /**
+     * Nice wrapper around the raw write() method.
+     * Lets you write raw arrays of a particular type.
+     * POD types only. Returns the number of elelments actually written.
+     *
+     * @author Aleksander Demko
+     */
+    template <class TT>
+      size_t write_array(const TT *_buf, size_t _numelem) {
+        return write(reinterpret_cast<const byte_t*>(_buf), _numelem*sizeof(TT))/sizeof(TT);
+      }
+
+    /**
+     * Writes a block of bytes, using a void*
+     *
+     * @param _buf the bytes
+     * @param _size the size of the above buffer
+     * @return the number of bytes actually written
+     * @author Aleksander Demko
+     */ 
+    inline size_t write_void(const void *_buf, size_t _size) { return write(reinterpret_cast<const byte_t*>(_buf), _size); }
+};
+
+/**
+ * This adds type-aware input routines to an iflow_i.
+ * The types include numeric (both floating and integer)
+ * types aswell as std::string.
+ *
+ * @author Aleksander Demko
+ */
+class scopira::tool::itflow_i : public virtual scopira::tool::iflow_i
+{
+  public:
+    /**
+     * Reads an bool, returns true on success
+     * @author Aleksander Demko
+     */
+    SCOPIRA_EXPORT virtual bool read_bool(bool&) = 0;
+    /**
+     * Reads an char, returns true on success
+     * @author Aleksander Demko
+     */
+    SCOPIRA_EXPORT virtual bool read_char(char&) = 0;
+    /**
+     * Reads an short, returns true on success
+     * @author Aleksander Demko
+     */
+    SCOPIRA_EXPORT virtual bool read_short(short&) = 0;
+    /**
+     * Reads an int, returns true on success
+     * @author Aleksander Demko
+     */
+    SCOPIRA_EXPORT virtual bool read_int(int&) = 0;
+    /**
+     * Reads a size_t, returns true on success
+     * @author Aleksander Demko
+     */
+    SCOPIRA_EXPORT virtual bool read_size_t(size_t&) = 0;
+    /**
+     * Reads an long, returns true on success
+     * @author Aleksander Demko
+     */
+    SCOPIRA_EXPORT virtual bool read_long(long&) = 0;
+    /**
+     * Reads a float, returns true on success
+     * @author Aleksander Demko
+     */ 
+    SCOPIRA_EXPORT virtual bool read_float(float&) = 0;
+    /**
+     * Reads a double, returns true on success
+     * @author Aleksander Demko
+     */ 
+    SCOPIRA_EXPORT virtual bool read_double(double&) = 0;
+    /**
+     * Reads an STL string, returns true on success
+     * @author Aleksander Demko
+     */ 
+    SCOPIRA_EXPORT virtual bool read_string(std::string&) = 0;
+};
+
+/**
+ * This adds type-aware output routines to an oflow_i.
+ * The types include numeric (both floating and integer)
+ * types aswell as std::string.
+ *
+ * @author Aleksander Demko
+ */
+class scopira::tool::otflow_i : public virtual scopira::tool::oflow_i
+{
+  public:
+    /**
+     * Writes a bool
+     * @author Aleksander Demko
+     */ 
+    SCOPIRA_EXPORT virtual void write_bool(bool) = 0;
+    /**
+     * Writes a char
+     * @author Aleksander Demko
+     */ 
+    SCOPIRA_EXPORT virtual void write_char(char) = 0;
+    /**
+     * Writes a short
+     * @author Aleksander Demko
+     */ 
+    SCOPIRA_EXPORT virtual void write_short(short) = 0;
+    /**
+     * Writes an int
+     * @author Aleksander Demko
+     */ 
+    SCOPIRA_EXPORT virtual void write_int(int) = 0;
+    /**
+     * Writes a size_t
+     * @author Aleksander Demko
+     */
+    SCOPIRA_EXPORT virtual void write_size_t(size_t) = 0;
+    /**
+     * Writes an long
+     * @author Aleksander Demko
+     */ 
+    SCOPIRA_EXPORT virtual void write_long(long) = 0;
+    /**
+     * Write a float
+     * @author Aleksander Demko
+     */ 
+    SCOPIRA_EXPORT virtual void write_float(float) = 0;
+    /***
+     * Writes a double
+     * @author Aleksander Demko
+     */ 
+    SCOPIRA_EXPORT virtual void write_double(double) = 0;
+    /**
+     * Writes a STL string
+     * @author Aleksander Demko
+     */ 
+    SCOPIRA_EXPORT virtual void write_string(const std::string&) = 0;
+};
+
+
+/**
+ * Input object serialization. This interface adds a virtual-object
+ * read method to itflow_t. In total - via inheritance -
+ * this interface may read objects, primitive types (including
+ * streams) and raw bytes.
+ *
+ * @author Aleksander Demko
+ */
+class scopira::tool::iobjflow_i : public virtual scopira::tool::itflow_i
+{
+  public:
+
+    /**
+     * Reads a virtual object from the flow.
+     *
+     * The method may succeed (by returning true) and still set out
+     * to be null. This is normal, and just means that a null pointer
+     * was stored in the stream.
+     *
+     * Always pass a real object*. Do not attempt to pass (via a
+     * cast) yourobject* to this method. You will be bitten by
+     * subtlies in the way C++ moves pointers around on multiple
+     * or virtual inheritance heiarchies.
+     *
+     * @param out this will be set to the read object
+     * @return true on success, false on failure.
+     * @author Aleksander Demko
+     */
+    SCOPIRA_EXPORT virtual bool read_object(object* &out) = 0;
+
+    /**
+     * This is a type safe helper around read_object.
+     * It will do read_object on its own temporary object*
+     * and verify (via assert) that it can be cast to your
+     * type TT.
+     * @param TT the type of the output pointer
+     * @param out the output pointer to set, may be null on success
+     * @return true on success
+     * @author Aleksander Demko
+     */ 
+    template <class TT> bool read_object_type(TT * &out);
+    /**
+     * Similar to read_object_type, but reads into an auto pointer
+     * directly.
+     * @author Aleksander Demko
+     */ 
+    template <class TT> bool read_object_type(count_ptr<TT> &out);
+};
+template <class TT> bool scopira::tool::iobjflow_i::read_object_type(TT * &out)
+{
+  object *o;
+
+  if (!read_object(o))
+    return false;
+  assert(!o || dynamic_cast<TT*>(o));
+  out = dynamic_cast<TT*>(o);
+  return true;
+};
+template <class TT> bool scopira::tool::iobjflow_i::read_object_type(count_ptr<TT> &out)
+{
+  object *o;
+
+  if (!read_object(o))
+    return false;
+  assert(!o || dynamic_cast<TT*>(o));
+  out = dynamic_cast<TT*>(o);
+  return true;
+};
+
+
+/**
+ * Output object serialization. This interface adds a virtual-object
+ * write method to otflow_t. In total - via inheritance -
+ * this interface may write objects, primitive types (including
+ * streams) and raw bytes.
+ *
+ * @author Aleksander Demko
+ */
+class scopira::tool::oobjflow_i : public virtual scopira::tool::otflow_i
+{
+  public:
+    /**
+     * Writes the given object to stream.
+     * @param o the object to write. may be null.
+     * @author Aleksander Demko
+     */ 
+    SCOPIRA_EXPORT virtual void write_object(const scopira::tool::object* o) = 0;
+    /**
+     * Writes the given object to stream, from an auto pointer.
+     * @param o the object to write. may be null.
+     * @author Aleksander Demko
+     */ 
+    template <class L>
+      void write_object_type(const scopira::tool::count_ptr<L> &o)
+        { write_object(o.get()); }
+};
+
+//
+// Friend functions to allow visual ascii conversion of basic types
+// (like printoflow)
+//
+
+/**
+ * Flow output operator for type const char* (C string literals)
+ * @author Aleksander Demko
+ */ 
+SCOPIRA_EXPORT scopira::tool::oflow_i& operator<<(scopira::tool::oflow_i& o, const char* val);
+/**
+ * Flow output operator for STL strings
+ * @author Aleksander Demko
+ */ 
+SCOPIRA_EXPORT scopira::tool::oflow_i& operator<<(scopira::tool::oflow_i& o, const std::string& val);
+/**
+ * Flow output operator for char
+ * @author Aleksander Demko
+ */ 
+SCOPIRA_EXPORT scopira::tool::oflow_i& operator<<(scopira::tool::oflow_i& o, char val);
+/**
+ * Flow output operator for bool
+ * @author Aleksander Demko
+ */ 
+SCOPIRA_EXPORT scopira::tool::oflow_i& operator<<(scopira::tool::oflow_i& o, bool val);
+/**
+ * Flow output operator int
+ * @author Aleksander Demko
+ */ 
+SCOPIRA_EXPORT scopira::tool::oflow_i& operator<<(scopira::tool::oflow_i& o, int val);
+/**
+ * Flow output operator long
+ * @author Aleksander Demko
+ */ 
+SCOPIRA_EXPORT scopira::tool::oflow_i& operator<<(scopira::tool::oflow_i& o, long val);
+/**
+ * Flow output operator double
+ * @author Aleksander Demko
+ */ 
+SCOPIRA_EXPORT scopira::tool::oflow_i& operator<<(scopira::tool::oflow_i& o, double val);
+/**
+ * Flow output operator unsigned int
+ * @author Aleksander Demko
+ */ 
+SCOPIRA_EXPORT scopira::tool::oflow_i& operator<<(scopira::tool::oflow_i& o, unsigned int val);
+/**
+ * Flow output operator for unsigned long
+ * @author Aleksander Demko
+ */ 
+SCOPIRA_EXPORT scopira::tool::oflow_i& operator<<(scopira::tool::oflow_i& o, unsigned long val);
+/**
+ * Flow output operator long long
+ * @author Aleksander Demko
+ */ 
+SCOPIRA_EXPORT scopira::tool::oflow_i& operator<<(scopira::tool::oflow_i& o, long long val);
+/**
+ * Flow output operator unsigned long long
+ * @author Aleksander Demko
+ */ 
+SCOPIRA_EXPORT scopira::tool::oflow_i& operator<<(scopira::tool::oflow_i& o, unsigned long long val);
+/**
+ * Flow output operator for iflow_i.
+ * This does a raw (byte based) read from the input stream to the given output stream.
+ * It will read from the input stream until it provides no more bytes.
+ *
+ * @param i the input stream to read full.
+ * @param o the output stream to write to
+ * @return the same output stream, namely o
+ * @author Aleksander Demko
+ */ 
+SCOPIRA_EXPORT scopira::tool::oflow_i& operator<<(scopira::tool::oflow_i& o, scopira::tool::iflow_i& i);
+
+#endif
+
