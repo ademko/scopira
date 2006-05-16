@@ -315,6 +315,9 @@ class scopira::coreui::scrolled_canvas_base : public scopira::coreui::menu_handl
         SCOPIRAUI_EXPORT void set_vbounds(float lower, float upper, float value, float step_inc,
           float page_inc, float page_size);
 
+        void reset_hbounds(void) { set_hbounds(0, 1, 0, 0, 0, 1); }
+        void reset_vbounds(void) { set_vbounds(0, 1, 0, 0, 0, 1); }
+
         SCOPIRAUI_EXPORT void set_hvalue(float val);
         SCOPIRAUI_EXPORT void set_vvalue(float val);
 
@@ -357,7 +360,7 @@ class scopira::coreui::scrolled_canvas_base : public scopira::coreui::menu_handl
 
     /// handle scroll
     /// default implmenetaion does nothing
-    virtual void handle_scroll(scopira::coreui::widget_canvas &v, coord &crd);
+    SCOPIRAUI_EXPORT virtual void handle_scroll(scopira::coreui::widget_canvas &v, coord &crd);
 
   protected:
     bool dm_doneinit;

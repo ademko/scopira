@@ -56,6 +56,7 @@ class scopira::tool::archiveiflow : public scopira::tool::isoiflow
      * empty string is returned.
      *
      * On success, the actual tag is returned.
+     * On failure, "" is returned (and failed() is set).
      *
      * @author Aleksander Demko
      */
@@ -81,7 +82,7 @@ class scopira::tool::archiveoflow : public scopira::tool::isooflow
     /**
      * Open method.
      *
-     * Returns true on success.
+     * Checked failed() for failure.
      *
      * Should this support text file formats in the future?
      *

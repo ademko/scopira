@@ -42,6 +42,7 @@ using namespace scopira::uikit;
 static scopira::core::register_view<scopira::uikit::vec_viewer_v> r1("scopira::uikit::vec_viewer_v", "scopira::uikit::narray_m<double,1>", "View numeric data");
 static scopira::core::register_view<scopira::uikit::int_vec_viewer_v> r2("scopira::uikit::int_vec_viewer_v", "scopira::uikit::narray_m<int,1>", "View numeric data");
 static scopira::core::register_view<scopira::uikit::matrix_viewer_v> r4("scopira::uikit::matrix_viewer_v", "scopira::uikit::narray_m<double,2>", "View numeric data");
+static scopira::core::register_view<scopira::uikit::char_matrix_viewer_v> r5a("scopira::uikit::char_matrix_viewer_v", "scopira::uikit::narray_m<char,2>", "View numeric data");
 static scopira::core::register_view<scopira::uikit::int_matrix_viewer_v> r5("scopira::uikit::int_matrix_viewer_v", "scopira::uikit::narray_m<int,2>", "View numeric data");
 static scopira::core::register_view<scopira::uikit::matrix_editor_v> r6("scopira::uikit::matrix_editor_v", "scopira::uikit::narray_m<double,2>", "Edit numeric data");
 
@@ -526,6 +527,122 @@ void matrix_viewer_v::get_data_stat(std::string &out) const
   endii = dm_data->end();
   for (ii=dm_data->begin(); ii != endii; ++ii)
     if (is_zero(*ii))
+      c++;
+  out += "  NumZero=";
+  out += tool::int_to_string(c);
+}
+
+//
+//
+// char_matrix_viewer_v
+//
+//
+
+char_matrix_viewer_v::char_matrix_viewer_v(void)
+  : dm_model(this)
+{
+  init_gui();
+  set_view_title("Integer Vector");
+}
+
+void char_matrix_viewer_v::set_matrix(narray_o<char,2> *indata)
+{
+  dm_data = indata;
+
+  prep_display();
+
+  request_resize();
+  request_redraw();
+}
+
+void char_matrix_viewer_v::bind_model(scopira::core::model_i *sus)
+{
+  dm_model = dynamic_cast<narray_m<char,2> *>(sus);
+}
+
+void char_matrix_viewer_v::react_model_update(scopira::core::model_i *sus, scopira::core::view_i *src)
+{
+  if (dm_model.get()) {
+    dm_data = dm_model->pm_array;
+
+    prep_display();
+
+    request_resize();
+    request_redraw();
+  }
+}
+
+int char_matrix_viewer_v::get_data_width(void) const
+{
+  if (dm_data.is_null())
+    return 0;
+  return dm_data->width();
+}
+
+int char_matrix_viewer_v::get_data_height(void) const
+{
+  if (dm_data.is_null())
+    return 0;
+  return dm_data->height();
+}
+
+void char_matrix_viewer_v::get_data_text(int x, int y, std::string &out) const
+{
+  int_to_string(dm_data->get(x, y), out);
+}
+
+void char_matrix_viewer_v::get_data_stat(std::string &out) const
+{
+  size_t minx, miny, maxx, maxy, x, y;
+  int minval, maxval;
+  int d;
+  int c;
+  narray_o<char,2>::iterator ii, endii;
+
+  out = "Width=";
+  out += tool::int_to_string(dm_data->width());
+  out += "  Height=";
+  out += tool::int_to_string(dm_data->height());
+  out += "  NumVal=";
+  out += tool::int_to_string(dm_data->size());
+
+  if (dm_data->empty())
+    return;
+
+  minx = miny = maxx = maxy = 0;
+  maxval = minval = dm_data->get(0,0);
+  for (y=0; y<dm_data->height(); ++y)
+    for (x=0; x<dm_data->width(); ++x) {
+      if (dm_data->get(x,y) < minval) {
+        minval = dm_data->get(x,y);
+        minx = x;
+        miny = y;
+      }
+      if (dm_data->get(x,y) > minval) {
+        maxval = dm_data->get(x,y);
+        maxx = x;
+        maxy = y;
+      }
+    }
+
+  out += "  MinVal=";
+  out += tool::int_to_string(minval) + " @" + tool::int_to_string(minx)
+    + "," + tool::int_to_string(miny);
+  out += "  MaxVal=";
+  out += tool::int_to_string(maxval) + " @" + tool::int_to_string(maxx)
+    + "," + tool::int_to_string(maxy);
+
+  sum(*dm_data, d);
+  out += "  Sum=";
+  out += tool::int_to_string(d);
+  mean(*dm_data, d);
+  out += "  Mean=";
+  out += tool::int_to_string(d);
+
+  c = 0;
+  endii = dm_data->end();
+  for (ii=dm_data->begin(); ii != endii; ++ii)
+    if (*ii == 0)
       c++;
   out += "  NumZero=";
   out += tool::int_to_string(c);

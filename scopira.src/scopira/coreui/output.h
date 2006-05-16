@@ -30,6 +30,11 @@ namespace scopira
   }
 }
 
+/**
+ * A widget for "output", that is, scrolling text.
+ *
+ * @author Aleksander Demko
+ */ 
 class scopira::coreui::outputwidget : public scopira::coreui::widget,
   private scopira::tool::oflow_i
 {
@@ -37,7 +42,12 @@ class scopira::coreui::outputwidget : public scopira::coreui::widget,
     typedef scopira::coreui::widget parent_type;
 
   public:
-    /// ctor
+    /**
+     * Constructor.
+     * This is a fully formed widget that does its own init_gui calling.
+     *
+     * @author Aleksander Demko
+     */ 
     SCOPIRAUI_EXPORT outputwidget(void);
     
     /// sets the diplsay buffer

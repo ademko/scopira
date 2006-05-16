@@ -35,6 +35,8 @@ send_msg::send_msg(scopira::agent::task_context &ctx, scopira::tool::uuid dest)
   dm_buf->reserve(1024*32);
 
   open(dm_buf.get());
+
+  m_sendingbcast = false;
 }
 
 send_msg::send_msg(scopira::agent::task_context &ctx, int dest)
@@ -44,12 +46,28 @@ send_msg::send_msg(scopira::agent::task_context &ctx, int dest)
   dm_buf->reserve(1024*32);
 
   open(dm_buf.get());
+
+  m_sendingbcast = false;
+}
+
+send_msg::send_msg(scopira::agent::task_context &ctx, const service_broadcast &targets)
+  : bin64oflow(true, 0), dm_src(ctx.dm_peers[ctx.dm_myindex]), dm_dest(targets.get_serviceid())
+{
+  dm_buf = new scopira::tool::bufferflow;
+  dm_buf->reserve(1024*32);
+
+  open(dm_buf.get());
+
+  m_sendingbcast = true;
 }
 
 send_msg::~send_msg()
 {
   // ok, now the send thing
-  agent_i::instance()->send_msg(dm_src, dm_dest, dm_buf.get());
+  if (m_sendingbcast)
+    agent_i::instance()->send_msg_bcast(dm_src, dm_dest, dm_buf.get());
+  else
+    agent_i::instance()->send_msg(dm_src, dm_dest, dm_buf.get());
 }
 
 //
@@ -157,6 +175,12 @@ task_context::~task_context()
   assert(!dm_peers[dm_myindex].is_zero());
   if (dm_server_link.get())
     dm_server_link->unreg_context(dm_peers[dm_myindex]);
+}
+
+void task_context::enable_service(scopira::tool::uuid serviceid, bool enable)
+{
+  assert(!dm_peers[dm_myindex].is_zero());
+  agent_i::instance()->set_service(dm_peers[dm_myindex], serviceid, enable);
 }
 
 scopira::tool::uuid task_context::launch_task(const std::string &classname)

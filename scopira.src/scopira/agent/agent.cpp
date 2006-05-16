@@ -206,7 +206,7 @@ agent_i * agent_i::new_agent(void)
       delete server_link;
       // we failed, give them a local agent instead
       // by simply dropping to the end of this function :)
-      OUTPUT << "Failed to start clust_agent; using local_agent\n";
+      OUTPUT << "Failed to start cluster_agent; using local_agent\n";
     } else
       return server_link;
   }

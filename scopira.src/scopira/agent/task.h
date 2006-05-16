@@ -1,6 +1,6 @@
 
 /*
- *  Copyright (c) 2005    National Research Council
+ *  Copyright (c) 2005-2006    National Research Council
  *
  *  All rights reserved.
  *
@@ -16,6 +16,7 @@
 
 #include <scopira/tool/export.h>
 #include <scopira/tool/object.h>
+#include <scopira/tool/uuid.h>
 
 namespace scopira
 {
@@ -59,6 +60,7 @@ class scopira::agent::agent_task_i : public virtual scopira::tool::object
       run_again_c,        // run again, whenever
       run_again_immovable_c,// run again, but do NOT move the process (it still needs to be registered, but doesnt nee save/load)
       run_sleep_c,       // run when a msg arrives
+      run_sleep_immovable_c,       // run when a msg arrives, and dont move this process
       //run_sync_c,     // run all group memebers at the same time
       // what about checkpoint-able processes? different launch type and resttricted communications?
     };

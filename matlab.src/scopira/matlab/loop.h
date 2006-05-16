@@ -22,7 +22,7 @@ namespace scopira
   {
     template <class loopT> class shared_loop;
 
-    class matlab_loop;
+    class matlab_lab_loop;
   }
 }
 
@@ -63,15 +63,15 @@ template <class loopT> class scopira::matlab::shared_loop
  *
  * @author Aleksander Demko
  */ 
-class scopira::matlab::matlab_loop
+class scopira::matlab::matlab_lab_loop
 {
   private:
     scopira::tool::count_ptr<scopira::lab::lab_loop> dm_loop;
   public:
     /// ctor
-    matlab_loop(bool needgui = false);
+    matlab_lab_loop(bool needgui = false);
     /// dtor
-    ~matlab_loop();
+    ~matlab_lab_loop();
 };
 
 #endif

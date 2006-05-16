@@ -13,6 +13,7 @@
 
 #include <scopira/uikit/basic.h>
 
+#include <scopira/tool/archiveflow.h>
 #include <scopira/core/register.h>
 #include <scopira/core/project.h>
 #include <scopira/core/loop.h>
@@ -33,11 +34,14 @@ using namespace scopira::uikit;
 //
 //
 
-static scopira::core::register_view<rename_v> r1("scopira::uikit::rename_v", "scopira::core::model_i", "(rename)", scopira::core::windowonly_uimode_c);
-static scopira::core::register_view<remove_v> r2("scopira::uikit::remove_v", "scopira::core::model_i", "(remove from project)",
+static scopira::core::register_view<rename_v> r1("scopira::uikit::rename_v", model_type_c, "(rename)", scopira::core::windowonly_uimode_c);
+static scopira::core::register_view<remove_v> r2("scopira::uikit::remove_v", model_type_c, "(remove from project)",
   scopira::core::windowonly_uimode_c | scopira::core::vg_needs_project_c);
-static scopira::core::register_view<copy_v> r3("scopira::uikit::copy_v", "scopira::core::model_i", "(copy)",
+static scopira::core::register_view<copy_v> r3("scopira::uikit::copy_v", model_type_c, "(copy)",
   scopira::core::no_uimode_c | scopira::core::vg_needs_project_c | scopira::core::vg_needs_copyfunc_c);
+static scopira::core::register_view<save_to_file_v> r4("scopira::uikit::save_to_file_v", model_type_c, "(save object to file)", scopira::core::windowonly_uimode_c);
+//static scopira::core::register_view<insert_from_file_v> r5("scopira::uikit::insert_from_file_v", model_type_c, "(insert object from file)", scopira::core::windowonly_uimode_c | scopira::core::vg_needs_project_c);
+static scopira::core::register_view<insert_from_file_v> r5("scopira::uikit::insert_from_file_v", project_type_c, "Basic/Insert object from file", scopira::core::windowonly_uimode_c);
 
 //
 //
@@ -164,5 +168,100 @@ void copy_v::bind_model(scopira::core::model_i *sus)
   //  - dynamic_cast
   //  - objflowloader, then check the tree?
   sus->get_project()->notify_views(this);
+}
+
+//
+//
+// save_to_file_v
+//
+//
+
+save_to_file_v::save_to_file_v(void)
+  : dm_model(this)
+{
+  dm_filename = new fileentry;
+
+  dm_filename->set_filename("data.sobj");
+
+  viewwidget::init_gui(dm_filename.get(), button_ok_c|button_cancel_c);
+}
+
+void save_to_file_v::bind_model(scopira::core::model_i *sus)
+{
+  dm_model = sus;
+
+  set_view_title("Save: " + dm_model->get_title());
+}
+
+void save_to_file_v::react_button(scopira::coreui::button *source, int actionid)
+{
+  if (actionid == action_apply_c) {
+    assert(dm_model.get());
+
+    archiveoflow out;
+
+    out.open(dm_filename->get_filename(), "SCOPIRA_OBJECT_100");
+
+    if (out.failed())
+      return;
+
+    out.write_object(dm_model.get());
+  }
+
+  viewwidget::react_button(source, actionid);
+}
+
+//
+//
+// insert_from_file_v
+//
+//
+
+insert_from_file_v::insert_from_file_v(void)
+  : dm_model(this)
+{
+  dm_filename = new fileentry;
+
+  dm_filename->set_filename("data.sobj");
+
+  viewwidget::init_gui(dm_filename.get(), button_ok_c|button_cancel_c);
+  set_view_title("Insert Object from a File");
+}
+
+void insert_from_file_v::bind_model(scopira::core::model_i *sus)
+{
+  //dm_model = sus;
+  dm_model = dynamic_cast<scopira::core::project_i*>(sus);
+}
+
+void insert_from_file_v::react_button(scopira::coreui::button *source, int actionid)
+{
+  if (actionid == action_apply_c) {
+    assert(dm_model.get());
+
+    archiveiflow inf;
+    std::string tag;
+
+    tag = inf.open(dm_filename->get_filename(), "SCOPIRA_OBJECT_100");
+
+    if (tag != "SCOPIRA_OBJECT_100")
+      return;
+
+    /*count_ptr<project_i> prj;
+
+    prj = dm_model->get_project();
+    assert(prj.get());*/
+
+    count_ptr<model_i> m;
+    if (!inf.read_object_type(m))
+      return;
+
+    /*prj->add_model(dm_model.get(), m.get());
+    prj->notify_views(this);*/
+    dm_model->add_model(0, m.get());
+    dm_model->notify_views(this);
+  }
+
+  viewwidget::react_button(source, actionid);
 }
 

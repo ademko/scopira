@@ -277,7 +277,7 @@ void canvas::draw_scaled_image(context c, rgb_image &src,
   
   scaled_img = gdk_pixbuf_scale_simple(src.dm_buff, w, h, GDK_INTERP_BILINEAR);
   assert(scaled_img);
-  gdk_pixbuf_ref(scaled_img);
+  //gdk_pixbuf_ref(scaled_img);
   gdk_pixbuf_render_to_drawable(scaled_img, dm_drawable, c.dm_gc,
     0, 0, xdest, ydest, w, h, GDK_RGB_DITHER_NONE, 0, 0);
 
@@ -303,15 +303,16 @@ void canvas::draw_scaled_image(context c, int xsrc, int ysrc, int wsrc, int hsrc
   assert(hdest>0);
   subsrc = gdk_pixbuf_new_subpixbuf(src.dm_buff, xsrc, ysrc, wsrc, hsrc);
   assert(subsrc);
-  gdk_pixbuf_ref(subsrc);
+  //gdk_pixbuf_ref(subsrc);
 
   scaled_img = gdk_pixbuf_scale_simple(subsrc, wdest, hdest, GDK_INTERP_BILINEAR);
   assert(scaled_img);
-  gdk_pixbuf_ref(scaled_img);
+  //gdk_pixbuf_ref(scaled_img);
 
   gdk_pixbuf_render_to_drawable(scaled_img, dm_drawable, c.dm_gc,
     0, 0, xdest, ydest, wdest, hdest, GDK_RGB_DITHER_NONE, 0, 0);
 
+  gdk_pixbuf_unref(subsrc);
   gdk_pixbuf_unref(scaled_img);
 }
 
@@ -441,6 +442,11 @@ context widget_canvas::background_context(void)
 
 pixmap_context::pixmap_context(void)
 {
+}
+
+pixmap_context::pixmap_context(pixmap_canvas &pcan)
+{
+  set_pixmap(pcan);
 }
 
 pixmap_context::~pixmap_context()

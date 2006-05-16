@@ -40,13 +40,17 @@ int main(int argc, char **argv)
       " task=TASK\n"
       "\n"
       " cluster=server\n"
+      " cluster=serveronly\n"
+      " cluster=auto\n"
+      " cluster=autoclient\n"
       " cluster=SOMEURL\n"
       " cluster=SOMEURL task=TASK\n"
+      "         SOMEURL is like scopira://hostname:port/options\n"
       "\n"
-      " network=auto\n"
+      /*" network=auto\n"
       " network=SOMEURL\n"
       " network=SOMEURL task=TASK\n"
-      "\n"
+      "\n"*/
       " (you also usually have a few lib= params)\n";
     return 1;
   }

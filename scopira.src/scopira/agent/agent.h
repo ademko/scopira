@@ -18,8 +18,8 @@
 #include <scopira/tool/object.h>
 #include <scopira/tool/uuid.h>
 #include <scopira/tool/bufferflow.h>
-#include <scopira/agent/task.h>
 #include <scopira/tool/export.h>
+#include <scopira/agent/task.h>
 
 namespace scopira
 {
@@ -175,6 +175,8 @@ class scopira::agent::agent_i : public scopira::tool::object
     SCOPIRA_EXPORT virtual void reg_context(scopira::tool::uuid &ctxid, taskmsg_reactor_i *reac) = 0;
     SCOPIRA_EXPORT virtual void unreg_context(scopira::tool::uuid ctxid) = 0;
 
+    SCOPIRA_EXPORT virtual void set_service(scopira::tool::uuid ctxid, scopira::tool::uuid serviceid, bool enable) = 0;
+
     SCOPIRA_EXPORT virtual scopira::tool::uuid launch_task(const std::type_info &t) = 0;
     SCOPIRA_EXPORT virtual scopira::tool::uuid launch_group(int numps, const std::type_info &t) = 0;
     SCOPIRA_EXPORT virtual void launch_slaves(scopira::tool::uuid masterid, int numtotalps, const std::type_info &t,
@@ -185,6 +187,7 @@ class scopira::agent::agent_i : public scopira::tool::object
 
     SCOPIRA_EXPORT virtual bool wait_msg(const uuid_query &srcq,scopira::tool::uuid &foundsrc,  scopira::tool::uuid dest, int timeout) = 0;
     SCOPIRA_EXPORT virtual void send_msg(scopira::tool::uuid src, scopira::tool::uuid dest, scopira::tool::bufferflow *buf) = 0;
+    SCOPIRA_EXPORT virtual void send_msg_bcast(scopira::tool::uuid src, scopira::tool::uuid destserviceid, scopira::tool::bufferflow *buf) = 0;
     // src will be filled with the actual source, after
     SCOPIRA_EXPORT virtual void recv_msg(const uuid_query &srcq, scopira::tool::uuid &foundsrc, scopira::tool::uuid dest, scopira::tool::count_ptr<scopira::tool::bufferflow> &buf) = 0;
 

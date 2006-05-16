@@ -43,6 +43,7 @@ namespace scopira
     class vec_viewer_v;
     class int_vec_viewer_v;
     class matrix_viewer_v;
+    class char_matrix_viewer_v;
     class int_matrix_viewer_v;
 
     class matrix_editor_base;
@@ -220,6 +221,36 @@ class scopira::uikit::matrix_viewer_v : public scopira::uikit::matrix_viewer_bas
     SCOPIRAUI_EXPORT matrix_viewer_v(void);
 
     SCOPIRAUI_EXPORT virtual void set_matrix(scopira::basekit::narray_o<double,2> *indata);
+
+    SCOPIRAUI_EXPORT virtual void bind_model(scopira::core::model_i *sus);
+    SCOPIRAUI_EXPORT virtual void react_model_update(scopira::core::model_i *sus, scopira::core::view_i *src);
+
+    /// descedants provide this
+    SCOPIRAUI_EXPORT virtual int get_data_width(void) const;
+    /// descedants provide this
+    SCOPIRAUI_EXPORT virtual int get_data_height(void) const;
+    /// descedants provide this
+    SCOPIRAUI_EXPORT virtual void get_data_text(int x, int y, std::string &out) const;
+    /// descedants provide this
+    SCOPIRAUI_EXPORT virtual void get_data_stat(std::string &out) const;
+};
+
+/**
+ * Viewer of INT matrices.
+ * Perhaps this should be unified with the double one?
+ * @author Aleksander Demko
+ */
+class scopira::uikit::char_matrix_viewer_v : public scopira::uikit::matrix_viewer_base
+{
+  protected:
+    scopira::tool::count_ptr<scopira::basekit::narray_o<char,2> > dm_data;
+    scopira::core::model_ptr<scopira::uikit::narray_m<char,2> > dm_model;
+
+  public:
+    /// ctor
+    SCOPIRAUI_EXPORT char_matrix_viewer_v(void);
+
+    SCOPIRAUI_EXPORT virtual void set_matrix(scopira::basekit::narray_o<char,2> *indata);
 
     SCOPIRAUI_EXPORT virtual void bind_model(scopira::core::model_i *sus);
     SCOPIRAUI_EXPORT virtual void react_model_update(scopira::core::model_i *sus, scopira::core::view_i *src);

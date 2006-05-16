@@ -61,7 +61,7 @@ class scopira::coreui::close_reactor_i : public virtual scopira::tool::object
  * Decendants should do this:
  *   - ctor
  *     - must calls its own init_gui
- *   - init_uit
+ *   - init_ui
  *     - must set dm_widget (preferable to a gtk_window
  *     - must call window::init_gui at its end
  *

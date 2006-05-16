@@ -63,6 +63,13 @@ class scopira::tool::uuid                       // super-Linux implementation
   public:
     /// Constructor. Builds a "zero" UUID (one with all zeros)
     uuid(void) { ::uuid_clear(dm_id); }
+    /**
+     * Construct the UUID from the given string.
+     * Particularly useful in global, static, constant-like objects.
+     *
+     * @author Aleksander Demko
+     */
+    uuid(const char *s);
 
     /**
      * Sets this uuid to be a zero UUID, the "null" of UUIDs.
@@ -117,6 +124,13 @@ class scopira::tool::uuid                       // super-Win32 implementation
   public:
     /// Constructor. Builds a "zero" UUID (one with all zeros)
     uuid(void) { dm_id = GUID_NULL; }
+    /**
+     * Construct the UUID from the given string.
+     * Particularly useful in global, static, constant-like objects.
+     *
+     * @author Aleksander Demko
+     */
+    uuid(const char *s);
 
     /**
      * Sets this uuid to be a zero UUID, the "null" of UUIDs.

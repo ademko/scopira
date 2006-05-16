@@ -209,6 +209,24 @@ void local_agent::wait_stop(void)
     L.wait();
 }
 
+void local_agent::set_service(scopira::tool::uuid ctxid, scopira::tool::uuid serviceid, bool enable)
+{
+  event_ptr<kernel_area> L(dm_kernel);
+  // do a removal
+  servicemap_t::iterator ii, endii;
+  ii = L->pm_services.lower_bound(serviceid);
+  endii = L->pm_services.upper_bound(serviceid);
+
+  for (; ii != endii; ++ii)
+    if (ii->second == ctxid)
+      break;    // found it
+
+  if (enable && ii == endii)
+    L->pm_services.insert(servicemap_t::value_type(serviceid, ctxid));
+  if (!enable && ii != endii)
+    L->pm_services.erase(ii);
+}
+
 void local_agent::reg_context(scopira::tool::uuid &ctxid, taskmsg_reactor_i *reac)
 {
   count_ptr<process_t> p;
@@ -239,6 +257,7 @@ void local_agent::unreg_context(scopira::tool::uuid ctxid)
 
   assert(!ctxid.is_zero());
   assert(L->pm_ps.find(ctxid) != L->pm_ps.end());
+  erase_services(L->pm_services, ctxid);
   L->pm_ps.erase(L->pm_ps.find(ctxid));
 }
 
@@ -516,6 +535,8 @@ void local_agent::send_msg(scopira::tool::uuid src, scopira::tool::uuid dest, sc
 {
   count_ptr<process_t> ps;
 
+  // is dest zero, bcast it to all the people in this processes group
+  // by simply doing a recursive send
   if (dest.is_zero()) {
     // broad cast time
     assert(!src.is_zero());
@@ -532,13 +553,17 @@ void local_agent::send_msg(scopira::tool::uuid src, scopira::tool::uuid dest, sc
     return;
   }
 
+  // find the process locally
   get_ps(dest, ps);
+
+  // if the process isnt local, then call the hanlder (if any) and exit now
   if (!ps.get()) {
     // not found! lets send it off anyways via the la_send_msg function as a last resort
     la_send_msg(src, dest, buf);
     return;   // not found!
   }
 
+  // finally, deliver the sevent to the local task process
   taskmsg_reactor_i *reac;
 
   // ok, do the queue and notify then, locally
@@ -554,6 +579,28 @@ void local_agent::send_msg(scopira::tool::uuid src, scopira::tool::uuid dest, sc
   // call the reactor, if any
   if (reac)
     reac->react_taskmsg(this, src, dest);
+}
+
+void local_agent::send_msg_bcast(scopira::tool::uuid src, scopira::tool::uuid destserviceid, scopira::tool::bufferflow *buf)
+{
+  // do local delivery of this bcast msg
+  std::vector<scopira::tool::uuid> targetlist;    // no pre reserve, this will usually be a small/empty list for the most part
+
+  // find all the local tasks that support this service
+  {
+    event_ptr<kernel_area> L(dm_kernel);
+
+    servicemap_t::iterator ii, endii;
+    ii = L->pm_services.lower_bound(destserviceid);
+    endii = L->pm_services.upper_bound(destserviceid);
+
+    for (; ii != endii; ++ii)
+      targetlist.push_back(ii->second);
+  }
+
+  // finally, deliver the msg to all of them via send_msg calls
+  for (int x=0; x<targetlist.size(); ++x)
+    send_msg(src, targetlist[x], buf);
 }
 
 void local_agent::recv_msg(const uuid_query &srcq, scopira::tool::uuid &foundsrc, scopira::tool::uuid dest,
@@ -799,7 +846,7 @@ void* local_agent::worker_func(void *data)
         }
       }
 
-      if (retcode == agent_task_i::run_sleep_c) {
+      if (retcode == agent_task_i::run_sleep_c || retcode == agent_task_i::run_sleep_immovable_c) {
         event_ptr<process_t::state_area> LL(ps->pm_state);
 
         LL->pm_mode = process_t::ps_sleep_c;
@@ -810,6 +857,7 @@ void* local_agent::worker_func(void *data)
           event_ptr<kernel_area> L(here->dm_kernel);
 
           assert(L->pm_ps.find(ps->pm_id) != L->pm_ps.end());
+          erase_services(L->pm_services, ps->pm_id);
           L->pm_ps.erase(L->pm_ps.find(ps->pm_id));
         }
         // signal its destruction
@@ -862,5 +910,17 @@ void local_agent::set_min_threads(void)
   }
 
   dm_kernel.pm_condition.notify_all();
+}
+
+void local_agent::erase_services(servicemap_t &m, scopira::tool::uuid taskid)
+{
+  servicemap_t::iterator ii = m.begin();
+
+  while (ii != m.end())
+    if (ii->second == taskid) {
+      m.erase(ii);
+      ii = m.begin();
+    } else
+      ++ii;
 }
 

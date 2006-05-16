@@ -16,7 +16,7 @@
 //BBtargets libscopiramatlab.so
 //BBlibs scopiraui
 
-scopira::matlab::matlab_loop::matlab_loop(bool needgui)
+scopira::matlab::matlab_lab_loop::matlab_lab_loop(bool needgui)
 {
   int argc = 0;
   char **argv = 0;
@@ -28,11 +28,11 @@ scopira::matlab::matlab_loop::matlab_loop(bool needgui)
 
   if (needgui && !dm_loop->has_display()) {
     bool ret = dm_loop->open_display(argc, argv);
-    assert(ret && "[cant open display from within matlab_loop]");
+    assert(ret && "[cant open display from within matlab_lab_loop]");
   }
 }
 
-scopira::matlab::matlab_loop::~matlab_loop()
+scopira::matlab::matlab_lab_loop::~matlab_lab_loop()
 {
 }
 

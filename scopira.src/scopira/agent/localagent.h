@@ -81,6 +81,8 @@ class scopira::agent::local_agent : public scopira::agent::agent_i
     virtual bool failed(void) const { return false; }
     virtual void set_agenterror_reactor(agenterror_reactor_i *r) { } //im never goin to call this, so ill just ignore this
 
+    virtual void set_service(scopira::tool::uuid ctxid, scopira::tool::uuid serviceid, bool enable);
+
     virtual void reg_context(scopira::tool::uuid &ctxid, taskmsg_reactor_i *reac);
     virtual void unreg_context(scopira::tool::uuid ctxid);
 
@@ -94,6 +96,9 @@ class scopira::agent::local_agent : public scopira::agent::agent_i
 
     virtual bool wait_msg(const uuid_query &srcq, scopira::tool::uuid &foundsrc, scopira::tool::uuid dest, int timeout);
     virtual void send_msg(scopira::tool::uuid src, scopira::tool::uuid dest, scopira::tool::bufferflow *buf);
+    // this implementation does local deliver
+    // decendants override this
+    virtual void send_msg_bcast(scopira::tool::uuid src, scopira::tool::uuid destserviceid, scopira::tool::bufferflow *buf);
     virtual void recv_msg(const uuid_query &srcq, scopira::tool::uuid &foundsrc, scopira::tool::uuid dest, scopira::tool::count_ptr<scopira::tool::bufferflow> &buf);
 
   protected:
@@ -114,6 +119,7 @@ class scopira::agent::local_agent : public scopira::agent::agent_i
     virtual void la_send_msg(scopira::tool::uuid src, scopira::tool::uuid dest, scopira::tool::bufferflow *buf) { }
     /// la calls this after a local task is terminated
     virtual void la_dead_task(scopira::tool::uuid taskid) { }
+    /// the local_agent implementation simply does local deliverty
 
   private:
     static void* worker_func(void *data);
@@ -157,8 +163,8 @@ class scopira::agent::local_agent : public scopira::agent::agent_i
         };
 
         scopira::tool::uuid pm_id;
-        bool pm_special;        // if true, this isnt a normal, local process
-        scopira::tool::count_ptr<scopira::agent::agent_task_i> pm_task;
+        bool pm_special;        // if true, this isnt a normal, process
+        scopira::tool::count_ptr<scopira::agent::agent_task_i> pm_task;   // only non-null on local, normal processes
 
         // GROUP STUFF (TODO should this be in the state_area?)
         int pm_index;   // my index in the group
@@ -187,11 +193,12 @@ class scopira::agent::local_agent : public scopira::agent::agent_i
     };
 
     typedef std::map<scopira::tool::uuid, scopira::tool::count_ptr<process_t> > psmap_t;
-
+    typedef std::multimap<scopira::tool::uuid, scopira::tool::uuid> servicemap_t;
     typedef std::vector<scopira::tool::count_ptr<scopira::tool::thread> > threadlist_t;
 
     struct kernel_area {
       psmap_t pm_ps;    // the processes
+      servicemap_t pm_services;   // maps serviceid -> task/ctx id
 
       bool pm_alive;    // if this is false, Ive been sent the kill signal.
 
@@ -214,6 +221,8 @@ class scopira::agent::local_agent : public scopira::agent::agent_i
     /// this does its own locking, do not call it within any locks
     /// will wake up the threads too
     void set_min_threads(void);
+    /// erase all the services associated with this taskid
+    static void erase_services(servicemap_t &m, scopira::tool::uuid taskid);
 };
 
 #endif

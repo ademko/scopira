@@ -29,11 +29,11 @@ using namespace scopira::coreui;
 using namespace scopira::uikit;
 
 static scopira::core::register_view<new_array_v> x1("scopira::uikit::new_array_v",
-    scopira::core::project_type_c, "New array data",
+    scopira::core::project_type_c, "Basic/New array data",
     scopira::core::windowonly_uimode_c);
 
 static scopira::core::register_view<load_array_v> x2("scopira::uikit::load_array_v",
-    scopira::core::project_type_c, "Load array data from file",
+    scopira::core::project_type_c, "Basic/Load array data from file",
     scopira::core::windowonly_uimode_c);
 
 static scopira::core::register_view<export_array_v<char,1> > c1("scopira::uikit::export_array_v<char,1>",

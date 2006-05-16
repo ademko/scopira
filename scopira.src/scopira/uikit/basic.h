@@ -16,6 +16,7 @@
 
 #include <scopira/coreui/entry.h>
 #include <scopira/coreui/viewwidget.h>
+#include <scopira/coreui/filewindow.h>
 
 namespace scopira
 {
@@ -24,6 +25,8 @@ namespace scopira
     class rename_v;
     class remove_v;
     class copy_v;
+    class save_to_file_v;
+    class insert_from_file_v;
   }
 }
 
@@ -83,6 +86,49 @@ class scopira::uikit::copy_v : public scopira::core::view_i
 {
   public:
     virtual void bind_model(scopira::core::model_i *sus);
+};
+
+/**
+ * Saves the object to a file.
+ *
+ * @author Aleksander Demko
+ */ 
+class scopira::uikit::save_to_file_v : public scopira::coreui::viewwidget
+{
+  protected:
+    scopira::core::model_ptr<scopira::core::model_i> dm_model;
+
+    scopira::tool::count_ptr<scopira::coreui::fileentry> dm_filename;
+
+  public:
+    /// ctor
+    save_to_file_v(void);
+
+    virtual void bind_model(scopira::core::model_i *sus);
+
+    virtual void react_button(scopira::coreui::button *source, int actionid);
+};
+
+/**
+ * Inserts an object into a project from a file.
+ *
+ * @author Aleksander Demko
+ */ 
+class scopira::uikit::insert_from_file_v : public scopira::coreui::viewwidget
+{
+  protected:
+    //scopira::core::model_ptr<scopira::core::model_i> dm_model;
+    scopira::core::model_ptr<scopira::core::project_i> dm_model;
+
+    scopira::tool::count_ptr<scopira::coreui::fileentry> dm_filename;
+
+  public:
+    /// ctor
+    insert_from_file_v(void);
+
+    virtual void bind_model(scopira::core::model_i *sus);
+
+    virtual void react_button(scopira::coreui::button *source, int actionid);
 };
 
 #endif

@@ -217,6 +217,17 @@ class scopira::core::register_view : public scopira::core::register_flow<T>
     typedef scopira::core::register_flow<T> parent_type;
   public:
     /// ctor, null parent_name means "top level object" (ie from tool::object)
+    /**
+     * Constructor.
+     *
+     * fullname is the full name of the class that is being registered, this is usually
+     * the full c++ name.
+     * model_type is the full name of the model to be associated with this view.
+     * menu_name is the name in the popup menu. Slashes denote sub menus ("blah/View" for example)
+     * vgmask is a bitmask of flags and options
+     *
+     * @author Aleksander Demko
+     */ 
     register_view(const char *fullname, const char *model_type, const char *menu_name, int vgmask = default_uimode_c)
       : parent_type(fullname)
       { link_view_imp(typeid(T), model_type, menu_name, vgmask); }

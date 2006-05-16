@@ -31,7 +31,11 @@ namespace scopira
 }
 
 /**
- * a format-free ascii flow
+ * A type flow that helps parse ASCII input streams.
+ *
+ * Please note that this not a "symmetrical" tflow like all the others, that
+ * is you shouldn't use it in building a serialization stack. ie. write_string
+ * by printoflow may not always translate to the same read_string in printiflow.
  *
  * @author Aleksander Demko
  */
@@ -47,9 +51,10 @@ class scopira::tool::printiflow : public scopira::tool::itflow_i
     
   public:
     /**
-     * constrcutor
+     * Constructor.
      *
-     * @param is the input stream to use. this object will "own" it
+     * @param doref should this class ref count in
+     * @param in the input stream to use
      * @author Aleksander Demko
      */
     SCOPIRA_EXPORT printiflow(bool doref, iflow_i* in);
@@ -62,6 +67,8 @@ class scopira::tool::printiflow : public scopira::tool::itflow_i
     /// read raw block data, returns num read in
     SCOPIRA_EXPORT virtual size_t read(byte_t* _buf, size_t _maxsize);
 
+    // parsing routines
+
     SCOPIRA_EXPORT virtual bool read_bool(bool&);
     SCOPIRA_EXPORT virtual bool read_char(char&);
     SCOPIRA_EXPORT virtual bool read_short(short&);
@@ -70,6 +77,14 @@ class scopira::tool::printiflow : public scopira::tool::itflow_i
     SCOPIRA_EXPORT virtual bool read_long(long&);
     SCOPIRA_EXPORT virtual bool read_float(float&);
     SCOPIRA_EXPORT virtual bool read_double(double&);
+
+    /**
+     * Reads a string. Specifically, the next line of next up to the line terminator.
+     * UNIX and Win32 line terminators are supported. The line terminator(s) will NOT
+     * be in the resulting string.
+     *
+     * @author Aleksander Demko
+     */ 
     SCOPIRA_EXPORT virtual bool read_string(std::string&);
 
     /// opens a new link
@@ -79,10 +94,19 @@ class scopira::tool::printiflow : public scopira::tool::itflow_i
 
     // extra routines
 
-    /// read a stl string
+    /**
+     * Reads a string. Specifically, read the next _max chars into the string.
+     * Anything other than _max chars is considered failure.
+     *
+     * @author Aleksander Demko
+     */ 
     SCOPIRA_EXPORT virtual bool read_string(std::string& ret, int _max);
 
-    /// read a word string
+    /**
+     * Reads the next "word", that is stream of non-whitespace characters.
+     *
+     * @author Aleksander Demko
+     */ 
     SCOPIRA_EXPORT bool read_string_word(std::string &ret);
 };
 

@@ -15,9 +15,14 @@
 
 #include <gtk/gtk.h>
 
+#include <scopira/coreui/layout.h>
+#include <scopira/coreui/button.h>
+#include <scopira/coreui/label.h>
+
 //BBlibs scopira
 //BBtargets libscopiraui.so
 
+using namespace scopira::tool;
 using namespace scopira::coreui;
 
 messagewindow::messagewindow(const std::string &title, const std::string &msg,
@@ -64,5 +69,46 @@ void messagewindow::popup(const std::string &title, const std::string &msg,
 void messagewindow::popup_error(const std::string &msg)
 {
   popup("Error", msg, error_c, true);
+}
+
+//
+//
+// entrywindow
+//
+//
+
+entrywindow::entrywindow(const std::string &title, const std::string &msg,
+      const std::string &defval)
+  : window(title, false), dm_reactor(0)
+{
+  count_ptr<box_layout> bx;
+  count_ptr<button_layout> bl;
+
+  bx = new box_layout(false, false);
+
+  dm_entry = new entry;
+  dm_entry->set_text(defval);
+
+  bx->add_widget(new label(msg), false, false);
+  bx->add_widget(dm_entry.get(), true, true);
+
+  bl = new button_layout(bx.get());
+  bl->add_stock_buttons(button_constants::button_ok_c | button_constants::button_cancel_c, this);
+
+  dm_thewidget = bl.get();
+  window::init_gui(dm_thewidget->get_widget());
+}
+
+void entrywindow::react_button(scopira::coreui::button *source, int actionid)
+{
+  if (actionid == button_constants::action_apply_c && dm_reactor) {
+    // reflect this msg
+    std::string txt;
+    dm_entry->get_text(txt);
+    dm_reactor->react_entry(dm_entry.get(), txt.c_str());
+  }
+
+  if (actionid == button_constants::action_close_c)
+    on_destroy();
 }
 

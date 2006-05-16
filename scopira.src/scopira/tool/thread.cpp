@@ -279,26 +279,7 @@ void rwlock::unlock(void)
 #ifdef PLATFORM_linux
 int scopira::tool::num_system_cpus(void)
 {
-  /// open /proc/cpuinfo and count some lines
-  fileflow inf("/proc/cpuinfo", fileflow::input_c);
-
-  if (inf.failed())
-    return 1;
-
-  printiflow input(false, &inf);
-  std::string line;
-  int count = 0;
-
-  line.reserve(250);
-
-  while (input.read_string(line))
-    if (line.compare(0, 9, "processor") == 0)
-      ++count;
-
-  if (count == 0)
-    return 1;
-  else
-    return count;
+  return sysconf(_SC_NPROCESSORS_CONF);
 }
 #elif defined(PLATFORM_osx)
 int scopira::tool::num_system_cpus(void)

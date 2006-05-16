@@ -237,6 +237,11 @@ void* network_agent::listen_thread_func(void *herep)
   return 0;
 }
 
+//
+// UDP stuff
+//
+
+namespace {//anonymous namespace
 template <int LEN> class fixed_string
 {
   public:
@@ -277,12 +282,6 @@ class fixed_addr
       return netaddr(chars[0], chars[1], chars[2], chars[3]);
     }
 };
-
-//
-//
-// UDP section
-//
-//
 
 struct udpmsg_t {
   enum { magic_c = 0x3455FF33 };
@@ -326,6 +325,7 @@ struct udpmsg_t {
   const byte_t * as_bytes(void) const { return reinterpret_cast<const byte_t*>(this); }
   size_t size(void) const { return sizeof(udpmsg_t); }
 };
+}//anonymous namespace
 
 static void find_udpmaster_bcast(scopira::tool::uuid srcid, udpflow &fl, netaddr bcastaddr, int port)
 {
@@ -386,7 +386,6 @@ void* network_agent::udp_thread_func(void *herep)
 
   assert(here->is_alive_object());
 
-  bcastport = 0;
   {
     nethostrec hrec;
     if (!hostname_to_hostrec(here->dm_networkstart.get_hostname(), hrec)) {
@@ -399,8 +398,11 @@ void* network_agent::udp_thread_func(void *herep)
     }
     bcastaddr = hrec.get_addr();
   }
+
+  bcastport = here->dm_networkstart.get_port();
   if (bcastport == 0)
     bcastport = default_port_c;
+
   clocky.start();
   {
     sysdev_gen gen;
@@ -640,7 +642,7 @@ OUTPUT << "!PONG\n";
         assert(n.port != 0);
         break;
       }
-    }
+    }//switch
   }//while true 
 
   return 0;

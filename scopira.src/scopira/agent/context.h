@@ -16,22 +16,51 @@
 
 #include <typeinfo>
 
+#include <scopira/tool/export.h>
 #include <scopira/tool/uuid.h>
 #include <scopira/tool/binflow.h>
 #include <scopira/agent/task.h>
 #include <scopira/agent/agent.h>
-#include <scopira/tool/export.h>
 
 namespace scopira
 {
   namespace agent
   {
+    class service_broadcast;
+
     class send_msg;
     class recv_msg;
 
     class task_context;  // rename to task_context
   }
 }
+
+/**
+ * A object that sepecifies a network broadcast.
+ * Basically, this will send your message to ALL
+ * tasks in the system that have the given service
+ * (ie. return has_service() true for the given service).
+ *
+ * @author Aleksander Demko
+ */
+class scopira::agent::service_broadcast
+{
+  public:
+    /**
+     * Basic constructor.
+     *
+     * In the future, perhaps add a int depth=0 param.
+     *
+     * @author Aleksander Demko
+     */
+    service_broadcast(const scopira::tool::uuid &serviceid) : m_serviceud(serviceid) { }
+
+    /// returns the service id
+    const scopira::tool::uuid & get_serviceid(void) const { return m_serviceud; }
+
+  private:
+    scopira::tool::uuid m_serviceud;
+};
 
 /**
  * A send msg.
@@ -60,6 +89,16 @@ class scopira::agent::send_msg : public scopira::tool::bin64oflow
      */ 
     SCOPIRA_EXPORT send_msg(scopira::agent::task_context &ctx, int dest);
 
+    /**
+     * Prepare and send msg transaction. Broadcast edition.
+     *
+     * ctx is your context.
+     * dest is your destination
+     *
+     * @author Aleksander Demko
+     */ 
+    SCOPIRA_EXPORT send_msg(scopira::agent::task_context &ctx, const service_broadcast &targets);
+
     /// dtor
     SCOPIRA_EXPORT virtual ~send_msg();
 
@@ -67,6 +106,8 @@ class scopira::agent::send_msg : public scopira::tool::bin64oflow
     // in the future, change the implementation to use direct-to-wire
     scopira::tool::uuid dm_src, dm_dest;
     scopira::tool::count_ptr<scopira::tool::bufferflow> dm_buf;
+
+    bool m_sendingbcast;
 };
 
 /**
@@ -149,7 +190,7 @@ class scopira::agent::task_context
      * @author Aleksander Demko
      */ 
     SCOPIRA_EXPORT task_context(taskmsg_reactor_i *reac);
-
+    /// internal ctor, dont use
     SCOPIRA_EXPORT task_context(int myindex, const scopira::basekit::narray<scopira::tool::uuid> &peers);
     /// dtor
     SCOPIRA_EXPORT ~task_context();
@@ -160,6 +201,17 @@ class scopira::agent::task_context
      * @author Aleksander Demko
      */
     bool failed(void) const { return agent_i::instance()->failed(); }
+
+    /**
+     * If enable true, then this decalres that this task can receive
+     * broadcast messages targeted with the given serviceid.
+     *
+     * If enable is false, then any previous declaration (if any)
+     * will be cleared.
+     *
+     * @author Aleksander Demko
+     */
+    void enable_service(scopira::tool::uuid serviceid, bool enable = true);
 
     /**
      * Spawn the given one task into the agent system.

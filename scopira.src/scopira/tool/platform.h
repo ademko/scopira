@@ -30,10 +30,10 @@
 // PLATFORM_osx      Apple Macintosh OS X (not yet used)
 //
 
-#define SCOPIRA_VERSION "0.9.9"
+#define SCOPIRA_VERSION "0.9.10"
 #define SCOPIRA_VERSION_MAJOR 0
 #define SCOPIRA_VERSION_MINOR 9
-#define SCOPIRA_VERSION_SUBMINOR 9
+#define SCOPIRA_VERSION_SUBMINOR 10
 
 #if !defined(PLATFORM_win32) && defined(WIN32)
 #define PLATFORM_win32

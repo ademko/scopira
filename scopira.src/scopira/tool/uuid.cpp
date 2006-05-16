@@ -46,6 +46,17 @@ bool uuid::operator < (const uuid &rhs) const
 #endif
 
 #ifdef PLATFORM_E2UUID
+uuid::uuid(const char *s)
+{
+#ifndef NDEBUG
+  bool b =
+#endif
+  parse_string(s);
+  assert(b);
+}
+#endif
+
+#ifdef PLATFORM_E2UUID
 std::string uuid::as_string(void) const
 {
   char s[40];
@@ -60,6 +71,17 @@ std::string uuid::as_string(void) const
 bool uuid::parse_string(const std::string &s)
 {
   return uuid_parse(s.c_str(), dm_id) == 0;
+}
+#endif
+
+#ifdef PLATFORM_win32
+uuid::uuid(const char *s)
+{
+#ifndef NDEBUG
+  bool b =
+#endif
+  parse_string(s);
+  assert(b);
 }
 #endif
 

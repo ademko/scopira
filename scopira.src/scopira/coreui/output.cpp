@@ -100,7 +100,7 @@ void outputwidget::init_gui(void)
   
   //create text buffer
   dm_buffer = gtk_text_view_get_buffer(GTK_TEXT_VIEW(dm_text_widget));
-  gtk_text_buffer_set_text(dm_buffer, "Output buffer ready.\n", -1);
+  gtk_text_buffer_set_text(dm_buffer, "", -1);
   
   parent_type::init_gui();
 }

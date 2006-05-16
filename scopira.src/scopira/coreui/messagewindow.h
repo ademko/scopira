@@ -16,12 +16,15 @@
 
 #include <scopira/coreui/window.h>
 #include <scopira/coreui/export.h>
+#include <scopira/coreui/button.h>
+#include <scopira/coreui/entry.h>
 
 namespace scopira
 {
   namespace coreui
   {
     class messagewindow;
+    class entrywindow;
   }
 }
 
@@ -45,7 +48,7 @@ class scopira::coreui::messagewindow : public scopira::coreui::dialog
      * Constructor
      * @author Aleksander Demko
      */
-   SCOPIRAUI_EXPORT  messagewindow(const std::string &title, const std::string &msg,
+   SCOPIRAUI_EXPORT messagewindow(const std::string &title, const std::string &msg,
         int typ = notype_c, bool modal = true);
 
     /**
@@ -65,6 +68,29 @@ class scopira::coreui::messagewindow : public scopira::coreui::dialog
      * @author Aleksander Demko
      */
     SCOPIRAUI_EXPORT static void popup_error(const std::string &msg);
+};
+
+/**
+ * A windows with a simply entry box.
+ *
+ * @author Aleksander Demko
+ */
+class scopira::coreui::entrywindow : public scopira::coreui::window,
+  public virtual scopira::coreui::button_reactor_i
+{
+  private:
+    scopira::coreui::entry_reactor_i *dm_reactor;
+  public:
+    SCOPIRAUI_EXPORT entrywindow(const std::string &title, const std::string &msg,
+      const std::string &defval = "");
+
+    void set_entry_reactor(entry_reactor_i *react) { dm_reactor = react; }
+
+    SCOPIRAUI_EXPORT virtual void react_button(scopira::coreui::button *source, int actionid);
+
+  private:
+    scopira::tool::count_ptr<scopira::coreui::widget> dm_thewidget;
+    scopira::tool::count_ptr<scopira::coreui::entry> dm_entry;
 };
 
 #endif

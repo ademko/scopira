@@ -28,7 +28,7 @@ namespace scopira
 }
 
 /**
- * a string system file
+ * A flow-sink that reads/writes data to a in-memory STL string.
  *
  * @author Aleksander Demko
  */
@@ -81,7 +81,7 @@ class scopira::tool::stringflow : public scopira::tool::iflow_i, public scopira:
 };
 
 /**
- * a string iflow, that reads directly from an existing string
+ * A wrapper flow that reads data from an already existing STL string.
  *
  * @author Aleksander Demko
  */
@@ -93,7 +93,12 @@ class scopira::tool::stringiflow : public scopira::tool::iflow_i
     std::string::size_type dm_idx;
 
   public:
-    /// opening constructor, null is valid (but unusable)
+    /**
+     * Constructor. Pass that string that will be used as input.
+     * Null is valid, but unsable (in which case, follow with an open() call.
+     *
+     * @author Aleksander Demko
+     */ 
     SCOPIRA_EXPORT stringiflow(const std::string* data);
 
     /// are we in a failed state?

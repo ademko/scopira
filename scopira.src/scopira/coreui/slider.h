@@ -85,7 +85,7 @@ class scopira::coreui::slider : public scopira::coreui::widget
     /// shows min and max values
     SCOPIRAUI_EXPORT void show_min_max(void);
     /// set number of decimal places for granularity
-    SCOPIRAUI_EXPORT void slider::set_digits(int digits);
+    SCOPIRAUI_EXPORT void set_digits(int digits);
     
   protected:
     SCOPIRAUI_EXPORT void init_gui(void);

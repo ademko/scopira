@@ -37,7 +37,7 @@ using namespace pakit;
 //
 //
 
-static scopira::core::register_view<new_ibdtext_v> r1("pakit::new_ibdtext_v", scopira::core::project_type_c, "Load IBD Text File", scopira::core::windowonly_uimode_c);
+static scopira::core::register_view<new_ibdtext_v> r1("pakit::new_ibdtext_v", scopira::core::project_type_c, "Pattern Analysis/Load IBD Text File", scopira::core::windowonly_uimode_c);
 static scopira::core::register_view<save_ibdtext_v> r2("pakit::save_ibdtext_v", "pakit::patterns_m", "Save as IBD Text File", scopira::core::windowonly_uimode_c);
 static scopira::core::register_view<add_centroids_v> r3("pakit::add_centroids_v", "pakit::patterns_m", "Add Centroids", scopira::core::windowonly_uimode_c);
 static scopira::core::register_view<general_report_v> r4("pakit::general_report_v", "pakit::patterns_m", "About...");

@@ -72,6 +72,9 @@ scopira::tool::oflow_i& operator<<(scopira::tool::oflow_i& o, const scopira::age
  */ 
 class scopira::agent::cluster_agent : public scopira::agent::local_agent
 {
+  public:
+    /// default port used by the master
+    enum { default_port_c = 5555 };
   private:
     typedef local_agent parent_type;
   public:
@@ -107,6 +110,7 @@ class scopira::agent::cluster_agent : public scopira::agent::local_agent
     virtual bool wait_msg(scopira::tool::uuid src, scopira::tool::uuid dest, int timeout);
     virtual void send_msg(scopira::tool::uuid src, scopira::tool::uuid dest, scopira::tool::bufferflow *buf);
     virtual void recv_msg(scopira::tool::uuid &src, scopira::tool::uuid dest, scopira::tool::count_ptr<scopira::tool::bufferflow> &buf);*/
+    virtual void send_msg_bcast(scopira::tool::uuid src, scopira::tool::uuid destserviceid, scopira::tool::bufferflow *buf);
 
   protected:
     virtual void la_send_msg(scopira::tool::uuid src, scopira::tool::uuid dest, scopira::tool::bufferflow *buf);
@@ -222,6 +226,7 @@ class scopira::agent::cluster_agent : public scopira::agent::local_agent
     class client_kill_msg;
     class client_is_alive_msg;
     class send_data_msg;
+    class bcast_data_msg;
     class reg_context_msg;
     class dead_task_msg;
     static scopira::core::register_flow<cluster_agent::reply_msg> r81123;
@@ -239,6 +244,7 @@ class scopira::agent::cluster_agent : public scopira::agent::local_agent
     static scopira::core::register_flow<cluster_agent::client_kill_msg> r45666;
     static scopira::core::register_flow<cluster_agent::client_is_alive_msg> r44512;
     static scopira::core::register_flow<cluster_agent::send_data_msg> r49075;
+    static scopira::core::register_flow<cluster_agent::bcast_data_msg> r49076;
     static scopira::core::register_flow<cluster_agent::reg_context_msg> r89063;
     static scopira::core::register_flow<cluster_agent::dead_task_msg> r85221;
 
@@ -380,8 +386,6 @@ class scopira::agent::cluster_agent : public scopira::agent::local_agent
     };
 
   private:
-    /// default port used by the master
-    enum { default_port_c = 5555 };
     enum {
       failed_initting_c,
       failed_cantinit_c,
@@ -399,7 +403,7 @@ class scopira::agent::cluster_agent : public scopira::agent::local_agent
     struct peer_area
     {
       public:
-        /// link to my master, null if I am the cluster master
+        /// link to my master/server, null if I am the cluster master/server
         scopira::tool::count_ptr<link> pm_masterlink;
         /// the links to our peers
         peers_t pm_peers;
@@ -517,8 +521,11 @@ class scopira::agent::cluster_agent : public scopira::agent::local_agent
 
     /// cluster password, if any
     std::string dm_password;
-    /// the port we're listenin on
+    /// the port we're listenin on, 0 if none
     int dm_listenport;
+    /// the udp port we're listening to, 0 if none
+    /// this is only set for servers
+    int dm_udpport;
 
     /// kernel area
     scopira::tool::event_area<peer_area> dm_peerarea;
@@ -533,8 +540,12 @@ class scopira::agent::cluster_agent : public scopira::agent::local_agent
 
     /// listen socket
     scopira::tool::netflow dm_listensocket;
+    /// udp socket (only used in servers) (0 if not used)
+    scopira::tool::udpflow dm_udpsocket;
     /// listen thread
     scopira::tool::thread dm_listenthread;
+    /// udp listening thread... only active if dm_udpsocket!=0
+    scopira::tool::thread dm_udpthread;
     /// admin thread (this processes the admin event queue)
     scopira::tool::thread dm_adminthread;
 
@@ -599,6 +610,7 @@ class scopira::agent::cluster_agent : public scopira::agent::local_agent
 
   private:
     static void* listen_thread_func(void *herep);
+    static void* udp_thread_func(void *herep);
     static void* admin_thread_func(void *herep);
 };
 

@@ -62,7 +62,7 @@ void listbox::init_gui( void )
 
   // add row columns to model
   col = gtk_tree_view_column_new_with_attributes("Name", gtk_cell_renderer_text_new(),
-      "text", table_label_str_col, 0);
+      "text", table_label_str_col, NULL);
   gtk_tree_view_append_column( GTK_TREE_VIEW(table_view), col );
   
   

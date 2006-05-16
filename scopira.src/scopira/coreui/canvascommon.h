@@ -183,11 +183,11 @@ class scopira::coreui::context
 };
 
 /** 
- * a graphics layout
+ * A graphics layout shadow for Pango.
  *
- * @autor marina mandelzweig
+ * @author Aleksander Demko
  */
-class scopira::coreui::layout: public virtual scopira::tool::object
+class scopira::coreui::layout : public virtual scopira::tool::object
 {
   protected:
     PangoContext *dm_context;
@@ -357,6 +357,8 @@ class scopira::coreui::pixmap_context : public scopira::coreui::context
   public:
     /// ctor
     SCOPIRAUI_EXPORT pixmap_context(void);
+    /// ctor + set_pixmap call
+    SCOPIRAUI_EXPORT explicit pixmap_context(pixmap_canvas &pcan);
     /// dtor
     SCOPIRAUI_EXPORT ~pixmap_context();
 

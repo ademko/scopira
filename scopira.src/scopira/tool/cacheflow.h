@@ -216,9 +216,11 @@ class scopira::tool::cacheiflow : public scopira::tool::iflow_i
 
   public:
     /**
-     * constrcutor
+     * Constructor.
      *
-     * @param is the input stream to use. this object will "own" it
+     * @param doref should innie be ref counted
+     * @param innie the iflow to get data from
+     * @param buffersize the buffer size of the cache
      * @author Aleksander Demko
      */
     SCOPIRA_EXPORT cacheiflow(bool doref, iflow_i* innie, size_t buffersize = 32768);
@@ -258,9 +260,11 @@ class scopira::tool::cacheoflow : public scopira::tool::oflow_i
 
   public:
     /**
-     * constrcutor
+     * Constructor.
      *
-     * @param is the input stream to use. this object will "own" it
+     * @param doref should out be ref counted
+     * @param out the oflow to put data to
+     * @param buffersize the buffer size of the cache
      * @author Aleksander Demko
      */
     SCOPIRA_EXPORT cacheoflow(bool doref, oflow_i* out, size_t buffersize = 32768);
