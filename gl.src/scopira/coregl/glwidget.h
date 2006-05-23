@@ -154,7 +154,14 @@ class scopira::coregl::glwidget : public scopira::coreui::widget
      */
     SCOPIRAGL_EXPORT glwidget(void);
 
-    SCOPIRAGL_EXPORT widget * make_drawing_area(void);
+    /**
+     * A helper method for alternative init_gui() sequences.
+     * If adddefaultbuts is false, then the default Home/Perspective buttons
+     * will not be added, and you'll just get a pure display.
+     *
+     * @author Aleksander Demko
+     */ 
+    SCOPIRAGL_EXPORT widget * make_drawing_area(bool adddefaultbuts = true);
 
     /**
      * Sets up the UI. Your descendants must call this. OR you can do the following:
@@ -166,7 +173,7 @@ class scopira::coregl::glwidget : public scopira::coreui::widget
      *
      * @author Aleksander Demko
      */ 
-    SCOPIRAGL_EXPORT void init_gui(void);
+    SCOPIRAGL_EXPORT void init_gui(bool adddefaultbuts = true);
 
     /**
      * Called once on window creation - do you gl related
@@ -272,11 +279,38 @@ class scopira::coregl::glwidget : public scopira::coreui::widget
         }
     };
 
+    /**
+     * Is the mouse button currently pressed?
+     *
+     * @author Aleksander Demko
+     */ 
+    bool is_mouse_down(void) const { return dm_mousedown; }
+    /**
+     * Are we in a selection-mode render?
+     *
+     * @author Aleksander Demko
+     */ 
+    bool is_select_down(void) const { return dm_selectdown; }
+
   protected:
-    /// true if the mouse is currently down
-    bool dm_mousedown;    // this really should be a parm in handle_render()
-    /// true if we'return in a SELECT render
+    /**
+     * Is the mouse button currently pressed?
+     * You should use is_mouse_down() instead.
+     * This really should be a parm in handle_render().
+     *
+     * @author Aleksander Demko
+     */ 
+    bool dm_mousedown;
+    /**
+     * Are we in a selection-mode render?
+     * You should use is_select_down() instead.
+     * This really should be a parm in handle_render().
+     *
+     * @author Aleksander Demko
+     */ 
     bool dm_selectdown;    // this really should be a parm in handle_render()
+
+  protected:
     scopira::tool::fixed_array<double, 16> dm_xform;    /// current transform matrix
     GdkGLConfig * dm_glconfig;    
     GtkWidget *dm_glw;
@@ -296,7 +330,7 @@ class scopira::coregl::glwidget : public scopira::coreui::widget
      *
      * @author Aleksander Demko
      */ 
-    GtkWidget * make_drawing_area_impl(void);
+    GtkWidget * make_drawing_area_impl(bool adddefaultbuts);
 
     /**
      * Sets up the camera
@@ -327,6 +361,19 @@ class scopira::coregl::glwidget : public scopira::coreui::widget
     /// exponensial camera scaling
     SCOPIRAGL_EXPORT static double adjust_camera(double oldcamera, double pixdelta);        
 };
+
+/**
+  \page scopiraglsyspage Scopira OpenGL Reference
+
+  This subsytem provides the scopira::coregl::glwidget, a
+  base class for building widgets that can draw on the display using
+  OpenGL commands.
+
+  Some helper classes are also in the namespace scopira::coregl.
+
+  See scopira::coregl::glwidget for usage.
+
+*/
 
 #endif
 

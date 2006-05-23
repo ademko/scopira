@@ -21,6 +21,12 @@
 
 namespace scopira
 {
+  /**
+   * This namespace houses more complex UI elelements, aswell
+   * as all the core models and views.
+   *
+   * @author Aleksander Demko
+   */ 
   namespace uikit
   {
     template <class T, int DIM=1> class narray_m;

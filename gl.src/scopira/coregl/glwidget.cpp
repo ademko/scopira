@@ -111,15 +111,15 @@ glwidget::~glwidget()
   assert(dm_glconfig); /// no idea who deletes this TODO FIXME
 }
 
-widget * glwidget::make_drawing_area(void)
+widget * glwidget::make_drawing_area(bool adddefaultbuts)
 {
-  return new scopira::coreui::widget(make_drawing_area_impl());
+  return new scopira::coreui::widget(make_drawing_area_impl(adddefaultbuts));
 }
 
-GtkWidget * glwidget::make_drawing_area_impl(void)
+GtkWidget * glwidget::make_drawing_area_impl(bool adddefaultbuts)
 {
   gboolean b;
-  GtkWidget *hbox, *retwid;
+  GtkWidget *butbox, *retwid;
   GtkWidget *but1, *but2;
 
   dm_glconfig = gdk_gl_config_new_by_mode(static_cast<GdkGLConfigMode>(GDK_GL_MODE_RGB | GDK_GL_MODE_DEPTH | GDK_GL_MODE_DOUBLE));
@@ -141,38 +141,42 @@ GtkWidget * glwidget::make_drawing_area_impl(void)
   g_signal_connect(G_OBJECT(dm_glw), "motion_notify_event", G_CALLBACK(h_mouse_motion), this);
   //g_signal_connect(G_OBJECT(dm_glw), "unrealize", G_CALLBACK(h_destroy), this);
 
-  hbox = gtk_hbox_new(FALSE,0);
-	
-  //create button1
-  but1 = gtk_button_new_with_label("Perspective/Orthographic");
-  g_signal_connect(G_OBJECT(but1), "clicked", G_CALLBACK(h_but_per), this);
-	gtk_box_pack_start(GTK_BOX(hbox), but1, TRUE, TRUE, 0);
-	gtk_widget_show(but1);
+  if (adddefaultbuts) {
+    butbox = gtk_hbox_new(FALSE,0);
+    
+    //create button1
+    but1 = gtk_button_new_with_label("Perspective/Orthographic");
+    g_signal_connect(G_OBJECT(but1), "clicked", G_CALLBACK(h_but_per), this);
+    gtk_box_pack_start(GTK_BOX(butbox), but1, TRUE, TRUE, 0);
+    gtk_widget_show(but1);
 
-  //create button2
-  but2 = gtk_button_new_with_label("Home Display");
-  g_signal_connect(G_OBJECT(but2), "clicked", G_CALLBACK(h_but_home), this);
-	gtk_box_pack_start(GTK_BOX(hbox), but2, TRUE, TRUE, 0);
-	gtk_widget_show(but2);
+    //create button2
+    but2 = gtk_button_new_with_label("Home Display");
+    g_signal_connect(G_OBJECT(but2), "clicked", G_CALLBACK(h_but_home), this);
+    gtk_box_pack_start(GTK_BOX(butbox), but2, TRUE, TRUE, 0);
+    gtk_widget_show(but2);
+  }
 
   retwid = gtk_vbox_new(FALSE,2);
 
   gtk_container_set_border_width(GTK_CONTAINER(retwid), 2);
 
 	gtk_box_pack_start(GTK_BOX(retwid), dm_glw, TRUE, TRUE, 0);
-	gtk_box_pack_start(GTK_BOX(retwid), hbox, FALSE, TRUE, 0);
+  if (adddefaultbuts)
+    gtk_box_pack_start(GTK_BOX(retwid), butbox, FALSE, TRUE, 0);
 	
 	gtk_widget_show(dm_glw);
-	gtk_widget_show(hbox);
+  if (adddefaultbuts)
+    gtk_widget_show(butbox);
 
   assert(retwid);
 
   return retwid;
 }
 
-void glwidget::init_gui(void)
+void glwidget::init_gui(bool adddefaultbuts)
 {
-  widget::init_gui(make_drawing_area_impl());
+  widget::init_gui(make_drawing_area_impl(adddefaultbuts));
 }
 
 void glwidget::setup_camera(int selx, int sely)

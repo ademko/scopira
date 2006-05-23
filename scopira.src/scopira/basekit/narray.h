@@ -580,9 +580,9 @@ template <class T, int DIM> class scopira::basekit::narray
      */
     void save(scopira::tool::otflow_i &out) const;
 
-    /// raw c-array style access, along as the standard permits this
+    /// raw c-array style access
     const T * c_array(void) const { return dm_ary; }
-    /// raw c-array style access, along as the standard permits this
+    /// raw c-array style access
     T * c_array(void) { return dm_ary; }
 
     /// begin-stl like iterator
@@ -660,7 +660,7 @@ template <class T, int DIM> class scopira::basekit::narray
 
     // VECTOR
 
-    // vector to vector
+    /// vector to vector
     nslice<T,1> xslice(size_t basex, size_t len)
       { return slicer(nindex<1>(basex), nindex<1>(len), nindex<1>(x_axis_c)); }
 
@@ -724,7 +724,7 @@ template <class T, int DIM> class scopira::basekit::narray
 
     // VECTOR
 
-    // vector to vector
+    /// vector to vector
     const_nslice<T,1> xslice(size_t basex, size_t len) const
       { return slicer(nindex<1>(basex), nindex<1>(len), nindex<1>(x_axis_c)); }
 
@@ -1313,7 +1313,7 @@ template <class T, int DIM> class scopira::basekit::nslice
 
     // VECTOR
 
-    // vector to vector
+    /// vector to vector
     nslice<T,1> xslice(size_t basex, size_t len) const
       { return slicer(nindex<1>(basex), nindex<1>(len), nindex<1>(x_axis_c)); }
 
@@ -1857,7 +1857,7 @@ template <class T, int DIM> class scopira::basekit::const_nslice
 
     // VECTOR
 
-    // vector to vector
+    /// vector to vector
     const_nslice<T,1> xslice(size_t basex, size_t len) const
       { return slicer(nindex<1>(basex), nindex<1>(len), nindex<1>(x_axis_c)); }
 
@@ -2418,6 +2418,99 @@ scopira::tool::oflow_i & operator << (scopira::tool::oflow_i &o,
     o << ',' << d[x];
   return o << ')';
 }
+
+/**
+  \page scopirabasekitnarray narray (core data template class)
+
+  The scopira::basekit::narray template class is the core numerical
+  data array class in Scopira. It can be used to make arrays
+  of any dimention and with any data type.
+
+  \section notessec Some notes
+
+  Data access for multi-dimention arrays follow the x,y,z,etc style.
+  In particular, matrices are x,y (rather than the mathematical convention
+  of rows,cols). This is deliberate as to be consistant with higher
+  dimention array.
+
+  STL-like begin()/end() iteration is supported.
+
+  You can always get at the raw data in an narray using the scopira::basekit::narray::c_array()
+  method.
+
+  Use [] for 1-dimention (vector) access. Use () for 2-dimention (matrix) access.
+  () is also used for 3+-dimention access via nindex objects.
+
+  \section examplessec Basic Example
+
+  This is an example of some basic usage of narrays.
+
+  \code
+  #include <scopira/tool/output.h>
+  #include <scopira/basekit/narray.h>
+  int main(void)
+  {
+    scopira::basekit::narray<double,2> M;     // this is a matrix of doubles
+    scopira::basekit::narray<int,1> V;        // this is a vector of ints
+    scopira::basekit::narray<float> F;        // this is a vector of floats (1 is the default when no dimention is sepecified)
+
+    // resize the arrays
+    M.resize(5, 4);
+    V.resize(10);
+
+    // set some initial values
+    M.set_all(1.2);
+    V.set_all(555);
+
+    // so some data access
+    // note that [] can ONLY be used in 1-dimentional vectors
+    // () can be used for all dimentions
+    M(0,0) = 22;                                // set top left corner of the matrix
+    M(4, 3); = 33;                              // set bottom right corner of the matrix
+    V[1] = 55;                                  // set the 2nd element in the vector
+
+    OUTPUT << M.width() << "x" << M.height() << "; " << V.size() << '\n';
+    OUTPUT << M << V << '\n';
+  }
+  \endcode
+
+  \section slicesec Slices
+
+  scopira::basekit::nslice is a template class that provides "slicing" for narrays.
+  A slice is a small pointer into a subsection of a host-narray. A nslice has no
+  data of it's own, it only knows where in the host narray it should be accessing.
+  It is invalid to use a nslice after its hsot narray has been destroyed (or even
+  simply resized).
+
+  A nslice has most of the same methods and access functions as an narray.
+
+  A nslice can have less dimentions that its host narray (but never more).
+  For example, you can make a vector-like nslice out of a 2-dimention matrix
+  narray.
+
+  An example:
+
+  \code
+  {
+    scopira::basekit::narray<double,2> M;
+    scopira::basekit::nslice<double,2> subM;
+    scopira::basekit::nslice<double,1> subV;
+
+    // initialize M
+    M.resize(10, 5);
+    M.set_all(99);
+
+    // print out the top left elements (3 by 3 square)
+    subM = M.xyslice(0, 0, 3, 3);
+    OUTPUT << subM << '\n';
+
+    // print out the 2nd column
+    subV = M.yslice(1, 0, M.height());
+    OUTPUT << subV << '\n';
+  }
+  \endcode
+
+*/
 
 #endif
 

@@ -120,5 +120,39 @@ class scopira::coreui::ui_loop : public scopira::core::basic_loop, protected sco
     volatile bool dm_quitonlastclose;
 };
 
+/**
+  \page scopirauisyspage Scopira UI Reference
+
+  This subsystem provides the standard GUI widget library and 2D drawing capabilities
+  to Scopira applications.
+
+  Namespaces that comprise this library are: scopira::coreui, scopira::uikit
+  and scopira::lab
+
+*/
+
+/**
+  \page scopiraappspage Scopira Applications
+
+  Scopira is predomenantly an library for building domain-specific
+  applications. However two generic applications are provides.
+
+  \section appsec scopira.exe
+
+  scopira.exe is a basic, graphical model/view project application.
+  It includes all the basic facilities for model managment and view launching.
+  You can build on this application by making plug-ins that register models
+  and/or views, and then loading those libraries with the lib= command line parameter.
+
+  \section agentsec scopiraagent.exe
+
+  scopiraagent.exe is a non-gui program for launch agent tasks.
+  You typically load your plug-in of tasks via a lib= parameter, and tell
+  scopiraagent.exe which task to run with the task= parameter.
+  You should provide the full registration string of the tkas you'd like luanched
+  (typically, you shadow the full C++ name when deciding on registration strings).
+
+*/
+
 #endif
 

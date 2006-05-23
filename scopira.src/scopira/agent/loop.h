@@ -20,6 +20,11 @@
 
 namespace scopira
 {
+  /**
+   * This namespace houses the API and implementations of Scopira Agents.
+   *
+   * @author Aleksander Demko
+   */ 
   namespace agent
   {
     class agent_loop;
@@ -81,6 +86,11 @@ class scopira::agent::agent_loop
     /// our link to the static worker
     scopira::tool::count_ptr<scopira::agent::agent_i> dm_worker;
 };
+
+/**
+  \page scopiraagentssyspage Scopira Agents (message passing)
+
+*/
 
 #endif
 

@@ -271,5 +271,90 @@ class scopira::core::basic_loop : public virtual scopira::tool::object
     void process_libdir(const std::string &dirname);
 };
 
+/**
+  \page scopiracoreloop The main loop
+
+  \section introsec Introduction
+
+  Scopira uses the concept of stackable singleton objects "loops" to manage the
+  core global variables needed various subsystem layers. Loop objects
+  are either implicitly created, created by being a base class of another loop
+  and directly instantied by you in your main() function.
+
+  You don't always need a loop object, however.
+
+  The scopira::core::basic_loop is the core loop in almost all loops. It can also
+  be used directly but may also be a base class by variou other groups.
+
+  \section features Features
+
+  scopira::core::basic_loop provides the following key features:
+    - Command line and configuration file parsing and processing (get_config(), etc)
+    - Dynamic library loading (plug-ins) via lib= parameters.
+
+  basic_loop is a singleton. It's instance can always be accessed via
+  scopira::core::basic_loop::instance().
+
+  \section examplesec Example
+
+  A basic, non-gui Scopira program would be as follows:
+
+  \code
+  #include <scopira/core/loop.h>
+
+  int main(int argc, char **argv)
+  {
+    scopira::core::basic_loop l(argc, argv);
+
+    return 0;
+  }
+  \endcode
+
+
+*/
+
+/**
+  \page scopiraconfigpage Command line parameter processing
+
+  Scopira based applications can take command line options. All options are in the form of option=value
+
+  \section sysoptsec System Options
+
+  System options are options that are available to all Scopira based applications. They are:
+
+    - debug=1 show some debug information on startup (like the object registration tree)
+    - noui=1 (Lab applications only) disable GUI, and use only paramters supplied via the command line
+    - config=filename sepecifies a config file to parse (one key=value per line)
+    - lib=filename.so loads a dynamic library (a plug in)
+    - libdir=directory process all the .so files in the given directory with lib=
+    - mpi=1 (MPI enabled applications only) enable and use MPI 
+
+  Your application may introduce other options. For example, project based applications may also have:
+
+    - project=file load the given projectfile upon start up
+
+  \section configfilessec Configuration Files
+
+  In addition to the command line, Scopira based applications also search a few additional locations for paramters. These locations are based on your APPNAME. The APPNAME is the name of the binary that was run, sans extension and path. For example, you you run /usr/bin/evident.exe, your APPNAME is simply, evident.
+
+  The following locations are searched in the following order:
+
+    - environment variable: SCOPIRA_CONFIG
+    - environment variable: APPNAME_CONFIG (in this context, your APPNAME will be converted to upper case)
+    - file: ~/.scopira/config
+    - file: ~/.scopira/APPNAME.config
+    - file: ~/.scopira/APPNAME.config.saved (this file is created and maintained by Scopira programs)
+    - command line
+
+  \section examplesec An example
+
+  \verbatim
+  ./scopira.exe debug=1
+  echo lib=/path/to/some/libplugin.so >> ~/.scopira/scopira.config
+  export SCOPIRA_CONFIG=mpi=1
+  \endverbatim
+
+*/
+
 #endif
 

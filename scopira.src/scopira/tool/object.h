@@ -621,6 +621,172 @@ class scopira::tool::objrefcounter
 // NDEBUG
 #endif
 
-// INCLUDE HEADER
+/**
+  \page scopirasyspage Scopira Core Reference
+
+  \section introsec Introduction
+
+  Scopira is a C++ API and framework for application development. It is designed to be
+  an efficient, modular and flexible toolkit for the development of graphical,
+  visualization, distributed and/or scientific applications.
+
+  \section userssec User Documention
+
+  Documentation pages userful for users:
+    - \subpage scopiraappspage
+    - \subpage scopiraconfigpage
+
+  \section tutsys Tutorials and Examples
+
+   - \subpage basicexamplespage
+
+  \section subsyssec Subsystem API Reference
+
+  This is the core Scopira library. All applications uses this.
+  It includes no graphical components.
+
+  This library provides reference counting, networking, IO, many utilities,
+  core loop processing, Agents and basic numerics.
+
+  Some sections include:
+    - \subpage scopiracoreloop
+    - \subpage scopiratoolobject
+    - \subpage scopiratooloutput
+    - \subpage scopirabasekitnarray
+    - \subpage scopiraagentssyspage
+
+  Namespaces that comprise this library are: scopira::tool, scopira::core
+  and scopira::basekit
+
+  \subsection othersubsyssec Other subsystems
+
+  Scopira utilizes a modular architecture designed to allow application developers
+  to only use the subsystems that they need. This also reduces the dependancy
+  on unused 3rd party libraries.
+
+  See the "Related Pages" tab for a full list of subsystem manuals.
+
+*/
+
+/**
+  \page scopiratoolobject Core object and reference counting
+
+  \section introsec Introduction
+
+  The base object class is scopira::tool::object.
+  This is the base class for all classes that want to be:
+  
+  - Reference counted via count_ptr
+  - Be serializable (streamable to I/O streams)
+  - Lifecycle debugging methods
+
+  You should almost always inherit from this class virtually. That is:
+
+  \code
+  class myclass : public virtual scopira::tool::object { } ;
+  \endcode
+
+  \section debugsec Debugging
+
+  Each object descendant, during debug builds exposes an scopira::tool::object::is_alive_object
+  method that returns true if the given object is non-null and valid (not destroyed)
+  and matches an internal magic number.
+  This is useful in catching many bad-memory manipulation errors.
+
+  \code
+    assert(is_alive_object());              // assert that "this" is valid
+    assert(someobj->is_alive_object());     // assert that someobj is valid
+  \endcode
+
+  Also while in debug builds, Scopira will notify the user on exit if there
+  are any non-deleted scopira::tool::object decendants in memory.
+  This greatly helps in detecting memory leaks.
+
+  \section countptrsec Reference counting
+
+  Reference counting is the core memory managment style of most Scopira objects
+  in a Scopira application.
+
+  All scopira::tool::object decendant instances can be reference counted, but need not be
+  (ie. they can still be created on the stack, etc). However, once an object
+  is reference counted by atleast one counter, that instance now must be reference
+  counted until its destruction. Reference counted objects may be shared by multiple
+  reference counters. When the last counter releases their count, the object is destroyed.
+
+  scopira::tool::count_ptr is the basic "smart pointer" template class for handling
+  reference counts. This smart pointer provides all the usual pointer like methods,
+  but makes sure to keep a reference count on the object they contain.
+
+  Some sample code:
+
+  \code
+  {
+    scopira::tool::count_ptr<someclass> p, p2;    // initialized to null by default
+
+    p = new p;              // create an instance, it is now reference counted
+    p->somemethods();       // access p
+    p.get();                // returns a pointer to someclass
+    *p;                     // returns a reference to someclass
+
+    p2 = p;                 // two ferences to the same object
+
+    p = 0;                  // won't delete the instance, p2 still has a reference
+    p2 = 0;                 // will delete the instance
+
+    // note that count_ptr's naturally de-reference count their instance upon their
+    // destruction. You need not assign null to them explicitly
+  }
+  \endcode
+
+  All scopira::tool::object descendants can be reference counted by scopira::tool::count_ptr
+  by simply proving your own add_ref() and sub_ref() methods. This is typically only done
+  in the most sepecialized of cases, however.
+*/
+
+/**
+  \page basicexamplespage Basic Examples
+
+  \section hellosec Full Hello World Example
+
+  You may utilize the Scopira data objects and other algorithms without having to code up modules. The simplest example would be like this:
+
+  \code
+  #include <scopira/tool/output.h>
+  #include <scopira/basekit/narray.h>
+  //BBlibs scopira
+  //BBtargets test.exe
+  int main(void)
+  {
+    scopira::basekit::narray<double, 2> thematrix;
+    thematrix.resize(4,4);
+    thematrix.set_all(1);
+    thematrix.diagonal_slice().set_all(5);
+    OUTPUT << thematrix;
+    return 0;
+  }
+  \endcode
+
+  Save this as test.cpp. Run buildboss on it, make then run it:
+
+  \verbatim
+  buildboss test.cpp
+  make
+  ./test.cpp
+  \endverbatim
+
+  Your output should be:
+
+  \verbatim
+  autoinit: default flow for OUTPUT.
+  Matrix, w=4 h=4:
+                0:       1:       2:       3:
+      0:      5.00     1.00     1.00     1.00
+      1:      1.00     5.00     1.00     1.00
+      2:      1.00     1.00     5.00     1.00
+      3:      1.00     1.00     1.00     5.00
+  \endverbatim
+
+*/
+
 #endif
 
