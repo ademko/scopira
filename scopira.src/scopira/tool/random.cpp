@@ -20,6 +20,7 @@
 
 #ifndef PLATFORM_win32
 #include <unistd.h>
+#include <sys/time.h>
 #endif
 
 using namespace scopira::tool;
@@ -30,7 +31,10 @@ int scopira::tool::time_seed(void)
 #ifdef PLATFORM_win32
   return static_cast<int>(::time(0));
 #else
-  return ::time(0) + 77777 * ::getpid();
+  //return ::time(0) + 77777 * ::getpid();
+  struct timeval tv;
+  ::gettimeofday(&tv, 0);
+  return 1000000 * tv.tv_sec + tv.tv_usec;  //just mash em together
 #endif
 }
 

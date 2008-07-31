@@ -1,6 +1,6 @@
 
 /*
- *  Copyright (c) 2002    National Research Council
+ *  Copyright (c) 2002-2007    National Research Council
  *
  *  All rights reserved.
  *
@@ -15,6 +15,7 @@
 #define __INCLUDED_SCOPIRA_TOOL_TEXTFLOW_H__
 
 #include <scopira/tool/flow.h>
+#include <scopira/tool/export.h>
 
 namespace scopira
 {
@@ -45,33 +46,35 @@ class scopira::tool::textiflow : public scopira::tool::itflow_i
     /**
      * constrcutor
      *
-     * @param is the input stream to use. this object will "own" it
+     * @param doref should this class reference count in
+     * @param in the input stream to use. this object will "own" it
      * @author Aleksander Demko
      */
-    textiflow(bool doref, iflow_i* in);
+    SCOPIRA_EXPORT textiflow(bool doref, iflow_i* in);
     /// destructor
-    virtual ~textiflow(void);
+    SCOPIRA_EXPORT virtual ~textiflow(void);
 
     /// are we in a failed state?
-    virtual bool failed(void) const;
+    SCOPIRA_EXPORT virtual bool failed(void) const;
 
     /// read raw block data, returns num read in
-    virtual size_t read(byte_t* _buf, size_t _maxsize);
+    SCOPIRA_EXPORT virtual size_t read(byte_t* _buf, size_t _maxsize);
 
-    virtual bool read_bool(bool&);
-    virtual bool read_char(char&);
-    virtual bool read_short(short&);
-    virtual bool read_int(int&);
-    virtual bool read_size_t(size_t&);
-    virtual bool read_long(long&);
-    virtual bool read_float(float&);
-    virtual bool read_double(double&);
-    virtual bool read_string(std::string&);
+    SCOPIRA_EXPORT virtual bool read_bool(bool&);
+    SCOPIRA_EXPORT virtual bool read_char(char&);
+    SCOPIRA_EXPORT virtual bool read_short(short&);
+    SCOPIRA_EXPORT virtual bool read_int(int&);
+    SCOPIRA_EXPORT virtual bool read_size_t(size_t&);
+    SCOPIRA_EXPORT virtual bool read_int64_t(int64_t&);
+    SCOPIRA_EXPORT virtual bool read_long(long&);
+    SCOPIRA_EXPORT virtual bool read_float(float&);
+    SCOPIRA_EXPORT virtual bool read_double(double&);
+    SCOPIRA_EXPORT virtual bool read_string(std::string&);
 
     /// opens a new link
-    void open(iflow_i* in);
+    SCOPIRA_EXPORT void open(iflow_i* in);
     /// close the current link
-    void close(void);
+    SCOPIRA_EXPORT void close(void);
 };
 
 /**
@@ -90,33 +93,35 @@ class scopira::tool::textoflow : public scopira::tool::otflow_i
     /**
      * constrcutor
      *
-     * @param is the output stream to use. this object will "own" it
+     * @param doref should this class reference count in
+     * @param in the output stream to use. this object will "own" it
      * @author Aleksander Demko
      */
-    textoflow(bool doref, oflow_i* out);
+    SCOPIRA_EXPORT textoflow(bool doref, oflow_i* out);
     /// destructor
-    virtual ~textoflow(void);
+    SCOPIRA_EXPORT virtual ~textoflow(void);
       
     /// are we in a failed state?
-    virtual bool failed(void) const;
+    SCOPIRA_EXPORT virtual bool failed(void) const;
 
     /// write a raw block of data
-    virtual size_t write(const byte_t* _buf, size_t _size);
+    SCOPIRA_EXPORT virtual size_t write(const byte_t* _buf, size_t _size);
 
-    virtual void write_bool(bool val);
-    virtual void write_char(char val);
-    virtual void write_short(short val);
-    virtual void write_int(int val);
-    virtual void write_size_t(size_t val);
-    virtual void write_long(long val);
-    virtual void write_float(float val);
-    virtual void write_double(double val);
-    virtual void write_string(const std::string& val);
+    SCOPIRA_EXPORT virtual void write_bool(bool val);
+    SCOPIRA_EXPORT virtual void write_char(char val);
+    SCOPIRA_EXPORT virtual void write_short(short val);
+    SCOPIRA_EXPORT virtual void write_int(int val);
+    SCOPIRA_EXPORT virtual void write_size_t(size_t val);
+    SCOPIRA_EXPORT virtual void write_int64_t(int64_t val);
+    SCOPIRA_EXPORT virtual void write_long(long val);
+    SCOPIRA_EXPORT virtual void write_float(float val);
+    SCOPIRA_EXPORT virtual void write_double(double val);
+    SCOPIRA_EXPORT virtual void write_string(const std::string& val);
 
     /// opens a new link
-    void open(oflow_i* out);
+    SCOPIRA_EXPORT void open(oflow_i* out);
     /// close the current link
-    void close(void);
+    SCOPIRA_EXPORT void close(void);
 };
 
 #endif

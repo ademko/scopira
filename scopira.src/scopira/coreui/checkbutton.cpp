@@ -57,8 +57,9 @@ bool checkbutton::is_checked(void) const
 
 void checkbutton::init_gui(const char *label)
 {
-  // make my label
-  dm_widget = gtk_check_button_new_with_label((label ? label : "label"));
+  // make my label (we'll always have a label, just incase they do a set_label after using the (void) constructor
+  dm_widget = gtk_check_button_new_with_label(label ? label : "");
+
   g_signal_connect(G_OBJECT(dm_widget), "toggled", G_CALLBACK(h_on_toggle), this);
   
   // call ancestor method

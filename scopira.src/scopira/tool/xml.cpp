@@ -1,6 +1,6 @@
 
 /*
- *  Copyright (c) 2003    National Research Council
+ *  Copyright (c) 2003-2007    National Research Council
  *
  *  All rights reserved.
  *
@@ -17,6 +17,9 @@
 #include <scopira/tool/util.h>
 
 #include <vector>
+
+//BBlibs libxml-2.0 scopira
+//BBtargets libscopiraxml.so
 
 using namespace scopira::tool;
 
@@ -44,6 +47,24 @@ void xml_doc::init(const std::string &rootnodename)
   assert(nd);
   nd = xmlDocSetRootElement(dm_doc, nd);
   assert(!nd);
+}
+
+void xml_doc::add_pi(const std::string &name, const std::string &content)
+{
+  xmlNodePtr nd;
+ 
+  nd = xmlNewDocPI(dm_doc, reinterpret_cast<const xmlChar*>(name.c_str()),
+     reinterpret_cast<const xmlChar*>(content.c_str()));
+  assert(nd);
+  //nd = xmlAddChild(reinterpret_cast<xmlNodePtr>(dm_doc), nd);
+  nd = xmlAddPrevSibling(xmlDocGetRootElement(dm_doc), nd);
+  assert(nd);
+}
+
+void xml_doc::load_ptr(xmlDocPtr newdoc)
+{
+  clear();
+  dm_doc = newdoc;
 }
 
 bool xml_doc::load_file(const std::string &filename)
@@ -287,6 +308,25 @@ xml_node xml_node::add_child(const std::string &name)
   return xml_node(nd);
 }
 
+xml_node xml_node::add_comment(const std::string &comment_contents)
+{
+  xmlNodePtr nd;
+ 
+  nd = xmlNewComment(reinterpret_cast<const xmlChar*>(comment_contents.c_str()));
+  assert(nd);
+  nd = xmlAddChild(dm_node, nd);
+  assert(nd);
+
+  return xml_node(nd);
+}
+
+void xml_node::clear_this(void)
+{
+  assert(is_valid());
+  xmlUnlinkNode(dm_node);
+  xmlFreeNode(dm_node);
+}
+
 void xml_node::add_attrib(const std::string &key, const std::string &val)
 {
  
@@ -308,6 +348,18 @@ xml_node xml_node::add_content_child(const std::string &content)
   assert(nd);
 
   return xml_node(nd);
+}
+
+void xml_node::clear_content_children(void)
+{
+  while (true) {
+    xml_node n = get_first_child_type(text_c);
+
+    if (!n.is_valid())
+      return; // done
+    xmlUnlinkNode(n.dm_node);
+    xmlFreeNode(n.dm_node);
+  }
 }
 
 const char * xml_node::get_text_c_content(void) const
@@ -445,8 +497,4 @@ int main(void)
   return 0;
 }
 #endif
-
-
-//BBlibs libxml-2.0
-//BBtargets libscopira.so
 

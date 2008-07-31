@@ -1,6 +1,6 @@
 
 /*
- *  Copyright (c) 2005    National Research Council
+ *  Copyright (c) 2005-2008    National Research Council
  *
  *  All rights reserved.
  *
@@ -15,6 +15,7 @@
 
 #include <scopira/tool/output.h>
 #include <scopira/tool/objflowloader.h>
+#include <scopira/tool/time.h>
 
 //BBtargets libscopira.so
 
@@ -31,23 +32,35 @@ using namespace scopira::agent;
 send_msg::send_msg(scopira::agent::task_context &ctx, scopira::tool::uuid dest)
   : bin64oflow(true, 0), dm_src(ctx.dm_peers[ctx.dm_myindex]), dm_dest(dest)
 {
+  assert(!dest.is_zero() && "[send_msg cannt take a zero-uuid]\n");
+  // broadcast not supported
+  // perhaps do a list-based or query based broadcast system?
+  // similar to the service broadcast, or remove this all together and stick
+  // with the simple list based system
+
   dm_buf = new scopira::tool::bufferflow;
   dm_buf->reserve(1024*32);
 
   open(dm_buf.get());
 
-  m_sendingbcast = false;
+  dm_service_bcast = false;
 }
 
 send_msg::send_msg(scopira::agent::task_context &ctx, int dest)
   : bin64oflow(true, 0), dm_src(ctx.dm_peers[ctx.dm_myindex]), dm_dest(dest == -1 ? scopira::tool::uuid() : ctx.dm_peers[dest])
 {
+  assert(dest>=0 && dest<ctx.dm_peers.size() && "[bad dest index sent to send_msg]\n");
+  // broadcast not supported
+  // perhaps do a list-based or query based broadcast system?
+  // similar to the service broadcast, or remove this all together and stick
+  // with the simple list based system
+
   dm_buf = new scopira::tool::bufferflow;
   dm_buf->reserve(1024*32);
 
   open(dm_buf.get());
 
-  m_sendingbcast = false;
+  dm_service_bcast = false;
 }
 
 send_msg::send_msg(scopira::agent::task_context &ctx, const service_broadcast &targets)
@@ -58,13 +71,13 @@ send_msg::send_msg(scopira::agent::task_context &ctx, const service_broadcast &t
 
   open(dm_buf.get());
 
-  m_sendingbcast = true;
+  dm_service_bcast = true;
 }
 
 send_msg::~send_msg()
 {
   // ok, now the send thing
-  if (m_sendingbcast)
+  if (dm_service_bcast)
     agent_i::instance()->send_msg_bcast(dm_src, dm_dest, dm_buf.get());
   else
     agent_i::instance()->send_msg(dm_src, dm_dest, dm_buf.get());
@@ -91,7 +104,14 @@ recv_msg::recv_msg(scopira::agent::task_context &ctx, scopira::tool::uuid src)
 recv_msg::recv_msg(scopira::agent::task_context &ctx, int src)
   : bin64iflow(true, 0), dm_dest(ctx.dm_peers[ctx.dm_myindex])
 {
-  agent_i::instance()->recv_msg(uuid_query(src == -1 ? scopira::tool::uuid() : ctx.dm_peers[src]),
+  uuid_query q;
+
+  if (src == -1)
+    q.match_group(ctx.dm_peers);
+  else
+    q.match_one(ctx.dm_peers[src]);
+
+  agent_i::instance()->recv_msg(q,
       dm_lastsrc, dm_dest, dm_realbuf);
 
   assert(dm_realbuf.get());
@@ -177,16 +197,15 @@ task_context::~task_context()
     dm_server_link->unreg_context(dm_peers[dm_myindex]);
 }
 
-void task_context::enable_service(scopira::tool::uuid serviceid, bool enable)
+int task_context::find_services(scopira::tool::uuid &serviceid, scopira::basekit::narray<scopira::tool::uuid> &out)
 {
-  assert(!dm_peers[dm_myindex].is_zero());
-  agent_i::instance()->set_service(dm_peers[dm_myindex], serviceid, enable);
+  return agent_i::instance()->find_services(serviceid, out);
 }
 
-scopira::tool::uuid task_context::launch_task(const std::string &classname)
+scopira::tool::uuid task_context::launch_task(const std::string &classname, scopira::tool::uuid where)
 {
   assert(objflowloader::instance()->has_typeinfo(classname));
-  return agent_i::instance()->launch_task(objflowloader::instance()->get_typeinfo(classname));
+  return agent_i::instance()->launch_task(objflowloader::instance()->get_typeinfo(classname), where);
 }
 
 scopira::tool::uuid task_context::launch_group(int numps, const std::string &classname)
@@ -197,7 +216,7 @@ scopira::tool::uuid task_context::launch_group(int numps, const std::string &cla
 
 void task_context::launch_slaves(int numps, const std::string &classname)
 {
-  assert(objflowloader::instance()->has_typeinfo(classname));
+  assert(objflowloader::instance()->has_typeinfo(classname) && "[Given launch_slaves() class string is not registered]");
   launch_slaves_impl(numps, objflowloader::instance()->get_typeinfo(classname));
 }
 
@@ -208,12 +227,44 @@ bool task_context::wait_msg(scopira::tool::uuid src, int timeout)
 
 bool task_context::wait_msg(int src, int timeout)
 {
-  return agent_i::instance()->wait_msg(uuid_query(src == -1 ? scopira::tool::uuid() : dm_peers[src]), dm_lastsrc, dm_peers[dm_myindex], timeout);
+  uuid_query q;
+
+  if (src == -1)
+    q.match_group(dm_peers);
+  else
+    q.match_one(dm_peers[src]);
+
+  return agent_i::instance()->wait_msg(q, dm_lastsrc, dm_peers[dm_myindex], timeout);
 }
 
 bool task_context::wait_msg(const uuid_query &Q, int timeout)
 {
   return agent_i::instance()->wait_msg(Q, dm_lastsrc, dm_peers[dm_myindex], timeout);
+}
+
+bool task_context::has_msg(scopira::tool::uuid src)
+{
+  // -7734 is the "has_msg" code
+  return agent_i::instance()->wait_msg(uuid_query(src), dm_lastsrc, dm_peers[dm_myindex], -7734);
+}
+
+bool task_context::has_msg(int src)
+{
+  uuid_query q;
+
+  if (src == -1)
+    q.match_group(dm_peers);
+  else
+    q.match_one(dm_peers[src]);
+
+  // -7734 is the "has_msg" code
+  return agent_i::instance()->wait_msg(q, dm_lastsrc, dm_peers[dm_myindex], -7734);
+}
+
+bool task_context::has_msg(const uuid_query &Q)
+{
+  // -7734 is the "has_msg" code
+  return agent_i::instance()->wait_msg(Q, dm_lastsrc, dm_peers[dm_myindex], -7734);
 }
 
 void task_context::launch_slaves_impl(int numtotalps, const std::type_info &nfo)
@@ -235,20 +286,20 @@ int task_context::get_index(scopira::tool::uuid id) const
     if (dm_peers[x] == id)
       return x;
 
-  assert(false && "[bad id fed to get_index()]\n");
   return -1;
 }
 
 void task_context::barrier_group(void)
 {
+  // this stuff should be out of band or something in the future
   if (get_index() == 0) {
     // wait for each slaves ok msg
-    for (int x=1; x<get_index_size(); ++x) {
+    for (int x=1; x<get_group_size(); ++x) {
       recv_msg r(*this, x);
       int dummy;
       r.read_int(dummy);
     }
-    for (int x=1; x<get_index_size(); ++x) {
+    for (int x=1; x<get_group_size(); ++x) {
       send_msg s(*this, x);
       s.write_int(11);
     }
@@ -270,8 +321,64 @@ void task_context::barrier_group(void)
 
 void task_context::wait_group(void)
 {
-  for (int x=1; x<get_index_size(); ++x)
+  for (int x=1; x<get_group_size(); ++x)
     if (x != get_index())
       wait_task(dm_peers[x]);
+}
+
+//
+//
+// run_task
+//
+//
+
+
+/**
+ * This function will run the given task by calling
+ * it's run() method. it will properly analysis its
+ * return codes and possible call the run method repeadedly
+ * until the task is fininished or killed.
+ *
+ * @author Aleksander Demko
+ */
+void scopira::agent::run_task(scopira::agent::task_context &ctx, scopira::agent::agent_task_i &t)
+{
+  int retcode;
+  chrono timer;
+  double nexttime = 0;
+  bool ontime;
+
+  while (true) {
+    retcode = t.run(ctx);
+
+    // check if they want to quit
+    if (retcode == 0)
+      return;
+
+    // check if they want an immediate rerun
+    if ((retcode & 0xFF) == agent_task_i::run_again_0_c)
+      continue;
+
+    ontime = true;
+    switch (retcode & 0xFF) { // lower 8 bits are for run next
+      case agent_task_i::run_again_1_c: nexttime = 1; break;
+      case agent_task_i::run_again_10_c: nexttime = 10; break;
+      case agent_task_i::run_again_100_c: nexttime = 100; break;
+      default: ontime = false; break;
+    }
+
+    // ok, guess we're doing more complex waiting
+    if (ontime) {
+      timer.stop();
+      timer.reset();
+      timer.start();
+    }
+    while (true) {
+      if (ctx.wait_msg(uuid(), 1000) && retcode & agent_task_i::run_onmsg_c)
+        break; // a msg came that the task was waiting for. break this inner loop and start the next run
+      if (ontime && timer.get_running_time() >= nexttime)
+        break;  // time out happened
+    }//while (inner/waiting)
+  }//while (outter)
 }
 

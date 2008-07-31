@@ -37,83 +37,18 @@ using namespace pakit;
 //
 //
 
-static scopira::core::register_view<calc_distance_via_euclidean_v> r1(
-    "pakit::calc_distance_via_euclidean_v", "pakit::patterns_m", "RDP Calc Distance/Euclidean",
-    scopira::core::no_uimode_c);
-static scopira::core::register_view<calc_distance_via_cityblock_v> r2(
-    "pakit::calc_distance_via_cityblock_v", "pakit::patterns_m", "RDP Calc Distance/City Block",
-    scopira::core::no_uimode_c);
-static scopira::core::register_view<calc_distance_via_max_distance_v> r3(
-    "pakit::calc_distance_via_max_distance_v", "pakit::patterns_m", "RDP Calc Distance/Max Distance",
-    scopira::core::no_uimode_c);
 //Hide this for now, as the new system will use more patterns_m
-static scopira::core::register_view<rdp_space_v> r4(
+static scopira::core::register_view<rdp_space_v> r1(
     "pakit::rdp_space_v", "pakit::distances_m", "Calc RDP Projections/Old style",
     scopira::core::no_uimode_c);
-static scopira::core::register_view<rdp_space_patterns_v> r4B(
+static scopira::core::register_view<rdp_space_patterns_v> r1B(
     "pakit::rdp_space_patterns_v", "pakit::distances_m", "Calc RDP Projections/Into a data set",
     scopira::core::windowonly_uimode_c);
-static scopira::core::register_view<rdp_scatterplot_space_patterns_v> r4C(
+static scopira::core::register_view<rdp_scatterplot_space_patterns_v> r1C(
     "pakit::rdp_scatterplot_space_patterns_v", "pakit::distances_m", "Calc RDP Projections/Pair of reference pairs (scatterplot-style), into a data set",
     scopira::core::windowonly_uimode_c);
-static scopira::core::register_view<rdp_2d_plot_v> r5(
+static scopira::core::register_view<rdp_2d_plot_v> r2(
     "pakit::2d_plot_v", "pakit::rdp_2d_m", "View RDP Projection");
-
-//
-//
-// calc_distance_matrix_base
-//
-//
-
-void calc_distance_matrix_base::bind_model(scopira::core::model_i *sus)
-{
-  if (!sus)
-    return;
-
-  patterns_m *pat;
-  count_ptr<distances_m> output;
-  std::string desc;
-
-  pat = dynamic_cast<patterns_m*>(sus);
-  assert(pat);
-
-  output = new distances_m;
-  output->pm_array = new narray_o<double,2>;
-
-  // do the calculation via the virtual method
-  desc = calc_distance_matrix(pat->pm_data->all_slice(), output->pm_array.ref());
-
-  output->pm_patterns_link = pat;
-  output->set_title("Distance Matrix (" + desc + ")");
-  output->notify_views(this);
-
-  // add it to the catalog, if any
-  if (pat->get_project()) {
-    pat->get_project()->add_model(pat, output.get());
-    pat->get_project()->notify_views(this);
-  }
-}
-
-std::string calc_distance_via_euclidean_v::calc_distance_matrix(const scopira::basekit::nslice<double,2> &patterns,
-      scopira::basekit::narray<double,2> &outmatrix)
-{
-  pakit::calc_distance_matrix(patterns, outmatrix, euclidean_distance);
-  return "Euclidean";
-}
-
-std::string calc_distance_via_cityblock_v::calc_distance_matrix(const scopira::basekit::nslice<double,2> &patterns,
-      scopira::basekit::narray<double,2> &outmatrix)
-{
-  pakit::calc_distance_matrix(patterns, outmatrix, cityblock_distance);
-  return "City Block";
-}
-
-std::string calc_distance_via_max_distance_v::calc_distance_matrix(const scopira::basekit::nslice<double,2> &patterns,
-      scopira::basekit::narray<double,2> &outmatrix)
-{
-  pakit::calc_distance_matrix(patterns, outmatrix, max_distance);
-  return "Max Distance";
-}
 
 //
 //

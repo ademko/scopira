@@ -27,22 +27,27 @@ namespace scopira
 }
 
 /**
- * iterator for islice
+ * Iterator for islice
  * @author Aleksander Demko
  */ 
 template <class T> class scopira::basekit::islice_vec_iterator_g
 {
   public:
+    /// the generic data type T
     typedef T data_type;
   private:
     T * const * dm_ptr;
   public:
     /// ctor
     islice_vec_iterator_g(T * const * ptr) : dm_ptr(ptr) { }
+    /// dereference accessor
     const T & operator *(void) const { return **dm_ptr; }
+    /// equality operator
     bool operator ==(const islice_vec_iterator_g<T> &rhs) const { return dm_ptr == rhs.dm_ptr; }
+    /// inequality operator
     bool operator !=(const islice_vec_iterator_g<T> &rhs) const { return dm_ptr != rhs.dm_ptr; }
 
+    /// increment operator
     islice_vec_iterator_g<T>& operator++(void) { dm_ptr++; return *this; }
 };
 
@@ -53,16 +58,21 @@ template <class T> class scopira::basekit::islice_vec_iterator_g
 template <class T> class scopira::basekit::const_islice_vec_iterator_g
 {
   public:
+    /// the generic data type T
     typedef T data_type;
   private:
     const T * const * dm_ptr;
   public:
     /// ctor
     const_islice_vec_iterator_g(const T * const * ptr) : dm_ptr(ptr) { }
+    /// dereference accessor
     const T & operator *(void) const { return **dm_ptr; }
+    /// equality operator
     bool operator ==(const const_islice_vec_iterator_g<T> &rhs) const { return dm_ptr == rhs.dm_ptr; }
+    /// inequality operator
     bool operator !=(const const_islice_vec_iterator_g<T> &rhs) const { return dm_ptr != rhs.dm_ptr; }
 
+    /// increment operator
     const_islice_vec_iterator_g<T>& operator++(void) { dm_ptr++; return *this; }
 };
 
@@ -73,10 +83,14 @@ template <class T> class scopira::basekit::const_islice_vec_iterator_g
  */
 template <class T> class scopira::basekit::islice_vec_g : private scopira::tool::basic_array<T*>
 {
-  public:
+  private:
     typedef scopira::tool::basic_array<T*> parent_type;
+  public:
+    /// the generic data type T
     typedef T data_type;
+    /// the interator type
     typedef islice_vec_iterator_g<T> iterator;
+    /// the const_interator type
     typedef const_islice_vec_iterator_g<T> const_iterator;
 
   public:

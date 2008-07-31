@@ -18,6 +18,7 @@
 #include <scopira/tool/util.h>
 #include <scopira/tool/archiveflow.h>
 #include <scopira/core/register.h>
+#include <scopira/core/loop.h>
 #include <scopira/coreui/viewmenu.h>
 #include <scopira/coreui/layout.h>
 
@@ -116,8 +117,11 @@ void project_window_base::h_menu(GtkWidget *widget, gpointer ptr)
       break;
     case cmd_open_c:
       {
-        filewindow *fwin = new filewindow("Open Project", "*.prj",cmd_open_file);
+        filewindow *fwin = new filewindow("Open Project", "Scopira Projects (.prj)", "*.prj",cmd_open_file_c);
+        //filewindow *fwin = new filewindow("Open Project", cmd_open_file_c);
         fwin->set_filename_reactor(h_filename, here);
+        if (basic_loop::instance()->has_config("last_project.filename"))
+          fwin->set_filename(basic_loop::instance()->get_config("last_project.filename"));
         fwin->show_all();
       }
       break;
@@ -129,7 +133,8 @@ void project_window_base::h_menu(GtkWidget *widget, gpointer ptr)
       }//else, fall through and do a save ass...
     case cmd_save_as_c:
       {
-        filewindow *fwin = new filewindow("Save Project As", "*.prj",cmd_save_file);
+        filewindow *fwin = new filewindow("Save Project As", "Scopira Projects (.prj)", "*.prj",cmd_save_file_c);
+        //filewindow *fwin = new filewindow("Save Project As", cmd_save_file_c);
         fwin->set_filename_reactor(h_filename, here);
         fwin->show_all();
       }
@@ -182,6 +187,8 @@ bool project_window_base::h_filename(scopira::coreui::filewindow *source, const 
           newwin->set_title(filename);
           newprj->set_title(filename);
         }
+        // finally, save the filename in the basic_loop config system
+        basic_loop::instance()->set_config_save("last_project.filename", filename);
         return true;
       }
       break;

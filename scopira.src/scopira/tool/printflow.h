@@ -1,6 +1,6 @@
 
 /*
- *  Copyright (c) 2002    National Research Council
+ *  Copyright (c) 2002-2007    National Research Council
  *
  *  All rights reserved.
  *
@@ -74,6 +74,7 @@ class scopira::tool::printiflow : public scopira::tool::itflow_i
     SCOPIRA_EXPORT virtual bool read_short(short&);
     SCOPIRA_EXPORT virtual bool read_int(int&);
     SCOPIRA_EXPORT virtual bool read_size_t(size_t&);
+    SCOPIRA_EXPORT virtual bool read_int64_t(int64_t&);
     SCOPIRA_EXPORT virtual bool read_long(long&);
     SCOPIRA_EXPORT virtual bool read_float(float&);
     SCOPIRA_EXPORT virtual bool read_double(double&);
@@ -126,7 +127,8 @@ class scopira::tool::printoflow : public scopira::tool::otflow_i
     /**
      * constrcutor
      *
-     * @param is the output stream to use. this object will "own" it
+     * @param doref should this class reference count in
+     * @param in the output stream to use. this object will "own" it
      * @author Aleksander Demko
      */
     SCOPIRA_EXPORT printoflow(bool doref, oflow_i* in);
@@ -144,6 +146,7 @@ class scopira::tool::printoflow : public scopira::tool::otflow_i
     SCOPIRA_EXPORT virtual void write_short(short val);
     SCOPIRA_EXPORT virtual void write_int(int val);
     SCOPIRA_EXPORT virtual void write_size_t(size_t val);
+    SCOPIRA_EXPORT virtual void write_int64_t(int64_t val);
     SCOPIRA_EXPORT virtual void write_long(long val);
     SCOPIRA_EXPORT virtual void write_float(float val);
     SCOPIRA_EXPORT virtual void write_double(double val);

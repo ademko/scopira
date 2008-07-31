@@ -38,25 +38,22 @@ plotter_options::plotter_options(size_t numplot, size_t plotlen)
   : dm_name("2D Plot"), dm_xlabel("X"), dm_ylabel("Y")
 {
   dm_backcol = 0;
-  dm_freey = true;
+  dm_scaling_mode = scale_auto_c;
   dm_style = "line_plot";
-  dm_ymin = dm_ymax = 0;
 }
 
 plotter_options::plotter_options(const plotter_options &src)
   : dm_name(src.dm_name), dm_xlabel(src.dm_xlabel), dm_ylabel(src.dm_ylabel)
 {
   dm_backcol = src.dm_backcol;
-  dm_ymin = src.dm_ymin;
-  dm_ymax = src.dm_ymax;
-  dm_freey = src.dm_freey;
+  dm_scaling_mode = src.dm_scaling_mode;
   dm_style = "line_plot";
 }
 
 bool plotter_options::load(scopira::tool::iobjflow_i &in)
 {
-  return  in.read_string(dm_name) && in.read_string(dm_xlabel) && in.read_string(dm_ylabel)
-    && in.read_double(dm_ymin) && in.read_double(dm_ymax) && in.read_bool(dm_freey);
+  return  in.read_string(dm_name) && in.read_string(dm_xlabel) 
+          && in.read_string(dm_ylabel) && in.read_int(dm_scaling_mode);
 }
 
 void plotter_options::save(scopira::tool::oobjflow_i &out) const
@@ -64,9 +61,7 @@ void plotter_options::save(scopira::tool::oobjflow_i &out) const
   out.write_string(dm_name);
   out.write_string(dm_xlabel);
   out.write_string(dm_ylabel);
-  out.write_double(dm_ymin);
-  out.write_double(dm_ymax);
-  out.write_bool(dm_freey);
+  out.write_int(dm_scaling_mode);
 }
 
 void plotter_options::set_name(const std::string &name)
@@ -84,18 +79,10 @@ void plotter_options::set_ylabel(const std::string &lab)
   dm_ylabel = lab;
 }
 
-void plotter_options::set_freey(void)
+void plotter_options::set_scaling_mode(int mode)
 {
-  dm_freey = true;
+  dm_scaling_mode = mode;
 }
-
-void plotter_options::set_yaxis_range(double ymin, double ymax)
-{
-  dm_freey = false;
-  dm_ymin = ymin;
-  dm_ymax = ymax;
-}
-
 
 ///
 /// plotter_properties_dialog
@@ -123,6 +110,7 @@ void plotter_properties_dialog::init_gui(void)
   
   dm_tab = new tab_layout;
   count_ptr<grid_layout> label_grid,range_grid,color_grid,lines_grid;
+  count_ptr<box_layout> box;
   
   dialog::init_gui();
 
@@ -176,25 +164,40 @@ void plotter_properties_dialog::init_gui(void)
   range_grid = new grid_layout(2,5);
   dm_tab->add_widget(range_grid.get(), "Ranges");
    
+  box = new box_layout(true,false);
+  range_grid->add_widget(box.get(),0,0,1,1,false,false);
+  dm_scaling_buttons = new radiobutton();
+  dm_scaling_buttons->add_selection(scale_auto_c, "Auto Size");
+  dm_scaling_buttons->add_selection(scale_to_max_c, "Lock to overall min and max");
+  dm_scaling_buttons->add_selection(scale_user_c, "User set:");
+  dm_scaling_buttons->set_radiobutton_reactor(this);
+  box->add_widget(dm_scaling_buttons.get(),true,false);
+
   dm_xmin = new entry();
-  range_grid->add_widget(new label("X Min:"),0,0,1,1,false,false);
-  range_grid->add_widget(dm_xmin.get(),1,0,1,1,false,false);
+  // Added one to all the y values from here...
+  range_grid->add_widget(new label("X Min:"),0,1,1,1,false,false);
+  range_grid->add_widget(dm_xmin.get(),1,1,1,1,false,false);
   
   dm_xmax = new entry();
-  range_grid->add_widget(new label("X Max:"),0,1,1,1,false,false);
-  range_grid->add_widget(dm_xmax.get(),1,1,1,1,false,false);
+  range_grid->add_widget(new label("X Max:"),0,2,1,1,false,false);
+  range_grid->add_widget(dm_xmax.get(),1,2,1,1,false,false);
   
   dm_ymin = new entry();
-  range_grid->add_widget(new label("Y Min:"),0,2,1,1,false,false);
-  range_grid->add_widget(dm_ymin.get(), 1,2,1,1,false,false);
+  range_grid->add_widget(new label("Y Min:"),0,3,1,1,false,false);
+  range_grid->add_widget(dm_ymin.get(), 1,3,1,1,false,false);
   
   dm_ymax = new entry();
-  range_grid->add_widget(new label("Y Max:"),0,3,1,1,false,false);
-  range_grid->add_widget(dm_ymax.get(),1,3,1,1,false,false);
-  
-  dm_auto_size = new checkbutton("Auto Size");
-  dm_auto_size->set_checkbutton_reactor(this);
-  range_grid->add_widget(dm_auto_size.get(),0,4,1,1,true,false);
+  range_grid->add_widget(new label("Y Max:"),0,4,1,1,false,false);
+  range_grid->add_widget(dm_ymax.get(),1,4,1,1,false,false);
+  // ...to here
+  dm_xmin->set_sensitive(false);
+  dm_xmax->set_sensitive(false);
+  dm_ymin->set_sensitive(false);
+  dm_ymax->set_sensitive(false);
+
+  // This has an effect on the min and max entries above, so set here now
+  // that they are initialized!
+  dm_scaling_buttons->set_selection(scale_auto_c);
 
   lines_grid = new grid_layout(2,7);
   dm_tab->add_widget(lines_grid.get(), "Lines");
@@ -264,27 +267,6 @@ void plotter_properties_dialog::react_checkbutton(scopira::coreui::checkbutton *
         dm_colors[i].get()->set_sensitive(true);
     }
   } 
-  // auto ranges is checked
-  else if (source == dm_auto_size.get()) {
-    if (val) {
-      // auto ranges turned on
-      set_xmin(dm_xmin_real);
-      set_xmax(dm_xmax_real);
-      set_ymin(dm_ymin_real);
-      set_ymax(dm_ymax_real);
-      dm_xmin->set_sensitive(false);
-      dm_xmax->set_sensitive(false);
-      dm_ymin->set_sensitive(false);
-      dm_ymax->set_sensitive(false);
-    } 
-    else {
-      // auto ranges turned off
-      dm_xmin->set_sensitive(true);
-      dm_xmax->set_sensitive(true);
-      dm_ymin->set_sensitive(true);
-      dm_ymax->set_sensitive(true);
-    }
-  } 
   // auto lines is checked
   else if (source == dm_auto_line.get()) {
     if (val) {
@@ -336,6 +318,35 @@ void plotter_properties_dialog::react_colorbutton(scopira::uikit::colorbutton *s
   dm_colorwin->set_selected_color(source->get_gdk_color());
 }
 
+void plotter_properties_dialog::react_radiobutton(scopira::coreui::radiobutton *source, int selection)
+{
+  switch(selection) {
+    case scale_auto_c:
+      // auto ranges turned on
+      set_xmin(dm_xmin_real);
+      set_xmax(dm_xmax_real);
+      set_ymin(dm_ymin_real);
+      set_ymax(dm_ymax_real);
+      dm_xmin->set_sensitive(false);
+      dm_xmax->set_sensitive(false);
+      dm_ymin->set_sensitive(false);
+      dm_ymax->set_sensitive(false);
+    case scale_to_max_c:
+      // lock to min, max
+      dm_xmin->set_sensitive(false);
+      dm_xmax->set_sensitive(false);
+      dm_ymin->set_sensitive(false);
+      dm_ymax->set_sensitive(false);
+      break;
+    case scale_user_c:
+      // user settable
+      // auto ranges turned off
+      dm_xmin->set_sensitive(true);
+      dm_xmax->set_sensitive(true);
+      dm_ymin->set_sensitive(true);
+      dm_ymax->set_sensitive(true);
+  }
+}
 
 int plotter_properties_dialog::get_color(int c) const
 {
@@ -431,6 +442,11 @@ narray<int> plotter_properties_dialog::get_line_colors(void) const
   return colors;
 }
 
+int plotter_properties_dialog::get_scaling_method(void) const
+{
+  int method = dm_scaling_buttons->get_selection();
+  return method;
+}
 
 void plotter_properties_dialog::set_color(int c,int col)
 {
@@ -513,6 +529,11 @@ void plotter_properties_dialog::set_line_colors(const narray<int> &colors)
   dm_colors[plot_col6].get()->set_packed_color(colors[5]);
 }
 
+void plotter_properties_dialog::set_scaling_method(int the_method)
+{
+  dm_scaling_buttons->set_selection(the_method);
+}
+
 void plotter_properties_dialog::set_default_range(double xmin, double xmax, double ymin, double ymax)
 {
   dm_xmin_real = xmin;
@@ -551,9 +572,8 @@ plotter_options_bar::plotter_options_bar(size_t numplots, size_t plotlen)
   dm_xlabel = "X";
   dm_ylabel = "Y";
   dm_backcol = 0;
-  dm_freey = true;
+  dm_scaling_mode = scale_auto_c;
   dm_style = "bar_plot";
-  dm_ymin = dm_ymax = 0;  
 }
 
 plotter_options_bar::plotter_options_bar(const plotter_options_bar &src)
@@ -562,8 +582,7 @@ plotter_options_bar::plotter_options_bar(const plotter_options_bar &src)
   dm_xlabel = src.dm_xlabel;
   dm_ylabel = src.dm_ylabel;
   dm_backcol = src.dm_backcol;
-  dm_ymin = src.dm_ymin;
-  dm_freey = src.dm_freey;
+  dm_scaling_mode = src.dm_scaling_mode;
   dm_style = "bar_plot";
 }
 
@@ -594,6 +613,8 @@ plotter::plotter(bool scroll, bool zoom)
   dm_xdigits = 0;
   dm_ydigits = 2;
 
+  dm_reactor = 0;
+
   // draw the plot
   init_gui();
 }
@@ -614,6 +635,9 @@ plotter::plotter(int)
   dm_ydigits = 2;
   dm_pad_percent = 0;
   dm_ymin = dm_ymax = 0;
+  dm_scaling_method = scale_auto_c;
+
+  dm_reactor = 0;
 }
 
 
@@ -674,6 +698,12 @@ void plotter::set_back_color(int col)
 
 void plotter::set_border_color(int col)
 {
+  if ( col == dm_bordercol )
+    return;
+
+  if ( dm_reactor ) 
+    dm_reactor->border_colour_changed( this, col );
+  
   dm_bordercol = col;
 }
 
@@ -745,6 +775,11 @@ void plotter::set_line_colors(narray<int> colors)
     dm_plotcols[i] = colors[i];
 }
 
+void plotter::set_scaling_method(int the_method)
+{
+  if (!dm_meta.is_null()) dm_meta->set_scaling_mode(the_method);
+}
+
 void plotter::set_dialog_properties(void)
 {
   // make sure we have a window
@@ -774,6 +809,7 @@ void plotter::set_dialog_properties(void)
     dm_prop_window->set_xmax(dm_xmax);
     dm_prop_window->set_ymin(dm_ymin);
     dm_prop_window->set_ymax(dm_ymax);
+    dm_prop_window->set_scaling_method(scale_auto_c);
     // set the line colors
     dm_prop_window->set_line_colors(dm_plotcols);
   }
@@ -818,6 +854,8 @@ void plotter::get_dialog_properties(void)
   set_ymax(dm_prop_window->get_ymax());
   // get line colors
   set_line_colors(dm_prop_window->get_line_colors());
+  // get scaling method
+  set_scaling_method(dm_prop_window->get_scaling_method());
 }
 
 void plotter::add_stock_menu_items(scopira::coreui::menu_handler_base::popup_menu &menu)
@@ -1002,20 +1040,36 @@ void plotter::calc_y_range(void)
   if (dm_data.is_null() || dm_data->begin()==dm_data->end())
     return;
 
-  if ( !dm_meta.is_null() && !dm_meta->is_freey() ) 
-  {
-    dm_ymin = dm_meta->get_y_min();
-    dm_ymax = dm_meta->get_y_max();
-    
-    dm_ymin_orig = dm_ymin;
-    dm_ymax_orig = dm_ymax;
-    
-    return;
+  if ( !dm_meta.is_null() ) {
+    dm_scaling_method = dm_meta->get_scaling_mode();
+    switch( dm_scaling_method ) {
+      case scale_auto_c:
+        break; // auto calc, same as if no metadata
+      case scale_user_c:
+        dm_clip = true;
+        dm_xmin = dm_xmin_clip;
+        dm_xmax = dm_xmax_clip;
+        dm_ymin = dm_ymin_clip;
+        dm_ymax = dm_ymax_clip;
+        return;
+      case scale_to_max_c:
+        dm_clip = false;
+        dm_xmin_orig = dm_xmin;
+        dm_xmax_orig = dm_xmax;
+        dm_ymin_orig = dm_ymin;
+        dm_ymax_orig = dm_ymax;
+        return; 
+    }
   }
 
   // we have to auto calc them
+  dm_clip = false;
   min(dm_data.ref(), dm_ymin);
   max(dm_data.ref(), dm_ymax);
+  dm_ymin_clip = dm_ymin;
+  dm_ymax_clip = dm_ymax;
+  dm_ymin_orig = dm_ymin;
+  dm_ymax_orig = dm_ymax;
 
   // pad them, a little
   if (is_equal(dm_ymin, dm_ymax)) {
@@ -1030,7 +1084,8 @@ void plotter::calc_y_range(void)
     dm_ymin -= margin;
     dm_ymax += margin;
   }
-
+  dm_ymin_clip = dm_ymin;
+  dm_ymax_clip = dm_ymax;
   dm_ymin_orig = dm_ymin;
   dm_ymax_orig = dm_ymax;
 }
@@ -1410,14 +1465,13 @@ void plotter::prepare_axis(void)
 
   //calculate y ticks position
   y_axis_ticks.axis_ticks.resize(y_num_ticks);
-  new_tick_y = dm_back.height();
   for (i=0; i<y_num_ticks; i++) {
+    new_tick_y = dm_back.height() - i*y_axis_ticks.tick_per_pix;
     y_axis_ticks.axis_ticks[i].x_min_pos = dm_base.x-3;
     y_axis_ticks.axis_ticks[i].x_max_pos = dm_base.x+3;
     y_axis_ticks.axis_ticks[i].y_min_pos = static_cast<int>(::ceil(new_tick_y));
     y_axis_ticks.axis_ticks[i].y_max_pos = static_cast<int>(::ceil(new_tick_y));
     y_axis_ticks.axis_ticks[i].number_label.x_pos = -1;
-    new_tick_y -= y_axis_ticks.tick_per_pix;
   }
 
   //calculate y labels position
@@ -1459,19 +1513,19 @@ void plotter::prepare_axis(void)
 
   //calculate x ticks position
   x_axis_ticks.axis_ticks.resize(x_num_ticks);
-  new_tick_x = 0;
   for (i=0; i<x_num_ticks; i++) {
+    new_tick_x = x_axis_ticks.tick_per_pix * i;
     x_axis_ticks.axis_ticks[i].y_min_pos = dm_base.y+dm_size.y-3;
     x_axis_ticks.axis_ticks[i].y_max_pos = dm_base.y+dm_size.y+3;
     x_axis_ticks.axis_ticks[i].x_min_pos = static_cast<int>(ceil(new_tick_x));
     x_axis_ticks.axis_ticks[i].x_max_pos = static_cast<int>(ceil(new_tick_x));
     x_axis_ticks.axis_ticks[i].number_label.x_pos = -1;
-    new_tick_x += x_axis_ticks.tick_per_pix;
   }
 
   //calculate x labels position
   if (dm_ascending) {
     dm_xmin_tick = x_axis_min_val;
+    dm_xmax_tick = x_axis_max_val;;
     val = x_axis_min_val;
     for (i=0; i<x_num_ticks; i=i+count) {
       new_num_x = x_axis_ticks.axis_ticks[i].x_min_pos - 8;
@@ -1482,11 +1536,11 @@ void plotter::prepare_axis(void)
       x_axis_ticks.axis_ticks[i].number_label.x_pos = static_cast<int>(new_num_x);
       x_axis_ticks.axis_ticks[i].number_label.y_pos = x_axis_ticks.axis_ticks[i].y_max_pos+2;
       x_axis_ticks.axis_ticks[i].number_label.num = scopira::tool::double_to_string(val, get_xdigits());
-      dm_xmax_tick = val;
       val += x_tick_spacing_val*(count/2);
     }
   } else {
     dm_xmin_tick = x_axis_max_val;
+    dm_xmax_tick = x_axis_min_val;
     val = x_axis_max_val;
     for (i=0; i<x_num_ticks; i=i+count) {
       new_num_x = x_axis_ticks.axis_ticks[i].x_min_pos - 8;
@@ -1497,8 +1551,7 @@ void plotter::prepare_axis(void)
       x_axis_ticks.axis_ticks[i].number_label.x_pos = static_cast<int>(new_num_x);
       x_axis_ticks.axis_ticks[i].number_label.y_pos = x_axis_ticks.axis_ticks[i].y_max_pos+2;
       x_axis_ticks.axis_ticks[i].number_label.num = scopira::tool::double_to_string(val, get_xdigits());
-      dm_xmax_tick = val;
-        val -= x_tick_spacing_val*(count/2);
+      val -= x_tick_spacing_val*(count/2);
     }
   }
 }
@@ -1654,7 +1707,6 @@ void plotter::draw_lines(widget_canvas &v)
   point cur, prev;
   nslice<double> row;
   int num_clrs = dm_plotcols.size();
-//OUTPUT<<"plotter::draw_lines ymin: "<<dm_ymin<<" ymax: "<<dm_ymax<<"\n";
   assert(dm_ymin < dm_ymax);
 
   // clear

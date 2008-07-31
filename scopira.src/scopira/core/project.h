@@ -38,6 +38,7 @@ namespace scopira
 class scopira::core::project_i : public virtual scopira::core::model_i
 {
   public:
+    /// the model iterator type
     typedef scopira::core::model_iterator model_iterator;
 
   public:

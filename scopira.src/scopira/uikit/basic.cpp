@@ -39,9 +39,9 @@ static scopira::core::register_view<remove_v> r2("scopira::uikit::remove_v", mod
   scopira::core::windowonly_uimode_c | scopira::core::vg_needs_project_c);
 static scopira::core::register_view<copy_v> r3("scopira::uikit::copy_v", model_type_c, "(copy)",
   scopira::core::no_uimode_c | scopira::core::vg_needs_project_c | scopira::core::vg_needs_copyfunc_c);
-static scopira::core::register_view<save_to_file_v> r4("scopira::uikit::save_to_file_v", model_type_c, "(save object to file)", scopira::core::windowonly_uimode_c);
+static scopira::core::register_view<save_to_file_v> r4("scopira::uikit::save_to_file_v", model_type_c, "(save as object file)", scopira::core::windowonly_uimode_c);
 //static scopira::core::register_view<insert_from_file_v> r5("scopira::uikit::insert_from_file_v", model_type_c, "(insert object from file)", scopira::core::windowonly_uimode_c | scopira::core::vg_needs_project_c);
-static scopira::core::register_view<insert_from_file_v> r5("scopira::uikit::insert_from_file_v", project_type_c, "Basic/Insert object from file", scopira::core::windowonly_uimode_c);
+static scopira::core::register_view<insert_from_file_v> r5("scopira::uikit::insert_from_file_v", project_type_c, "Basic/Open object file", scopira::core::windowonly_uimode_c);
 
 //
 //

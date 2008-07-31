@@ -54,7 +54,9 @@ namespace scopira
       windowonly_uimode_c = vg_windowui_c,
     };
 
+    /// a class type for models that are just interfaces
     class interface_model_type { };
+    /// a class type for models that are copyable
     class copyable_model_type { };
 
     typedef scopira::tool::object* (*copyfunc_t)(const scopira::tool::object*);
@@ -70,12 +72,18 @@ namespace scopira
 
     /// internal functions
     SCOPIRA_EXPORT void flow_reg_imp(const std::type_info& id, const char * name, scopira::tool::objflowloader::loadfunc_t loader);
+    /// internal functions
     SCOPIRA_EXPORT void link_object_parent_imp(const std::type_info &id, const char *parent_name);
+    /// internal functions
     SCOPIRA_EXPORT void link_object_parent_imp(const std::type_info &id, const char **parents);
+    /// internal functions
     SCOPIRA_EXPORT void link_object_copyfunc(const std::type_info &id, copyfunc_t cf);
+    /// internal functions
     SCOPIRA_EXPORT void link_model_imp(const std::type_info &id, bool linktomodeltype);
+    /// internal functions
     SCOPIRA_EXPORT void link_view_imp(const std::type_info &id, const char *model_type, const char *menu_name, int vgmask);
     class objecttype;
+    /// internal functions
     SCOPIRA_EXPORT void build_objecttype_tree(scopira::tool::count_ptr<scopira::core::objecttype> &out);
 
     /// common type string: base of everything
@@ -233,5 +241,39 @@ class scopira::core::register_view : public scopira::core::register_flow<T>
       { link_view_imp(typeid(T), model_type, menu_name, vgmask); }
 };
 
+/**
+  \page scopiracoreserializationpage Object I/O
+
+  Serializable objects are able to convert themselves to/from a series of primitive types. Programmers may then utilize the flexibility
+  of the flow architecture to then store objects in various places, such as ASCII text files, binary files, in memory, or even over a 
+  network connection. By stacking and connecting filtering flows to an end flow, the possibilities are limitless. For an object to be 
+  serializable it must:
+
+  - Descend from scopira::tool::object.
+  - Implement scopira::tool::object::save and scopira::tool::object::load. When implementing these methods, descendants must first take care to call 
+    their parents save or load method, as the build process is recursive. 
+  - Register themselves for serialization. This is done by instatiating a scopira::core::register_flow singleton in your .cpp file.
+
+  An example of scopira::core::register_flow:
+
+  \code
+  #include <scopira/core/register.h>
+
+  class yournamespace::yourclass : public virtual scopira::tool::object
+  {
+    public:
+      virtual bool load(scopira::tool::iobjflow_i& in) {
+        // load self from in
+      }
+      virtual void save(scopira::tool::oobjflow_i& out) const {
+        // write self to out
+      }
+  };
+
+  // place one of these in the .cpp file of your class
+  static scopira::core::register_flow<yournamespace::yourclass> r1("yournamespace::yourclass");
+  \endcode
+
+*/
 #endif
 

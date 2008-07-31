@@ -1,6 +1,6 @@
 
 /*
- *  Copyright (c) 2002    National Research Council
+ *  Copyright (c) 2002-2007    National Research Council
  *
  *  All rights reserved.
  *
@@ -121,6 +121,21 @@ bool biniflow::read_size_t(size_t& ret)
   return true;
 }
 
+bool biniflow::read_int64_t(int64_t& ret)
+{
+  if (failed())
+    return false;
+
+  assert(dm_in.get());
+
+  dm_in->read(reinterpret_cast<byte_t*>(&ret), sizeof(ret));
+#ifdef PLATFORM_BYTESWAP
+  ret = byte_swap<int64_t>(ret);
+#endif
+
+  return true;
+}
+
 bool biniflow::read_long(long& ret)
 {
   if (failed())
@@ -170,16 +185,13 @@ bool biniflow::read_string(string& out)
 
   int len;
   if (!read_int(len) || len < 0) {
-    assert(len >= 0);
     return false;
   }
 
   // clear and resize out string
   out.resize(len);
   // read contents into string
-  dm_in->read(reinterpret_cast<byte_t*>(&out[0]), len);
-
-  return true;
+  return dm_in->read(reinterpret_cast<byte_t*>(&out[0]), len) == len;
 }
 
 
@@ -260,6 +272,15 @@ void binoflow::write_size_t(size_t val)
   assert(dm_out.get());
 #ifdef PLATFORM_BYTESWAP
   val = byte_swap<size_t>(val);
+#endif
+  dm_out->write(reinterpret_cast<const byte_t*>(&val), sizeof(val));
+}
+
+void binoflow::write_int64_t(int64_t val)
+{
+  assert(dm_out.get());
+#ifdef PLATFORM_BYTESWAP
+  val = byte_swap<int64_t>(val);
 #endif
   dm_out->write(reinterpret_cast<const byte_t*>(&val), sizeof(val));
 }

@@ -30,6 +30,10 @@ namespace scopira
   {
     class dll; //fwd
   }
+  /**
+   * General non-ui stuff useful to all Scopira applicationa
+   * @author Aleksander Demko
+   */ 
   namespace core
   {
     class basic_loop;
@@ -60,21 +64,6 @@ namespace scopira
 class scopira::core::basic_loop : public virtual scopira::tool::object
 {
   public:
-    /**
-     * This simply does push_configstack and pop_configstack
-     * in its ctor/dtor
-     * @author Aleksander Demko
-     */ 
-    class configstack_level
-    {
-      public:
-        /// ctor
-        configstack_level(void)
-        { instance()->push_configstack(); }
-        ~configstack_level(void)
-        { instance()->pop_configstack(); }
-    };
-  public:
     /// returns the static instance
     static basic_loop * instance(void) { return dm_instance; }
 
@@ -87,6 +76,14 @@ class scopira::core::basic_loop : public virtual scopira::tool::object
 
     /// destructor
     SCOPIRA_EXPORT ~basic_loop();
+
+    /**
+     * Enumerates all the current config keys
+     * to the given output string vector.
+     *
+     * @author Aleksander Demko
+     */ 
+    SCOPIRA_EXPORT void list_config(std::vector<std::string> &out) const;
 
     /**
      * Does the configutation system have the given key set?
@@ -107,6 +104,9 @@ class scopira::core::basic_loop : public virtual scopira::tool::object
      * Gets the configutation value of the given key and put it into out.
      * If there is no value for the given key, out is untouched and false
      * is returned.
+     * Non name-valued parameters (like lone files names and the program name
+     * itself will be stored in the keys param, param+, param++, param+++, etc.
+     * The program nameitself is usually param, so you'll want to start with param+.
      *
      * @author Aleksander Demko
      */ 
@@ -212,29 +212,27 @@ class scopira::core::basic_loop : public virtual scopira::tool::object
 
     struct value_t
     {
-      std::string pm_val;
-      bool pm_disk;
-      int pm_stacklevel;
-      std::auto_ptr<value_t> pm_stack;
+      std::string pm_val;                 // the current value
+      bool pm_disk;                       // is thie value marked for saving
+      int pm_creatorid;                  // the stack level that this value was created at (used in config stacks)
 
-      value_t(void) : pm_disk(false), pm_stacklevel(0) { }
-      value_t(const std::string &val, int stacklevel) : pm_val(val), pm_disk(false),
-        pm_stacklevel(stacklevel) { }
-      value_t(const value_t &src) : pm_val(src.pm_val), pm_disk(src.pm_disk),
-        pm_stacklevel(src.pm_stacklevel),
-        pm_stack(std::auto_ptr<value_t>(src.pm_stack.get() ? new value_t(*src.pm_stack) : 0)) { }
-      value_t & operator = (const value_t &src) {
-        pm_val = src.pm_val;
-        pm_disk = src.pm_disk;
-        pm_stacklevel = src.pm_stacklevel;
-        pm_stack = std::auto_ptr<value_t>(src.pm_stack.get() ? new value_t(*src.pm_stack) : 0);
-        return *this;
-      }
+      value_t(void) : pm_disk(false), pm_creatorid(0) { }
+      value_t(const std::string &val, int creatorid) : pm_val(val), pm_disk(false),
+        pm_creatorid(creatorid) { }
     };
 
     typedef std::map<std::string, value_t> configmap_t;
     configmap_t dm_configmap;
-    int dm_currentstacklevel;
+
+    // the current creator id to assign to new values
+    // its incremented between each "phase" or level or context of parsing
+    struct parse_context_t {
+      int pm_creatorid;
+      bool pm_disk;       // mark new nodes for writing (sets the value_t->pm_disk)
+    };
+    
+    parse_context_t dm_parse_context;
+
     std::string dm_emptrystring;
     std::string dm_appctx;
     std::string dm_configdir;
@@ -246,20 +244,6 @@ class scopira::core::basic_loop : public virtual scopira::tool::object
 #ifdef PLATFORM_win32
     scopira::tool::net_loop dm_netlooper;
 #endif
-
-  private:
-    /**
-     * Push the current config stack level
-     *
-     * @author Aleksander Demko
-     */
-    SCOPIRA_EXPORT void push_configstack(void);
-    /**
-     * Pop the current config task level
-     *
-     * @author Aleksander Demko
-     */
-    SCOPIRA_EXPORT void pop_configstack(void);
 
   private:
     void parse_config(int argc, char **argv);

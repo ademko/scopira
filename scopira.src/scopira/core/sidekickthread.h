@@ -42,21 +42,23 @@ class scopira::core::sidekick_runner : public virtual scopira::tool::runnable_i,
     /// ctor
     SCOPIRA_EXPORT sidekick_runner(void);
 
-    /// the run implementation    
+    /// the run implementation
     SCOPIRA_EXPORT virtual void run(void);
 
     /// called by sidekick_thread's dtor
     SCOPIRA_EXPORT virtual void notify_stop(void);
-    
+
   protected:
     SCOPIRA_EXPORT virtual void enqueue_sidekick(sidekick_i *t);
-    
+    SCOPIRA_EXPORT virtual bool is_sidekick_running(void);
+
   private:
     typedef std::list<scopira::tool::count_ptr<sidekick_i> > sidekick_list;
 
     // the condition in dm_openwindows is used as the signal for this area
     struct sidekick_area {
       bool alive;
+      bool running;
       sidekick_list queue;
     };
 
@@ -77,7 +79,7 @@ class scopira::core::sidekick_thread
     SCOPIRA_EXPORT sidekick_thread(void);
     /// dtor, blocks the thread until it stops
     SCOPIRA_EXPORT ~sidekick_thread();
-    
+
   private:
     sidekick_runner dm_runner;
     scopira::tool::thread dm_thready;

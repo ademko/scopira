@@ -19,8 +19,11 @@
 #include <scopira/tool/util.h>
 #include <scopira/tool/polyflow.h>
 #include <scopira/tool/time.h>
+#include <scopira/tool/platform.h>
 #include <scopira/core/loop.h>
 #include <scopira/core/register.h>
+
+#include <scopira/agent/ids.h>
 
 //BBtargets libscopira.so
 
@@ -30,6 +33,13 @@ using scopira::core::basic_loop;
 using scopira::basekit::narray;
 
 //#define CLUSTER_OUTPUT
+#define CLUSTER_NEW_TASK
+
+#ifdef PLATFORM_win32
+// disable this-in-initialize list warning
+#pragma warning(push)
+#pragma warning(disable:4355)
+#endif
 
 //
 // internal objects:
@@ -181,9 +191,13 @@ class cluster_agent::master_launch_task_msg : public cluster_agent::network_msg
     std::string dm_typestring;
     int dm_numps;   /// number of processes to make
     uuid dm_existingmaster;
+    uuid dm_where;    // on which agent-uuid to launch the new tasks, or zero of "determinate via basic load balancing"
   public:
     master_launch_task_msg(void);
-    master_launch_task_msg(scopira::tool::uuid srcagent, const std::string &typestring, int numps, const uuid &existingmaster = uuid());
+    /// where must be either 0, or the agent-uuid to launch
+    master_launch_task_msg(scopira::tool::uuid srcagent, const std::string &typestring,
+        int numps, uuid existingmaster = uuid(),
+        uuid where = uuid());
     virtual bool load(scopira::tool::iobjflow_i& in);
     virtual void save(scopira::tool::oobjflow_i& out) const;
     virtual const char * get_debug_name(void) const { return "master_launch_task_msg"; }
@@ -300,6 +314,31 @@ class cluster_agent::bcast_data_msg : public cluster_agent::network_msg
     virtual void execute_agent(cluster_agent &e, cluster_agent::link *lk);
 };
 
+class cluster_agent::find_services_msg : public cluster_agent::network_msg
+{
+  private:
+    scopira::tool::uuid dm_service;
+    bool dm_subquery; // true (master to sub agents) false (client to master)
+  public:
+    find_services_msg(void);
+    find_services_msg(scopira::tool::uuid service, bool subquery);
+    virtual bool load(scopira::tool::iobjflow_i& in);
+    virtual void save(scopira::tool::oobjflow_i& out) const;
+    virtual const char * get_debug_name(void) const { return "find_services_msg"; }
+    virtual void execute_agent(cluster_agent &e, cluster_agent::link *lk);
+};
+
+class cluster_agent::reply_find_services_msg : public cluster_agent::reply_msg
+{
+  public:
+    std::vector<scopira::tool::uuid> pm_results;
+  public:
+    reply_find_services_msg(void);
+    virtual bool load(scopira::tool::iobjflow_i& in);
+    virtual void save(scopira::tool::oobjflow_i& out) const;
+    virtual const char * get_debug_name(void) const { return "reply_find_services_msg"; }
+};
+
 class cluster_agent::reg_context_msg : public cluster_agent::network_msg
 {
   private:
@@ -326,6 +365,14 @@ class cluster_agent::dead_task_msg : public cluster_agent::network_msg
     virtual bool load(scopira::tool::iobjflow_i& in);
     virtual void save(scopira::tool::oobjflow_i& out) const;
     virtual const char * get_debug_name(void) const { return "dead_task_msg"; }
+    virtual void execute_agent(cluster_agent &e, cluster_agent::link *lk);
+};
+
+class cluster_agent::default_group_size_msg : public cluster_agent::network_msg
+{
+  public:
+    default_group_size_msg(void);
+    virtual const char * get_debug_name(void) const { return "default_group_size_msg"; }
     virtual void execute_agent(cluster_agent &e, cluster_agent::link *lk);
 };
 
@@ -392,6 +439,8 @@ cluster_agent::cluster_agent(void)
     dm_udpthread(udp_thread_func, this),
     dm_adminthread(admin_thread_func, this)
 {
+  int param_clusterport = 0, final_port = 0;
+  std::string param_cluster;
   int i;
   url serverurl;
 
@@ -401,84 +450,92 @@ cluster_agent::cluster_agent(void)
   dm_age.start();
 
   // param stuff
+  dm_nodespec.pm_ismaster = false;
 
-  dm_nodespec.pm_ismaster = true;
-
-  // determinate my agent type
-  if (basic_loop::instance()->get_config("cluster") == "server" || 
-      basic_loop::instance()->get_config("cluster") == "serveronly") {
-    if (basic_loop::instance()->get_config("cluster") == "serveronly")
-      dm_nodespec.pm_jobfilter = node_spec::my_jobs_c;      // this server dont work, yo
-  } else {
-    // some type of url
-
-    // alias processing
-    if (basic_loop::instance()->get_config("cluster") == "autoserver")
-      serverurl.set_url("scopira://255.255.255.255/autoserver"); // automatic + server... be a server if nothing can be found via udp
-    else if (basic_loop::instance()->get_config("cluster") == "auto")
-      serverurl.set_url("scopira://255.255.255.255/broadcast");
-    else if (basic_loop::instance()->get_config("cluster") == "autoclient")
-      serverurl.set_url("scopira://255.255.255.255/broadcast,client");
-    else if (!serverurl.set_url(basic_loop::instance()->get_config("cluster"))) {
-      // Not a server, and the user gave me a url
-      OUTPUT << "Failed to parse URL, cluster=" << basic_loop::instance()->get_config("cluster") << '\n';
-      dm_adminarea.pm_data.pm_failedstate = failed_cantinit_c;
-      return;
-    }
-
-    // assume non-master
-    dm_nodespec.pm_ismaster = false;
-
-    // check if we need to do an autoserver thing
-    if (serverurl.get_filename().find("autoserver") != std::string::npos) {
-      if (find_udp_server(serverurl))
-        OUTPUT << "Server found.\n serverurl=" << serverurl << '\n';
-      else {
-        // am master after all
-        dm_nodespec.pm_ismaster = true;
-        OUTPUT << "Server not found - assuming server role\n";
-      }
-    } else if (serverurl.get_filename().find("broadcast") != std::string::npos) {
-      // check if the url was with the scopirafind:// protocol, and if so, use udp to find a
-      // real server
-      if (find_udp_server(serverurl))
-        OUTPUT << "Server found.\n serverurl=" << serverurl << '\n';
-      else {
-        OUTPUT << "Failed to find a server via: " << serverurl << '\n';
-        dm_adminarea.pm_data.pm_failedstate = failed_cantinit_c;
-        return;
-      }
-    }
-
-    // not a master server
-
-    if (serverurl.get_proto() != "scopira") {
-      OUTPUT << "Protocol must be scopira://\n";
-      dm_adminarea.pm_data.pm_failedstate = failed_cantinit_c;
-      return;
-    }
-
-    dm_nodespec.parse_options(serverurl.get_filename());
+  // process cluster= (aliases first)
+  param_cluster = basic_loop::instance()->get_config("cluster");
+  if (param_cluster == "server")
+    dm_nodespec.pm_ismaster = true;
+  else if (param_cluster == "serveronly") {
+    dm_nodespec.pm_ismaster = true;
+    dm_nodespec.pm_jobfilter = node_spec::my_jobs_c;      // this server dont work
+  }
+  else if (param_cluster == "autoserver")
+    serverurl.set_url("scopira://255.255.255.255/autoserver"); // automatic + server... be a server if nothing can be found via udp
+  else if (param_cluster == "autoworker")
+    serverurl.set_url("scopira://255.255.255.255/broadcast");
+  else if (param_cluster == "autoclient")
+    serverurl.set_url("scopira://255.255.255.255/broadcast,client");
+  else if (!serverurl.set_url(param_cluster)) { // finally, parse the URL
+    // Not a server, and the user gave me a url
+    OUTPUT << "Failed to parse URL, cluster=" << param_cluster << '\n';
+    dm_adminarea.pm_data.pm_failedstate = failed_cantinit_c;
+    return;
   }
 
-  // if it doesnt exist, this will return "", which is ok.
+  // first, process clusterport= if any
+  if (basic_loop::instance()->has_config("clusterport"))
+    if (!string_to_int(basic_loop::instance()->get_config("clusterport"), param_clusterport)) {
+      OUTPUT << "Failed to parse a valid port from clusterport=" << basic_loop::instance()->get_config("clusterport") << '\n';
+      dm_adminarea.pm_data.pm_failedstate = failed_cantinit_c;
+      return;
+    }
+  // double check the port
+  if (param_clusterport != 0)
+    final_port = param_clusterport;
+  else if (serverurl.get_port() != 0)
+    final_port = serverurl.get_port();
+  else
+    final_port = default_port_c;
+  assert(final_port > 0);
+  // insert the port back in
+  serverurl.set_url(serverurl.get_proto(), serverurl.get_hostname(), final_port, serverurl.get_filename());
+
+  // check the protocol
+  if (serverurl.get_proto() != "scopira") {
+    OUTPUT << "Protocol must be scopira://\n";
+    dm_adminarea.pm_data.pm_failedstate = failed_cantinit_c;
+    return;
+  }
+
+  // parse options from the filename portion
+  dm_nodespec.parse_options(serverurl.get_filename());
+
+  // grab the password ("" is ok)
   dm_password = basic_loop::instance()->get_config("clusterpassword");
 
+  // autoserver
+  if (serverurl.get_filename().find("autoserver") != std::string::npos) {
+    if (find_udp_server(serverurl))
+      OUTPUT << "Server found.\n serverurl=" << serverurl << '\n';
+    else {
+      // am master after all
+      dm_nodespec.pm_ismaster = true;
+      OUTPUT << "Server not found - assuming server role\n";
+    }
+  }
+
+  // broadcast (autoworker and autoclient)
+  if (serverurl.get_filename().find("broadcast") != std::string::npos) {
+    // check if the url was with the scopirafind:// protocol, and if so, use udp to find a
+    // real server
+    if (find_udp_server(serverurl))
+      OUTPUT << "Server found.\n serverurl=" << serverurl << '\n';
+    else {
+      OUTPUT << "Failed to find a server via: " << serverurl << '\n';
+      dm_adminarea.pm_data.pm_failedstate = failed_cantinit_c;
+      return;
+    }
+  }
+
+  // open up listening sockets, if any
   if (dm_nodespec.pm_isdirectroute) {
     // am i doing any listening?
 
     // parse the listening port
-    if (basic_loop::instance()->has_config("clusterport")) {
-      if (!string_to_int(basic_loop::instance()->get_config("clusterport"), dm_listenport)) {
-        OUTPUT << "Failed to parse a valid port from clusterport=" << basic_loop::instance()->get_config("clusterport") << '\n';
-        dm_adminarea.pm_data.pm_failedstate = failed_cantinit_c;
-        return;
-      }
-    } else {
-      dm_listenport = default_port_c;
-      if (!dm_nodespec.pm_ismaster)
-        dm_listenport += 10;
-    }
+    dm_listenport = final_port;
+    if (!dm_nodespec.pm_ismaster)
+      dm_listenport += 10;
 
     // start the port listener thread
     for (i=0; i<100; ++i) {
@@ -493,6 +550,9 @@ cluster_agent::cluster_agent(void)
     }
     dm_listenport = dm_listenport + i;    // record the actual port
 
+    // record my listening url in my nodespec
+    dm_nodespec.pm_url = url("scopira://" + get_hostname() + ":" + int_to_string(dm_listenport));
+
     // try to open the udp/broadcast listen stuff
     if (dm_nodespec.pm_ismaster && dm_listenport != 0) {
       dm_udpsocket.open(dm_listenport);
@@ -504,8 +564,6 @@ cluster_agent::cluster_agent(void)
     }
   }
 
-  dm_nodespec.pm_url = url("scopira://" + get_hostname() + ":" + int_to_string(dm_listenport));
-
   // we're all ok now, lets start up
   if (dm_nodespec.pm_ismaster) {
     // add myself into the table, as I'm a server
@@ -514,7 +572,7 @@ cluster_agent::cluster_agent(void)
     L->pm_nodes[dm_nodespec.pm_uuid] = new meta_node(la_get_spec(), dm_nodespec);
   }
 
-  // at this point, we're live (seconds try, doesnt matter)
+  // at this point, we're live (second try, doesnt matter)
   dm_adminarea.pm_data.pm_failedstate = failed_opening_c;    // masters are always ok
   dm_peerarea.pm_data.pm_alive = true;
   dm_adminarea.pm_data.pm_alive = true;
@@ -529,8 +587,8 @@ cluster_agent::cluster_agent(void)
   }
   dm_adminthread.start();
 
-  OUTPUT << "Cluster Agent started.\n"
-    " uuid=" << dm_nodespec.pm_uuid << "\n";
+  OUTPUT << "Cluster Agent started (CPU=" << la_get_spec().pm_numcpu << ").\n"
+    " uuid=" << dm_nodespec.pm_uuid << '\n';
   if (dm_listenport == 0)
     ;
   else if (dm_nodespec.pm_ismaster)
@@ -623,6 +681,29 @@ void cluster_agent::set_agenterror_reactor(agenterror_reactor_i *r)
   L->pm_agenterror = r;
 }
 
+int cluster_agent::find_services(scopira::tool::uuid &serviceid, scopira::basekit::narray<scopira::tool::uuid> &out)
+{
+  assert(!serviceid.is_zero());
+
+  count_ptr<network_msg> netm;
+  count_ptr<reply_msg> reply;
+  reply_find_services_msg *frep;
+
+  netm = new find_services_msg(serviceid, false);
+
+  do_xtion(uuid(), netm.get(), reply);
+
+  frep = dynamic_cast<reply_find_services_msg*>(reply.get());
+
+  if (frep) {
+    // copy the results
+    out.resize(frep->pm_results.size());
+    std::copy(frep->pm_results.begin(), frep->pm_results.end(), out.begin());
+    return frep->pm_results.size();
+  } else
+    return 0;
+}
+
 void cluster_agent::reg_context(scopira::tool::uuid &ctxid, taskmsg_reactor_i *reac)
 {
   local_agent::reg_context(ctxid, reac);
@@ -645,7 +726,31 @@ void cluster_agent::unreg_context(scopira::tool::uuid ctxid)
   do_xtion(uuid(), new reg_context_msg(ctxid, false, dm_nodespec.pm_uuid), replye);
 }
 
-scopira::tool::uuid cluster_agent::launch_task(const std::type_info &t)
+int cluster_agent::universe_size(void)
+{
+  count_ptr<network_msg> netm;
+  count_ptr<reply_msg> replye;
+
+  netm = new default_group_size_msg;
+  do_xtion(uuid(), netm.get(), replye);
+
+  // return true only if we have an event and its ok
+  if (replye.get()) {
+    int numcpu = replye->get_code();
+
+    if (numcpu>0)
+      return numcpu;
+  }
+
+  return local_agent::universe_size(); // an error occured, just return the number of cpus on this code
+}
+
+scopira::tool::uuid cluster_agent::get_agent_id(void)
+{
+  return dm_nodespec.pm_uuid;
+}
+
+scopira::tool::uuid cluster_agent::launch_task(const std::type_info &t, scopira::tool::uuid where)
 {
   uuid psid;
   std::string typestring;
@@ -653,7 +758,18 @@ scopira::tool::uuid cluster_agent::launch_task(const std::type_info &t)
   assert(objflowloader::instance()->has_typeinfo(t) && "[Given type to launch_task is not registered]");
   typestring = objflowloader::instance()->get_name(t);
 
-  count_ptr<master_launch_task_msg> q = new master_launch_task_msg(dm_nodespec.pm_uuid, typestring, 1);
+  // check for special where flags, and resolve them accordingly
+  if (where == where_this_c || (where == where_master_c && dm_nodespec.pm_ismaster))
+    where = dm_nodespec.pm_uuid;
+  else if (where == where_master_c) {
+    event_ptr<peer_area> L(dm_peerarea);
+
+    assert(L->pm_masterlink.get());
+
+    where = L->pm_masterlink->get_uuid();
+  }
+
+  count_ptr<master_launch_task_msg> q = new master_launch_task_msg(dm_nodespec.pm_uuid, typestring, 1, uuid(), where);
   count_ptr<reply_msg> replye;
   reply_master_launch_task_msg *rep;
 
@@ -674,6 +790,8 @@ scopira::tool::uuid cluster_agent::launch_group(int numps, const std::type_info 
 {
   uuid psid;
   std::string typestring;
+
+  assert(numps>0 && "[launch_group numps must be >0");
 
   assert(objflowloader::instance()->has_typeinfo(t) && "[Given type to launch_task is not registered]");
   typestring = objflowloader::instance()->get_name(t);
@@ -699,6 +817,8 @@ void cluster_agent::launch_slaves(scopira::tool::uuid masterid, int numtotalps, 
       narray<uuid> &peers)
 {
   std::string typestring;
+
+  assert(numtotalps>0 && "[launch_slaves numps must be >0");
 
   assert(!masterid.is_zero());
 
@@ -1012,6 +1132,7 @@ void cluster_agent::do_resolve_xtion(scopira::tool::uuid id, bool dotaskresolve,
   // resolve where that task is
   do_xtion(uuid(), netm.get(), replye);
 
+  assert(replye.get());
   if (replye->get_code() != 0)
     return;   // not found
 
@@ -1123,7 +1244,11 @@ template <int LEN> class fixed_string
     char chars[LEN];
 
     /// sets from string, chars will be null terminated
+#ifdef PLATFORM_win32
+    void set(const std::string &s) { strncpy_s(chars, LEN, s.c_str(), LEN); chars[LEN-1] = 0; }
+#else
     void set(const std::string &s) { strncpy(chars, s.c_str(), LEN); chars[LEN-1] = 0; }
+#endif
     /// gets from string, no matter what chars is
     operator std::string(void) { chars[LEN-1] = 0; return std::string(chars); }
 };
@@ -1182,8 +1307,11 @@ static bool find_udp_server(scopira::tool::url &autourl)
   socky.write(bcastaddr, bcastport, bcastmsg.as_bytes(), bcastmsg.size());
 
   while (clocky.get_running_time() < 1) {    // 1 second time out... let this be specified via the URL/other config mechanism?
-    if (!socky.read_ready(250))
+    if (!socky.read_ready(100)) {
+      // rebroadcast the query
+      socky.write(bcastaddr, bcastport, bcastmsg.as_bytes(), bcastmsg.size());
       continue;
+    }
 
     // we have something
     udpmsg_t msg;
@@ -2054,7 +2182,8 @@ void cluster_agent::routed_msg::execute_agent(cluster_agent &e, cluster_agent::l
 // master_launch_task_msg
 //
 
-scopira::core::register_flow<cluster_agent::master_launch_task_msg> cluster_agent::r88312("scopira::agent::cluster_agent::master_launch_task_msg");
+scopira::core::register_flow<cluster_agent::master_launch_task_msg>
+  cluster_agent::r88312("scopira::agent::cluster_agent::master_launch_task_msg");
 
 cluster_agent::master_launch_task_msg::master_launch_task_msg(void)
   : dm_numps(0)
@@ -2062,15 +2191,17 @@ cluster_agent::master_launch_task_msg::master_launch_task_msg(void)
 }
 
 cluster_agent::master_launch_task_msg::master_launch_task_msg(scopira::tool::uuid srcagent,
-    const std::string &typestring, int numps, const uuid &existingmaster)
-  : dm_srcagent(srcagent), dm_typestring(typestring), dm_numps(numps), dm_existingmaster(existingmaster)
+    const std::string &typestring, int numps, uuid existingmaster, uuid where)
+  : dm_srcagent(srcagent), dm_typestring(typestring), dm_numps(numps),
+    dm_existingmaster(existingmaster), dm_where(where)
 {
 }
 
 bool cluster_agent::master_launch_task_msg::load(scopira::tool::iobjflow_i& in)
 {
   return network_msg::load(in) && dm_srcagent.load(in) && in.read_string(dm_typestring)
-    && in.read_int(dm_numps) && dm_existingmaster.load(in);
+    && in.read_int(dm_numps) && dm_existingmaster.load(in)
+    && dm_where.load(in);
 }
 
 void cluster_agent::master_launch_task_msg::save(scopira::tool::oobjflow_i& out) const
@@ -2080,6 +2211,7 @@ void cluster_agent::master_launch_task_msg::save(scopira::tool::oobjflow_i& out)
   out.write_string(dm_typestring);
   out.write_int(dm_numps);
   dm_existingmaster.save(out);
+  dm_where.save(out);
 }
 
 void cluster_agent::master_launch_task_msg::execute_agent(cluster_agent &e, cluster_agent::link *lk)
@@ -2115,19 +2247,42 @@ void cluster_agent::master_launch_task_msg::execute_agent(cluster_agent &e, clus
   for (x= (hasmaster?1:0); x<ids.size(); ++x)
     e.la_get_generator().next(ids[x]);
 
-  {
+  // if where is non-zero, MAKE SURE its valid
+  if (!dm_where.is_zero()) {
     event_ptr<meta_area> L(e.dm_metarea);
 
+    if (L->pm_nodes.find(dm_where) == L->pm_nodes.end())
+      dm_where = uuid();  // NOT valid, just zero it and use the default auto thing
+  }//checking the where
+
+  // find where to put these new tasks, and update the task tables
+  if (dm_where.is_zero()) {
+    event_ptr<meta_area> L(e.dm_metarea);
+
+#ifdef CLUSTER_OUTPUT
+OUTPUT << "ALLOCATOR: total node count: " << L->pm_nodes.size() << '\n';
+#endif
     // find the next agent to allocate
     for (x= (hasmaster?1:0); x<numps; ++x) {
       // find the most idle of nodes
       int bestnumbfree = -9999;
       nodemap_t::iterator bestsofar = L->pm_nodes.end(), srcnode = L->pm_nodes.end(), ii;
 
+      assert(!L->pm_nodes.empty());
+
+#ifdef CLUSTER_OUTPUT
+OUTPUT << "PRE ALLOCATION TASK LIST:\n";
+for (ii=L->pm_nodes.begin(); ii != L->pm_nodes.end(); ++ii)
+{
+event_ptr<meta_node::load_area> LA(ii->second->pm_loadarea);
+OUTPUT << "  node=" << ii->first << " tasks=" << LA->pm_tasks.size() << '\n';
+}
+#endif
       // scan all the agents
       for (ii=L->pm_nodes.begin(); ii != L->pm_nodes.end(); ++ii) {
         event_ptr<meta_node::load_area> LA(ii->second->pm_loadarea);
         int freecpu = static_cast<int>(ii->second->pm_machinespec.pm_numcpu) - LA->pm_tasks.size();
+//OUTPUT << "  trying_node=" << ii->first << " numcpu=" << ii->second->pm_machinespec.pm_numcpu << " tasks=" << LA->pm_tasks.size() << '\n';
 
         // remember the self, incase we need it later
         if (ii->second->pm_nodespec.pm_uuid != dm_srcagent)
@@ -2140,13 +2295,14 @@ void cluster_agent::master_launch_task_msg::execute_agent(cluster_agent &e, clus
             ii->second->pm_nodespec.pm_uuid != dm_srcagent)
           continue;
         // is it better than the one we have (and are we allowed to allocate jobs to it?)
+//OUTPUT << " potensial winner: freecpu=" << freecpu << " bestnumbfree=" << bestnumbfree << '\n';
         if (freecpu > bestnumbfree) {
+//OUTPUT << " winner so far\n";
           bestsofar = ii;
           bestnumbfree = static_cast<long>(ii->second->pm_machinespec.pm_numcpu) - LA->pm_tasks.size();
         }
       }
 
-      assert(!L->pm_nodes.empty());
       // we should always be able to alloce a job to someone
       if (bestsofar == L->pm_nodes.end())
         bestsofar = srcnode;    // if noone will take this job, then it HAS to go to the job request. a must.
@@ -2159,12 +2315,32 @@ void cluster_agent::master_launch_task_msg::execute_agent(cluster_agent &e, clus
 
       event_ptr<meta_node::load_area> LA(bestsofar->second->pm_loadarea);
       LA->pm_tasks.push_back(ids[x]);
-    }
-  }//event_ptr
+    }//for each new task
 
-#ifdef CLUSTER_OUTPUT
+#if defined(CLUSTER_OUTPUT) || defined(CLUSTER_NEW_TASK)
+OUTPUT << "POST ALLOCATION TASK LIST:\n";
+for (nodemap_t::iterator ii=L->pm_nodes.begin(); ii != L->pm_nodes.end(); ++ii)
+{
+event_ptr<meta_node::load_area> LA(ii->second->pm_loadarea);
+OUTPUT << "  node=" << ii->first << " tasks=" << LA->pm_tasks.size() << '\n';
+}
+#endif
+  } else { // non-zero dm_where, do force placement
+    event_ptr<meta_area> L(e.dm_metarea);
+
+    // iterate over all the tasks to make
+    for (x= (hasmaster?1:0); x<numps; ++x) {
+      allocagent[x] = dm_where;
+      L->pm_tasks[ids[x]] = dm_where;
+
+      event_ptr<meta_node::load_area> LA(L->pm_nodes[dm_where]->pm_loadarea);
+      LA->pm_tasks.push_back(ids[x]);
+    }//for each new task
+  }
+
+#if defined(CLUSTER_OUTPUT) || defined(CLUSTER_NEW_TASK)
   for (x= (hasmaster?1:0); x<numps; ++x)
-    OUTPUT << "Allocating task index=" << x << " to node=" << allocagent[x] << " type=" << dm_typestring << '\n';
+    OUTPUT << "ALLOCATOR: assigned index=" << x << " to node=" << allocagent[x] << " type=" << dm_typestring << '\n';
 #endif
 
   // lets send all those sub agent creation requests (phase 1)
@@ -2524,6 +2700,152 @@ void cluster_agent::bcast_data_msg::execute_agent(cluster_agent &e, cluster_agen
 }
 
 //
+// find_services_msg
+//
+
+scopira::core::register_flow<cluster_agent::find_services_msg> cluster_agent::r4834444("scopira::agent::cluster_agent::find_services_msg");
+
+cluster_agent::find_services_msg::find_services_msg(void)
+{
+}
+
+  cluster_agent::find_services_msg::find_services_msg(scopira::tool::uuid service, bool subquery)
+  : dm_service(service), dm_subquery(subquery)
+{
+}
+
+bool cluster_agent::find_services_msg::load(scopira::tool::iobjflow_i& in)
+{
+  return network_msg::load(in) && dm_service.load(in) && in.read_bool(dm_subquery);
+}
+
+void cluster_agent::find_services_msg::save(scopira::tool::oobjflow_i& out) const
+{
+  network_msg::save(out);
+  dm_service.save(out);
+  out.write_bool(dm_subquery);
+}
+
+void cluster_agent::find_services_msg::execute_agent(cluster_agent &e, cluster_agent::link *lk)
+{
+  count_ptr<reply_find_services_msg> myreply = new reply_find_services_msg; // both versions send this back as a reply
+
+  if (dm_subquery) {
+    // this is a subnode getting a request from the master
+    // send back my total for him to coallate
+    // use local_agent to do the local deed :)
+    narray<uuid> out;
+    e.local_agent::find_services(dm_service, out);
+
+    // copy out the results
+    myreply->pm_results.resize(out.size());
+    std::copy(out.begin(), out.end(), myreply->pm_results.begin());
+  } else if (dm_service == agent_service_c || dm_service == worker_agent_service_c) {
+    // this is for the master, and only wants agent lists (easy!)
+    std::vector<uuid> agents;
+    bool filter = dm_service == worker_agent_service_c;
+
+    // copy the peer list out and release the lock
+    {
+      event_ptr<meta_area> L(e.dm_metarea);
+
+      agents.reserve(L->pm_nodes.size()+1);
+
+      for (nodemap_t::iterator ii=L->pm_nodes.begin(); ii != L->pm_nodes.end(); ++ii)
+        if (!filter || ii->second->pm_nodespec.pm_jobfilter == node_spec::all_jobs_c)
+          agents.push_back(ii->first);
+    }
+
+    // this isnt an actual service hunt, but simply a request for a list of agents
+    myreply->pm_results = agents;
+  } else {
+    // this is for the master
+    // master will redistribute sub queries and coallate the results
+    std::vector<uuid> peers;
+
+    assert(e.dm_nodespec.pm_ismaster);
+
+    // add myself to the peer list
+    peers.push_back(e.dm_nodespec.pm_uuid);
+
+    // copy the peer list out and release the lock
+    {
+      event_ptr<peer_area> L(e.dm_peerarea);
+      peers.reserve(L->pm_peers.size()+1);
+
+      for (peers_t::iterator ii=L->pm_peers.begin(); ii != L->pm_peers.end(); ++ii)
+        peers.push_back(ii->first);
+    }
+
+    // now send them all a sub query of this find_services_msg msg
+    count_ptr<network_msg> netm;
+    count_ptr<reply_msg> reply;
+    reply_find_services_msg *frep;
+
+    netm = new find_services_msg(dm_service, true);
+
+    // add my results to the list directly, first (since i cant send a message to myself, as im in the main thread
+    {
+      narray<uuid> out;
+      e.local_agent::find_services(dm_service, out);
+      myreply->pm_results.resize(out.size());
+      std::copy(out.begin(), out.end(), myreply->pm_results.begin());
+    }
+
+    // send a sub query to every sub peer (including myself)
+    // skip the first one (which is me) so start x=1
+    for (int x=1; x<peers.size(); ++x) {
+      e.do_xtion(peers[x], netm.get(), reply);
+      frep = dynamic_cast<reply_find_services_msg*>(reply.get());
+      if (!frep)
+        continue;
+      // coallate these results into mine
+      for (int y=0; y<frep->pm_results.size(); ++y)
+        myreply->pm_results.push_back(frep->pm_results[y]);
+    }//for
+  }//else
+
+  e.enqueue_reply_msg(this, myreply.get());
+}
+
+//
+// reply_find_services_msg
+//
+
+scopira::core::register_flow<cluster_agent::reply_find_services_msg> cluster_agent::r4834445("scopira::agent::cluster_agent::reply_find_services_msg");
+
+cluster_agent::reply_find_services_msg::reply_find_services_msg(void)
+{
+}
+
+bool cluster_agent::reply_find_services_msg::load(scopira::tool::iobjflow_i& in)
+{
+  int sz;
+
+  if (!reply_msg::load(in) || !in.read_int(sz))
+    return false;
+
+  assert(sz>=0);
+
+  pm_results.resize(sz);
+
+  for (int x=0; x<pm_results.size(); ++x)
+    if (!pm_results[x].load(in))
+      return false;
+
+  return true;
+}
+
+void cluster_agent::reply_find_services_msg::save(scopira::tool::oobjflow_i& out) const
+{
+  reply_msg::save(out);
+
+  out.write_int(pm_results.size());
+  for (int x=0; x<pm_results.size(); ++x)
+    pm_results[x].save(out);
+}
+
+//
 // reg_context_msg
 //
 
@@ -2629,6 +2951,32 @@ void cluster_agent::dead_task_msg::execute_agent(cluster_agent &e, cluster_agent
         break;
       }
   }
+}
+
+//
+// default_group_size_msg
+//
+
+scopira::core::register_flow<cluster_agent::default_group_size_msg> cluster_agent::r85553("scopira::agent::cluster_agent::default_group_size_msg");
+
+cluster_agent::default_group_size_msg::default_group_size_msg(void)
+{
+}
+
+void cluster_agent::default_group_size_msg::execute_agent(cluster_agent &e, cluster_agent::link *lk)
+{
+  assert(e.dm_nodespec.pm_ismaster);
+
+  event_ptr<meta_area> L(e.dm_metarea);
+  int numcpu = 0;
+
+  nodemap_t::iterator jj;
+
+  for (jj=L->pm_nodes.begin(); jj!=L->pm_nodes.end(); ++jj)
+    if (jj->second->pm_nodespec.pm_jobfilter == node_spec::all_jobs_c)
+      numcpu += jj->second->pm_machinespec.pm_numcpu;
+
+  e.enqueue_reply_msg(this, new reply_msg(numcpu));
 }
 
 //
@@ -2883,7 +3231,7 @@ void* cluster_agent::net_link::send_thread_func(void *herep)
       event_ptr<queue_area> L(here->dm_queue);
 
       dalink = L->pm_link;
-      assert(dalink.get());     //this triggered on tryin to send msgs to tasks on agents that no longer exist
+      assert(dalink.get());     //this triggered on tryin to send msgs to tasks on agents that no longer exist //FIXME, this sometimes gets hit
       // do this outside of the lock
     }
     //call this outside of the lock as to avoid dead lock
@@ -3047,4 +3395,8 @@ void cluster_agent::link::unleash_a_msg(scopira::tool::event_ptr<queue_area> &L,
       L->pm_link->enqueue_msg(tosend.get());
   }
 }
+
+#ifdef PLATFORM_win32
+#pragma warning(pop)
+#endif
 

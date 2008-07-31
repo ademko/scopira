@@ -1,6 +1,6 @@
 
 /*
- *  Copyright (c) 2002-2003    National Research Council
+ *  Copyright (c) 2002-2007    National Research Council
  *
  *  All rights reserved.
  *
@@ -238,6 +238,11 @@ class scopira::tool::itflow_i : public virtual scopira::tool::iflow_i
      */
     SCOPIRA_EXPORT virtual bool read_size_t(size_t&) = 0;
     /**
+     * Reads an int64_t, returns true on success
+     * @author Aleksander Demko
+     */
+    SCOPIRA_EXPORT virtual bool read_int64_t(int64_t&) = 0;
+    /**
      * Reads an long, returns true on success
      * @author Aleksander Demko
      */
@@ -294,6 +299,11 @@ class scopira::tool::otflow_i : public virtual scopira::tool::oflow_i
      * @author Aleksander Demko
      */
     SCOPIRA_EXPORT virtual void write_size_t(size_t) = 0;
+    /**
+     * Writes a int64_t
+     * @author Aleksander Demko
+     */
+    SCOPIRA_EXPORT virtual void write_int64_t(int64_t) = 0;
     /**
      * Writes an long
      * @author Aleksander Demko
@@ -352,7 +362,6 @@ class scopira::tool::iobjflow_i : public virtual scopira::tool::itflow_i
      * It will do read_object on its own temporary object*
      * and verify (via assert) that it can be cast to your
      * type TT.
-     * @param TT the type of the output pointer
      * @param out the output pointer to set, may be null on success
      * @return true on success
      * @author Aleksander Demko
@@ -485,6 +494,88 @@ SCOPIRA_EXPORT scopira::tool::oflow_i& operator<<(scopira::tool::oflow_i& o, uns
  * @author Aleksander Demko
  */ 
 SCOPIRA_EXPORT scopira::tool::oflow_i& operator<<(scopira::tool::oflow_i& o, scopira::tool::iflow_i& i);
+
+/**
+  \page scopiratoolflowpage Input/output flows
+
+  Scopira includes its own input/output streaming flow facility. Features include:
+
+  - Easy output for many type with the << operator.
+  - Polymorphic architecture allows for the construction of layered, filtered data flows.
+  - Fully serialization (object persistence) capabilities, include the ability to handle circular references.
+
+  \section interfacessec Interfaces
+
+  Six primary interfaces are provided in the flow system. Three interfaces are for input:
+  - scopira::tool::iflow_i reads raw bytes via two read() methods. A failed() method tests if 
+    the flow is in a failed state.
+  - scopira::tool::itflow_i builds on scopira::tool::iflow_i by adding primitive type aware read methods. Primitives 
+    such as strings are included with the usual ints and doubles.
+  - scopira::tool::iobjflow_i builds on scopira::tool::itflow_i by adding a scopira::tool::object-based serialization 
+    read method. This method is able to construct previously serialized objects. 
+
+  And three interfaces are for output:
+  - scopira::tool::ioflow_i writes raw bytes via two write() methods. A failed() method tests 
+    if the flow is in a failed state.
+  - scopira::tool::iotflow_i builds on scopira::tool::ioflow_i by adding primitive type aware write methods. Primitives 
+    such as strings are included with the usual ints and doubles.
+  - scopira::tool::ioobjflow_i builds on scopira::tool::iotflow_i by adding a scopira::tool::object-based serialization 
+    write method. This method stores type information about the object for later reconstruction by 
+    iiobjflow}. 
+
+
+  \section endflowsec End Flows
+
+  End flows are flow objects that take and produce data from concrete locations. These include:
+  - Reading and writing to a file on disk with scopira::tool::fileflow.
+  - Reading and writing to a string in memory with scopira::tool::stringflow. This class uses its own 
+    internal string storage. Two variants read scopira::tool::stringiflow and write scopira::tool::stringoflow
+    to strings that you provide.
+  - Reading and writing to a buffer of bytes with scopira::tool::bufferflow.
+  - Reading and writing to a TCP/IP network socket with scopira::tool::netflow.
+  - A flow that produces nothing and accepts everything with scopira::tool::nullflow.
+
+  \section filteringsec Filtering Flows
+
+  Filtering flows provide flow classes that perform some kind of operations on the data flow as it 
+  passes to another flow. Filtering flows must always be connected to other flows and may be chained to 
+  perform stacked operations. Filters are organized into three tiers. 
+
+  At the byte level (descendants from scopira::tool::iflow_i and scopira::tool::oflow_i) transformations are done on the raw byte 
+  stream itself:
+  - scopira::tool::hexiflow and tool::hexiflow transform the stream into ASCII hex numbers. 
+    This is useful for storing arbitrary binary data in a text form.
+  - scopira::tool::distoflow multiplexes its output to multiple tool::oflow_i objects.
+  - scopira::tool::commentiflow is used to filter out comments from a file. A comment is defined as 
+    a # character in the first column, until end of line.
+  - Future binary filtering flows could include those for checksum calculation, encryption and compression. 
+
+  Type-level filters (those that descend from scopira::tool::itflow and scopira::tool::otflow) operate on primitive
+  types and convert them to and from bytes. They connect to binary filters or end flows directly. They 
+  include:
+  - Direct binary storage via scopira::tool::biniflow and scopira::tool::binoflow. This is the fastest 
+    and most compressed conversion possible.
+  - scopira::tool::textiflow and scopira::tool::textoflow provide straightforward, reversible ASCII 
+    encodings for the primitive types.
+  - scopira::tool::printiflow and tool::printoflow aid in the parsing and production of ASCII 
+    strings. Their formations are not always reversable.
+  - Filters specific to the produce of property files - scopira::tool::propiflow and scopira::tool::propoflow. 
+
+  Finally, object-level filters (those that descend from scopira::tool::iobjflow_i and scopira::tool::oobjflow_i) convert
+  objects to a series of primitives. 
+  They connect to type-level filters. Two serialization (persistent) capable filters are provided:
+  - scopira::tool::polyiflow and scopira::tool::polyoflow perform straight polymorphic serialization. 
+    This is the faster of the two streams but does not handle circular references, and stores duplicate object instances multiple 
+    times in the stream.
+  - scopira::tool::isoiflow and scopira::tool::isooflow build on the polymorphic streams. They support circular references and record 
+    only references to previously saved object instances. This pair should be preferred when the data being serialized is potentially 
+    complex or circular. 
+
+  \section setobjsec Serializable Objects
+
+  To make your own objects serialization, see \ref scopiracoreserializationpage
+
+*/
 
 #endif
 

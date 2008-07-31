@@ -87,21 +87,60 @@ namespace scopira
 {
   namespace basekit
   {
+    /**
+     * The tolerance constant, as used in various functions.
+     *
+     * @author Aleksander Demko
+     */
     const double tol_c = 0.0000001;
+    /**
+     * An arbitrary tiny number constant.
+     *
+     * @author Aleksander Demko
+     */ 
     const double tinynum_c = 1.0e-20;
+    /**
+     * An arbitrary small number constant.
+     *
+     * @author Aleksander Demko
+     */ 
     const double smallnum_c = 1.0e-5;
 
+    /**
+     * Computes the sqrt of v
+     * @author Aleksander Demko
+     */ 
     template <class T>
       inline T sqr(T v) { return v*v; }
+    /**
+     * Are v1 and v2 "equal" (within tolerance)
+     *
+     * @author Aleksander Demko
+     */ 
     template <class T>
       inline bool is_equal(T v1, T v2) { T tmp(v1 - v2); return tmp<tol_c && tmp> (-tol_c); }
+    /**
+     * Is v zero (within tolerance)
+     *
+     * @author Aleksander Demko
+     */ 
     template <class T>
       inline bool is_zero(T v) { return v<tol_c && v> (-tol_c); }
 #ifdef PLATFORM_win32
     inline bool is_nan(double v) { return _isnan(v) != 0; }
     inline bool is_nan(float v) { return _isnan(v) != 0; }//incase is*() is a macro, which it often is
 #else
+    /**
+     * Is v NaN (not a number)
+     *
+     * @author Aleksander Demko
+     */ 
     inline bool is_nan(double v) { return isnan(v) != 0; }
+    /**
+     * Is v NaN (not a number)
+     *
+     * @author Aleksander Demko
+     */ 
     inline bool is_nan(float v) { return isnan(v) != 0; }//incase is*() is a macro, which it often is
 #endif
     /// see man isinf for the meanin of the return
@@ -114,10 +153,27 @@ namespace scopira
     inline int is_inf(double v) { assert(false); return 0; }
     inline int is_inf(float v) { assert(false); return 0; }
 #else
+    /**
+     * Is v infinity.
+     *
+     * @author Aleksander Demko
+     */ 
     inline int is_inf(double v) { return isinf(v); }
+    /**
+     * Is v infinity.
+     *
+     * @author Aleksander Demko
+     */ 
     inline int is_inf(float v) { return isinf(v); }//incase is*() is a macro, which it often is
 #endif
 #endif
+    /**
+     * Returns the "sign" of v.
+     *
+     * @param v the number to test
+     * @return 1 if v is positive, -1 if v is negative, 0 otherwise
+     * @author Aleksander Demko
+     */ 
     template <class T>
       inline T sign(T v) { if (v>0) return 1; if (v<0) return -1; return 0; }
       
@@ -126,20 +182,18 @@ namespace scopira
      *  
      * Compute the factorial of n.  If m != 0, compute factorial of (n-m).
      * 
-     * @param source natural number n
-     * @param source difference integer m, m < n.
+     * @param n natural number n
+     * @param m difference integer m, m < n.
      * @return n! if (m==0), (n-m)! otherwise.
-     * 
      * @author Mark Alexiuk
      */  
     int factorial(int n, int m = 0);
     /**
      * Compute the binomial coefficient (n/(n-i, i)).
      *
-     * @param source value n (total things)
-     * @param source value i (choosen i at a time)
+     * @param n value n (total things)
+     * @param i value i (choosen i at a time)
      * @return binomial coefficient (n/(n-i, i))
-     * 
      * @author Mark Alexiuk
      */  
     int binomial(int n, int i);

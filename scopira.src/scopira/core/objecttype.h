@@ -97,7 +97,7 @@ class scopira::core::objecttype : public scopira::tool::object
     /**
      * Is this type a basetype (ancestor) for the given type?
      *
-     * @param the type to test against
+     * @param d the type to test against
      * @author Aleksander Demko
      */
     SCOPIRA_EXPORT bool is_base(const objecttype *d) const;
@@ -116,10 +116,12 @@ class scopira::core::objecttype : public scopira::tool::object
      */
     SCOPIRA_EXPORT void print_tree(int indent = 0);
 
+    /// internal
     template <class CT>
       CT * load_copy(const scopira::tool::object *src) const { return dynamic_cast<CT*>(load_copy_impl(src)); }
 
   protected:
+    /// internal
     SCOPIRA_EXPORT virtual void print_tree_this(int indent);
 
   private:

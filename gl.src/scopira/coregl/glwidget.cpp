@@ -68,12 +68,11 @@ void glfont::init(const std::string &fontname)
   assert("[GL font loading trouble]" && font);
 
   font_metrics = pango_font_get_metrics(font, 0);
-
   dm_font_height = PANGO_PIXELS(pango_font_metrics_get_ascent(font_metrics) +
       pango_font_metrics_get_descent(font_metrics));
+  pango_font_metrics_unref(font_metrics);
 
   pango_font_description_free(font_desc);
-  pango_font_metrics_unref(font_metrics);
 }
 
 void glfont::close(void)
@@ -82,6 +81,22 @@ void glfont::close(void)
   dm_inited = false;
 
   glDeleteLists(dm_list_base, num_lists_c);
+}
+
+void glfont::render_string(const std::string &v)
+{
+  assert(dm_inited);
+  glListBase(dm_list_base);
+  glCallLists(v.size(), GL_UNSIGNED_BYTE, v.c_str());
+}
+
+void glfont::render_string(const char *c)
+{
+  assert(dm_inited);
+  if (!c)
+    return;
+  glListBase(dm_list_base);
+  glCallLists(::strlen(c), GL_UNSIGNED_BYTE, c);
 }
 
 //
@@ -119,7 +134,7 @@ widget * glwidget::make_drawing_area(bool adddefaultbuts)
 GtkWidget * glwidget::make_drawing_area_impl(bool adddefaultbuts)
 {
   gboolean b;
-  GtkWidget *butbox, *retwid;
+  GtkWidget *butbox=0, *retwid;
   GtkWidget *but1, *but2;
 
   dm_glconfig = gdk_gl_config_new_by_mode(static_cast<GdkGLConfigMode>(GDK_GL_MODE_RGB | GDK_GL_MODE_DEPTH | GDK_GL_MODE_DOUBLE));

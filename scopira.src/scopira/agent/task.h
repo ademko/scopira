@@ -22,16 +22,6 @@ namespace scopira
 {
   namespace agent
   {
-    /**
-     * Parse and return the numtask= config variable, from basic_loop.
-     * You should only really call this in your id=0 or master threads.
-     *
-     * Returns 0 on failure or if the parameter was not provided.
-     *
-     * @author Aleksander Demko
-     */ 
-    SCOPIRA_EXPORT int get_config_numtask(void);
-
     class task_context; //fwd
     // users implement these
     class agent_task_i;
@@ -56,13 +46,20 @@ class scopira::agent::agent_task_i : public virtual scopira::tool::object
 {
   public:
     enum {
+      // the task is done, no need to run again
       run_done_c = 0,     // all done
-      run_again_c,        // run again, whenever
-      run_again_immovable_c,// run again, but do NOT move the process (it still needs to be registered, but doesnt nee save/load)
-      run_sleep_c,       // run when a msg arrives
-      run_sleep_immovable_c,       // run when a msg arrives, and dont move this process
-      //run_sync_c,     // run all group memebers at the same time
-      // what about checkpoint-able processes? different launch type and resttricted communications?
+
+      // pick one of these (whole first 8 bits (0xFF) are reserved for this stuff)
+      run_again_0_c = 0x1,    // run again, as soon as possible
+      run_again_1_c = 0x2,    // run again, ~1 sec
+      run_again_10_c = 0x3,   // run again, ~10 sec
+      run_again_100_c = 0x4,  // run again, ~100 sec
+
+      // optional:
+      run_canmove_c = 0x100,
+
+      // optional:
+      run_onmsg_c = 0x200,
     };
 
   public:

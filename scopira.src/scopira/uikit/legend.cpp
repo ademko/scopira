@@ -33,6 +33,9 @@ legend::legend(void)
   init_gui(100, 40);
 
   dm_min = dm_max = 0;
+
+  dm_num_dividers = 10;   // to keep with original hard-coded value
+  dm_show_values = true;  // to keep with original default behaviour
 }
 
 // set the palette
@@ -52,7 +55,7 @@ void legend::handle_repaint(scopira::coreui::widget_canvas &v)
 {
   int marker, pal_marker;
   double num_marker;
-  int divider = 10;
+//  int divider = 10;
   font afont;
   widget_context my_color(v);
 
@@ -63,19 +66,20 @@ void legend::handle_repaint(scopira::coreui::widget_canvas &v)
     dm_pal = new narray_o<int,1>(1024);
     make_gray_palette(dm_pal->all_slice());
   }
-  if (dm_pal->size() < divider)
-    divider = dm_pal->size();
-  pal_marker = dm_pal->size() / divider;
+  if (dm_pal->size() < dm_num_dividers)
+    dm_num_dividers = dm_pal->size();
+  pal_marker = dm_pal->size() / dm_num_dividers;
 
   // divide up the space
-  marker = v.width() / divider;
-  num_marker = (dm_max - dm_min) / divider;
+  marker = v.width() / dm_num_dividers;
+  num_marker = (dm_max - dm_min) / dm_num_dividers;
 
   // draw the legend
-  for (int i=0; i<divider; i++) {
+  for (int i=0; i<dm_num_dividers; i++) {
     my_color.set_foreground(dm_pal->get(i*pal_marker));
     v.draw_rectangle(my_color, true, 5+i*marker, 0, marker, 20);
-    v.draw_text(v.black_context(), afont, 5+i*marker, 25, scopira::tool::double_to_string(i*num_marker, 2));
+    if ( dm_show_values ) 
+      v.draw_text(v.black_context(), afont, 5+i*marker, 25, scopira::tool::double_to_string(i*num_marker, 2));
   }
 }
 

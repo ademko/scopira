@@ -276,9 +276,9 @@ class scopira::coreui::canvas
     /// full copy
     SCOPIRAUI_EXPORT void draw_canvas(context c, canvas &src);
     SCOPIRAUI_EXPORT void draw_image(context c, int xsrc, int ysrc, rgb_image &src, int xdest, int ydest, int w, int h);
-    SCOPIRAUI_EXPORT void draw_scaled_image(context c, rgb_image &src, int xdest, int ydest, int w, int h);
+    SCOPIRAUI_EXPORT void draw_scaled_image(context c, rgb_image &src, int xdest, int ydest, int w, int h, bool interpolate = true);
     SCOPIRAUI_EXPORT void draw_scaled_image(context c, int xsrc, int ysrc, int wsrc, int hsrc, rgb_image &src,
-        int xdest, int ydest, int wdest, int hdest);
+        int xdest, int ydest, int wdest, int hdest, bool interpolate = true);
 
     /// allocates and prepares a color_vec for this canvas
     SCOPIRAUI_EXPORT void map_colors(color_vec &cvec);
@@ -460,6 +460,13 @@ class scopira::coreui::rgb_image : protected scopira::tool::basic_array<unsigned
   public:
     struct color {
       unsigned char r, g, b;
+      /// uninitializing ctor
+      color(void) { }
+      /// initializing ctor, by packed colour
+      explicit color(int packedcol) { set_by_packed(packedcol); }
+      /// initializing ctor, by rgb
+      color(int _r, int _g, int _b) : r(_r), g(_g), b(_b) { }
+
       /// sets the rgb_image by "packed color"
       void set_by_packed(int packedcol) {
         r = (packedcol&0xFF0000)>>16;

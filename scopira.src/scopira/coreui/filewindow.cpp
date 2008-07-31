@@ -1,6 +1,6 @@
 
 /*
- *  Copyright (c) 2001    National Research Council
+ *  Copyright (c) 2001-2006    National Research Council
  *
  *  All rights reserved.
  *
@@ -17,6 +17,7 @@
 
 #include <gtk/gtk.h>
 #include <scopira/tool/file.h>
+#include <scopira/core/loop.h>
 
 //BBlibs scopira
 //BBtargets libscopiraui.so
@@ -31,10 +32,16 @@ using namespace scopira::tool;
 //
 //
 
-filewindow::filewindow(const std::string &title, const std::string &pattern, int type)
+filewindow::filewindow(const std::string &title, int type)
   : window(title), dm_reactor(0)     // call protoected constructor
 {
-  init_gui(pattern,type);
+  init_gui("", "", type);
+}
+
+filewindow::filewindow(const std::string &title, const std::string &filtername, const std::string &filterpattern, int type)
+  : window(title), dm_reactor(0)     // call protoected constructor
+{
+  init_gui(filtername, filterpattern, type);
 }
 
 void filewindow::set_filename(const std::string &filename)
@@ -44,7 +51,7 @@ void filewindow::set_filename(const std::string &filename)
 
 std::string filewindow::get_filename(void) const
 {
-  return gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dm_widget));   
+  return gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(dm_widget));
 }
 
 void filewindow::set_filename_reactor(filewindow_reactor_t r, void *data)
@@ -53,25 +60,43 @@ void filewindow::set_filename_reactor(filewindow_reactor_t r, void *data)
   dm_reactor_payload = data;
 }
 
-void filewindow::init_gui(const std::string &pattern, int type)
+void filewindow::init_gui(const std::string &patternname, const std::string &pattern, int type)
 {
-  if (type == cmd_open_file) 
-    dm_widget =  gtk_file_chooser_dialog_new(dm_title.c_str(), 
-      NULL,
-      GTK_FILE_CHOOSER_ACTION_OPEN,
-      GTK_STOCK_OPEN, GTK_RESPONSE_ACCEPT,
-      GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-      NULL);
-   else if (type == cmd_save_file)
-     dm_widget =  gtk_file_chooser_dialog_new(dm_title.c_str(), 
-      NULL,
-      GTK_FILE_CHOOSER_ACTION_SAVE,
-      GTK_STOCK_SAVE, GTK_RESPONSE_ACCEPT,
-      GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
-      NULL);
-              
+  GtkFileChooserAction act = static_cast<GtkFileChooserAction>(0);
+  const char * butname = 0;
+
+  switch (type) {
+    case cmd_open_file_c: act = GTK_FILE_CHOOSER_ACTION_OPEN; butname = GTK_STOCK_OPEN; break;
+    case cmd_save_file_c: act = GTK_FILE_CHOOSER_ACTION_SAVE; butname = GTK_STOCK_SAVE; break;
+    case cmd_open_dir_c: act = GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER; butname = GTK_STOCK_OPEN; break;
+    case cmd_save_dir_c: act = GTK_FILE_CHOOSER_ACTION_CREATE_FOLDER; butname = GTK_STOCK_SAVE; break;
+    default: assert(false);
+  }
+
+  dm_widget = gtk_file_chooser_dialog_new(dm_title.c_str(),
+    NULL,
+    act,
+    butname, GTK_RESPONSE_ACCEPT,
+    GTK_STOCK_CANCEL, GTK_RESPONSE_CANCEL,
+    NULL);
+
+  if (!pattern.empty() && pattern != "*") {
+    // add a pattern
+    gtk_ptr<GtkFileFilter> f;
+
+    f = gtk_file_filter_new();
+    gtk_file_filter_set_name(f.get(), patternname.c_str());
+    gtk_file_filter_add_pattern(f.get(), pattern.c_str());
+    gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dm_widget), f.get());
+
+    f = gtk_file_filter_new();
+    gtk_file_filter_set_name(f.get(), "All files");
+    gtk_file_filter_add_pattern(f.get(), "*");
+    gtk_file_chooser_add_filter(GTK_FILE_CHOOSER(dm_widget), f.get());
+  }
+
   g_signal_connect(G_OBJECT(dm_widget), "response", G_CALLBACK (h_response), this);
-      
+
   window::init_gui();
 }
 
@@ -88,14 +113,14 @@ void filewindow::h_response(GtkWidget *widget, gint res, gpointer data)
 {
   filewindow *here = reinterpret_cast<filewindow*>(data);
   assert(here->is_alive_object());
-  
-	switch (res) {
+
+  switch (res) {
     case GTK_RESPONSE_ACCEPT:
-		  here->ok();
+      here->ok();
       break;
     case GTK_RESPONSE_CANCEL:
       here->on_destroy();
-	}
+  }
 }
 
 //
@@ -107,6 +132,9 @@ void filewindow::h_response(GtkWidget *widget, gint res, gpointer data)
 fileentry::fileentry(void)
 {
   dm_filewin = 0;
+  dm_file_name_filter = "*";
+  dm_file_action = cmd_open_file_c;
+
   init_gui();
 }
 
@@ -128,20 +156,17 @@ void fileentry::react_destroy(scopira::tool::object *source)
   dm_filewin = 0;
 }
 
+void fileentry::set_config_key(const std::string &configkey)
+{
+  dm_configkey = configkey;
+
+  if (scopira::core::basic_loop::instance()->has_config(dm_configkey))
+    set_filename(scopira::core::basic_loop::instance()->get_config(dm_configkey));
+}
+
 void fileentry::set_filename(const std::string &filename)
 {
-  std::string dirs, fullname;
-  
-  // get the directory components of a file name, 
-  dirs = g_path_get_dirname(filename.c_str());
-  
-  //  if the file name has no directory components, dirs will contain  only "."  
-  if (dirs == ".") {
-    fullname = g_build_filename(g_get_current_dir(), filename.c_str(), NULL);
-    gtk_entry_set_text(GTK_ENTRY(dm_entry), fullname.c_str());
-  }
-  else
-    gtk_entry_set_text(GTK_ENTRY(dm_entry), filename.c_str());
+  gtk_entry_set_text(GTK_ENTRY(dm_entry), filename.c_str());
 }
 
 std::string fileentry::get_filename(void) const
@@ -157,6 +182,7 @@ void fileentry::init_gui(void)
 
   // make my entry
   dm_entry = gtk_entry_new();
+  g_signal_connect(G_OBJECT(dm_entry), "activate", G_CALLBACK(h_entry), this);
   gtk_box_pack_start(GTK_BOX(dm_widget), dm_entry, TRUE, TRUE, 0);
   gtk_widget_show(dm_entry);
 
@@ -182,7 +208,7 @@ void fileentry::h_browse(GtkWidget *widget, gpointer data)
   }
 
   // popup the file dialog
-  fwin = new filewindow("Select A File", "*",cmd_open_file);                                             
+  fwin = new filewindow("Select A File", "File Filter", here->dm_file_name_filter, here->dm_file_action);
   fwin->set_filename(gtk_entry_get_text(GTK_ENTRY(here->dm_entry)));
   fwin->set_filename_reactor(&h_filewindow_ok, here);
   fwin->add_destroy_reactor(here);
@@ -192,12 +218,27 @@ void fileentry::h_browse(GtkWidget *widget, gpointer data)
   fwin->show_all();
 }
 
+void fileentry::h_entry(GtkEntry *e, gpointer data)
+{
+  fileentry *here = reinterpret_cast<fileentry*>(data);
+
+  assert(here->is_alive_object());
+
+  if (!here->dm_configkey.empty())
+    scopira::core::basic_loop::instance()->set_config_save(here->dm_configkey, gtk_entry_get_text(e)); // save it the string, which they changed via the text field
+}
+
 bool fileentry::h_filewindow_ok(scopira::coreui::filewindow *source, const char *filename, void *data)
 {
   fileentry *here = reinterpret_cast<fileentry*>(data);
 
+  assert(here->is_alive_object());
+
   // grab the new text
   gtk_entry_set_text(GTK_ENTRY(here->dm_entry), filename);
+
+  if (!here->dm_configkey.empty())
+    scopira::core::basic_loop::instance()->set_config_save(here->dm_configkey, filename); // save it, too
 
   return true;
 }

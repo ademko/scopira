@@ -25,9 +25,13 @@ namespace scopira
 {
   namespace tool
   {
-    // returns a "random" number, usefull for initing (this
-    // is usually time(), so its not random at all.
-    // it might have some pid stuff thrown in
+    /**
+     * returns a "random" number, usefull for initing (this
+     * is usually time(), so its not random at all.
+     * it might have some pid stuff thrown in
+     *
+     * @author Aleksander Demko
+     */ 
     SCOPIRA_EXPORT int time_seed(void);
 
     class sysdev_gen;
@@ -42,14 +46,14 @@ namespace scopira
      * @author Aleksander Demko
      */ 
     template <class GEN>
-      double next_double(GEN &g, double mx) { return mx * (g() - g.min()) / (g.mx() - g.min()); }
+      double next_double(GEN &g, double mx) { return mx * (g() - g.min()) / (g.max() - g.min()); }
     /**
      * Returns an double from [0..1).
      *
      * @author Aleksander Demko
      */ 
     template <class GEN>
-      double next_double(GEN &g) { return (g() - g.min()) / (g.mx() - g.min()); }
+      double next_double(GEN &g) { return (g() - g.min()) / (g.max() - g.min()); }
   }
 }
 
@@ -190,6 +194,73 @@ class scopira::tool::sysrandom_gen
 
     // not serializable
 };
+
+/**
+  \page scopiratoolrandompage Random numbers
+
+  \section introsec Introduction
+
+  Scopira includes a collection of random number generation classes that allow for complete control
+  over random number generation and distribution. A light wrapper API is also provided for the basic OS
+  provided random number generation, including any "real" random number generation services that may be provided.
+
+  However, you should favour the Scopira provided classes for serveral reasons:
+    - full source code available
+    - portable to all OSes (ie. identical results on all platforms)
+    - full control over the seeding process (ie. reproducable runs)
+
+  \section classessec The random classes
+
+  Broken down by header file:
+
+    - scopira/tool/random.h - All random number generators in this header file use global state. You should not use them in your kernels.
+      - scopira::tool::sysdev_gen - this is a "true" random number generator, using the facilities of the operating system (/dev/random under Linux).
+      - scopira::tool::sysrand_gen - this uses the standard C rand() function.
+      - scopira::tool::sysrandom_gen - this uses the standard C random() function.
+      - scopira::tool::time_seed() - this is a simply function that will return you a nice starting seed, based on the system clock. Use it to seed your generator, if the user doesn't want an explicit seed. 
+    - tool/linconrandom.h - This header contains a compile-time configurable (via template) linear congruential generator, and typedef's two instances with popular properties. They are:
+      - scopira::tool::minstd_rand0
+      - scopira::tool::minstd_rand 
+      You should use any one of those as your random number generators in your kernels.
+    - tool/distrandom.h - This header defines distributions. A distribution takes a uniform random number generator and present it as a new distribution.
+      - scopira::tool::uni01_dist - real numbers (by default, double), [0..1)
+      - scopira::tool::unireal_dist - real numbers (by default, double), [min, max) (specified via the constructor)
+      - scopira::tool::unismallint_dist - integer numbers (by default, int), [min, max] (specified via the constructor) 
+
+  \section usagesec Class usage
+
+  All the random number generators and distributions follow a general compile type form - borrowed from boost (boost, boost's random). This makes them fast.
+
+  To use these generators, you maintain an instance of one of the seed-able, local-state generators (currently, either minstd_rand or minstd_rand0). Call this your random generator core.
+
+  Around your random core, you can have one or more distributions. Every time you ask them for a number, they ask the core then massage it to fit their distributions.
+
+  All random generators and distributions provide you with various methods. min() and max() return just that. operator() returns you the next number in the sequence.
+
+  \section examplesec Example
+
+  Here is an example:
+
+  \code
+  #include <scopira/tool/random.h>
+  #include <scopira/tool/linconrandom.h>
+
+  void foo(void) {
+    scopira::tool::lincon_core rcore;          // the typical code
+
+    rcore.seed(time_seed());                   // seed it with a "random" value
+
+    scopira::tool::lincon_01 dist(rcore);      // wrap a standard 0..1 distributor around the core
+                                               // note that you can have multi distribution objects around the same
+                                               // and that you can also simply make distribution objects as needed
+                                               // (distribution objects have no state themselves)
+
+    for (int x=0; x<5; ++x)
+      OUTPUT << ' ' << dist();                 // the () operator invokes the distribution to get the next number
+  }
+  \endcode
+
+*/
 
 #endif
 

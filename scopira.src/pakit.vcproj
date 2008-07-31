@@ -193,6 +193,10 @@
 				Name="pakit"
 				>
 				<File
+					RelativePath=".\pakit\distances.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\pakit\rdp.cpp"
 					>
 				</File>

@@ -63,7 +63,7 @@ class scopira::tool::dll : public virtual scopira::tool::object
      *
      * @param _name the filename of the dll
      * @return true on success
-     * @author @Aleksander Demko
+     * @author Aleksander Demko
      */
     SCOPIRA_EXPORT bool load_dll(std::string _name);
 

@@ -39,6 +39,9 @@ namespace scopira
  * File class. use to get information about a file on disk
  * (kinda like the Java class by the same name)
  *
+ * This should probably be eventually upgraded to stat64 and int64_t (especialy
+ * for size()).
+ *
  * @author Aleksander Demko
  */
 class scopira::tool::file
@@ -69,11 +72,18 @@ class scopira::tool::file
     SCOPIRA_EXPORT void set(const std::string &fname);
 
     /**
-     * Is this a file, and does it exist?
+     * Does this "file" exist? In this context, file can be anything (eg directory, symlink, etc)
      *
      * @author Aleksander Demko
      */ 
     SCOPIRA_EXPORT bool exists(void) const;
+
+    /**
+     * Is this a file?
+     *
+     * @author Aleksander Demko
+     */ 
+    SCOPIRA_EXPORT bool is_file(void) const;
 
     /**
      * Is it a directory?
@@ -140,6 +150,14 @@ class scopira::tool::file
      * @author Aleksander Demko
      */
     SCOPIRA_EXPORT static void split_path(const std::string &fullname, std::string &path, std::string &name);
+
+    /**
+     * Wrapper around stdlib realpath(). Mainly, removes the trailing / or \,
+     * removes . or .. and resolves all symbolice links.
+     *
+     * @author Aleksander Demko
+     */ 
+    SCOPIRA_EXPORT static std::string realpath(const std::string &name);
     
     /**
      * Creates a directory.

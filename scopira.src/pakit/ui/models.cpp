@@ -1,6 +1,6 @@
 
 /*
- *  Copyright (c) 2005    National Research Council
+ *  Copyright (c) 2005-2007    National Research Council
  *
  *  All rights reserved.
  *
@@ -15,6 +15,7 @@
 
 #include <scopira/basekit/math.h>
 #include <scopira/core/register.h>
+#include <scopira/coreui/aboutwindow.h>
 
 #include <pakit/rdp.h>
 
@@ -161,7 +162,7 @@ bool probabilities_m::load(scopira::tool::iobjflow_i& in)
       in.read_object_type(pm_patterns_link) &&
       in.read_object_type(pm_classes) &&
       in.read_object_type(pm_training);
-      
+
   if ( !b )
     return false;
 
@@ -258,6 +259,21 @@ void rdp_2d_m::calc_rdp(scopira::basekit::narray<double,2> *dmatrix)
   count_ptr<narray_o<double,2> > outmat = new narray_o<double,2> ;
 
   rdp_calc_2d_space(*dmatrix, pm_n1, pm_n2, outmat.ref());
+
+  pm_array = outmat;
+}
+
+void rdp_2d_m::calc_rdp_ratios(scopira::basekit::narray<double,2> *dmatrix)
+{
+  if (!dmatrix)
+    dmatrix = pm_distances.get();
+  if (!dmatrix)
+    dmatrix = pm_distances_link->pm_array.get();
+  assert(dmatrix);
+
+  count_ptr<narray_o<double,2> > outmat = new narray_o<double,2> ;
+
+  rdp_calc_2d_ratios(*dmatrix, pm_n1, pm_n2, outmat.ref());
 
   pm_array = outmat;
 }
@@ -371,4 +387,24 @@ void rdp_3d_m::set_title_auto(void)
 
   set_title(tit);
 }
+
+//
+// about dialog stuff
+//
+
+namespace pakit
+{
+  class abouttab;
+}
+
+class pakit::abouttab : public scopira::coreui::abouttab_i
+{
+  public:
+    virtual void add_tab(scopira::coreui::aboutwindow *aw)
+    {
+      aw->add_tab(0, "PAKit - an IBD library for Pattern Analysis", "PAKit");
+    }
+};
+
+static scopira::core::register_object<pakit::abouttab> r13("pakit::abouttab", "scopira::coreui::abouttab_i");
 

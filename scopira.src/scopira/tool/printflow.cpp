@@ -1,6 +1,6 @@
 
 /*
- *  Copyright (c) 2002    National Research Council
+ *  Copyright (c) 2002-2007    National Research Council
  *
  *  All rights reserved.
  *
@@ -113,6 +113,19 @@ bool printiflow::read_size_t(size_t& ret)
     s.push_back(b);
 
   return string_to_size_t(s, ret);
+}
+
+bool printiflow::read_int64_t(int64_t& ret)
+{
+  if (failed())
+    return false;
+
+  byte_t b = non_whitespace();
+  std::string s(reinterpret_cast<char*>(&b), 1);
+  while ( dm_in->read_byte(b)>0 && !is_whitespace(b))
+    s.push_back(b);
+
+  return string_to_int64_t(s, ret);
 }
 
 /// read an long
@@ -297,6 +310,11 @@ void printoflow::write_int(int val)
 void printoflow::write_size_t(size_t val)
 {
   write_string(size_t_to_string(val));
+}
+
+void printoflow::write_int64_t(int64_t val)
+{
+  write_string(int64_t_to_string(val));
 }
 
 void printoflow::write_long(long val)

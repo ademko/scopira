@@ -24,9 +24,152 @@ namespace scopira
 {
   namespace coreui
   {
+    template <class T> class gtk_ptr;
+
     class widget;
   }
 }
+
+/**
+ * A reference counting auto pointer of object and its decendants.
+ * This template class calls g_object_ref() and g_object_unref() on its targets,
+ * which is suitable for not only C-based gtk widgets, but also for glib stuff.
+ *
+ * This class has the following key characteristics:
+ * 1) save, null initialization 2) always maintain one (and only one)
+ * count to its given pointer
+ *
+ * @author Aleksander Demko
+ */
+template <class T> class scopira::coreui::gtk_ptr
+{
+  public:
+    typedef T data_type;
+
+  protected:
+    T *dm_ptr;
+
+  public:
+    /**
+     * Constructor, null initializing
+     *
+     * @author Aleksander Demko
+     */
+    gtk_ptr(void)
+      : dm_ptr(0) { }
+    /**
+     * Initializing constructor
+     *
+     * @author Aleksander Demko
+     */
+    gtk_ptr(T *o)
+      : dm_ptr(o) { if (o) g_object_ref(G_OBJECT(o)); }
+    /**
+     * Copy constructor
+     *
+     * @author Aleksander Demko
+     */
+    gtk_ptr(const gtk_ptr<T> &o)
+      : dm_ptr(o.dm_ptr) { if (dm_ptr) g_object_ref(G_OBJECT(dm_ptr)); }
+    /**
+     * Destructor
+     * @author Aleksander Demko
+     */
+    ~gtk_ptr()
+      { if (dm_ptr) g_object_unref(G_OBJECT(dm_ptr)); }
+
+    /**
+     * Sets the current pointer. Any old pointer will ofcourse
+     * be unreferenced.
+     *
+     * @author Aleksander Demko
+     */
+    void set(T* o)
+      { if (o) g_object_ref(G_OBJECT(o)); if (dm_ptr) g_object_unref(G_OBJECT(dm_ptr)); dm_ptr = o; }
+    /**
+     * Assignment.
+     *
+     * @author Aleksander Demko
+     */
+    gtk_ptr & operator = (T *o)
+      { set(o); return *this; }
+
+    /**
+     * Assignment.
+     *
+     * @author Aleksander Demko
+     */
+    gtk_ptr & operator = (const gtk_ptr<T> &o)
+      { set(o.dm_ptr); return *this; }
+    /**
+     * Comparison (equals) - compares internal pointer values.
+     *
+     * @author Aleksander Demko
+     */
+    bool operator == (const gtk_ptr<T> &rhs) const
+      { return dm_ptr == rhs.dm_ptr; }
+    /**
+     * Comparison (not equals) - compares internal pointer values.
+     *
+     * @author Aleksander Demko
+     */
+    bool operator != (const gtk_ptr<T> &rhs) const
+      { return dm_ptr != rhs.dm_ptr; }
+    /**
+     * Comparison (less than) - compares internal pointer values.
+     *
+     * @author Aleksander Demko
+     */
+    bool operator < (const gtk_ptr<T> &rhs) const
+      { return dm_ptr < rhs.dm_ptr; }
+
+    // do save and load like the above?
+
+    /**
+     * Gets the current object
+     *
+     * @author Aleksander Demko
+     */
+    T* get(void) const
+      { return dm_ptr; }
+    //T* get(void)
+      //{ return dm_ptr; }
+
+    /**
+     * Gets the current object, as a reference
+     *
+     * @author Aleksander Demko
+     */
+    T& ref(void) const
+      { assert("[NULL pointer dereferenced in gtk_ptr]" && dm_ptr); return *dm_ptr; }
+    //T& ref(void)
+      //{ assert(dm_ptr); return *dm_ptr; }
+
+    /**
+     * Convinient -> accesor to the object
+     *
+     * @author Aleksander Demko
+     */
+    T* operator ->(void) const
+      { assert("[NULL pointer dereferenced in gtk_ptr]" && dm_ptr); return dm_ptr; }
+    //T* operator ->(void)
+      //{ assert(dm_ptr); return dm_ptr; }
+
+    /**
+      * Convinient * deferencer.
+      *
+      * @author Aleksander Demko
+      */
+    T & operator *(void) const
+      { assert("[NULL pointer dereferenced in gtk_ptr]" && dm_ptr); return *dm_ptr; }
+
+    /**
+     * Is the pointer null?
+     *
+     * @author Aleksander Demko
+     */
+    bool is_null(void) const { return dm_ptr == 0; }
+};
 
 /**
  *  base widget shared by all GTK widgets

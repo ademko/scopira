@@ -31,10 +31,14 @@ namespace scopira
   namespace coreui
   {
     class box_layout;
+    class alignment_layout;
     class buttonbox_layout;
     class tab_layout;
     class split_layout;
     class grid_layout;
+
+    class frame;
+
     class button_constants;
     class button_layout;
 
@@ -82,7 +86,7 @@ class scopira::coreui::box_layout : public scopira::coreui::widget
      * @author Aleksander Demko
      */
     SCOPIRAUI_EXPORT box_layout(bool horiz, bool homogeneous, int spacing = 0);
-    
+
     /**
      * Sets the (additional) spacing added between each widget.
      *
@@ -103,7 +107,7 @@ class scopira::coreui::box_layout : public scopira::coreui::widget
      * @author Aleksander Demko
      */
     SCOPIRAUI_EXPORT void add_widget(widget *wid, bool expand, bool fill, int padding = 0);
-  
+
         /**
      * Adds a widget to the end of the box.
      * Might want to add more options here.
@@ -118,7 +122,7 @@ class scopira::coreui::box_layout : public scopira::coreui::widget
      * @author Marina Mandelzweig
      */
     SCOPIRAUI_EXPORT void add_widget_end(widget *wid, bool expand, bool fill, int padding = 0);
-    
+
     /**
      * Removes a widget from the box layout.
      * The widget must exist in this box.
@@ -130,6 +134,50 @@ class scopira::coreui::box_layout : public scopira::coreui::widget
   protected:
     /// inheritance cotr, doesnt call widget::init_gui, but does set dm_widget
     SCOPIRAUI_EXPORT box_layout(GtkWidget *w);
+};
+
+/**
+ * A layout container than holds one subwidget, but controls
+ * its relativly and total placement (alighment)
+ *
+ * @author Aleksander Demko
+ */ 
+class scopira::coreui::alignment_layout : public scopira::coreui::widget
+{
+  private:
+    scopira::tool::count_ptr<scopira::coreui::widget> dm_child;
+
+  public:
+    /**
+     * Constructor.
+     *
+     * @author Aleksander Demko
+     */ 
+    SCOPIRAUI_EXPORT alignment_layout(void);
+
+    /**
+     * All-in-one constructor.
+     *
+     * @param wid the widget to add
+     * @param xalign the horizontal alignment (0 is left, 1 is right)
+     * @param yalign the veritical alignment (0 is top, 1 is bottom)
+     * @param xscale the horizontal scaling (0 is dont expant, 1 is expand to all space)
+     * @param xscale the veritical scaling (0 is dont expant, 1 is expand to all space)
+     * @author Aleksander Demko
+     */ 
+    SCOPIRAUI_EXPORT alignment_layout(widget *wid, float xalign = 0, float yalign = 0, float xscale = 0, float yscale = 0);
+
+    /**
+     * Adds the one subwidget to the alignment_layout
+     *
+     * @param wid the widget to add
+     * @param xalign the horizontal alignment (0 is left, 1 is right)
+     * @param yalign the veritical alignment (0 is top, 1 is bottom)
+     * @param xscale the horizontal scaling (0 is dont expant, 1 is expand to all space)
+     * @param xscale the veritical scaling (0 is dont expant, 1 is expand to all space)
+     * @author Aleksander Demko
+     */ 
+    SCOPIRAUI_EXPORT void add_widget(widget *wid, float xalign = 0, float yalign = 0, float xscale = 0, float yscale = 0);
 };
 
 /**
@@ -152,7 +200,7 @@ class scopira::coreui::buttonbox_layout : public scopira::coreui::box_layout
      * Constructor.
      *
      * @author Aleksander Demko
-     */ 
+     */
     SCOPIRAUI_EXPORT buttonbox_layout(bool horiz, int layoutstyle = style_end_c);
 };
 
@@ -173,7 +221,7 @@ class scopira::coreui::split_layout : public scopira::coreui::widget
      * @author Aleksander Demko
      */
     SCOPIRAUI_EXPORT split_layout(bool horiz);
-    
+
     /**
      * Adds a widget to the box.
      *
@@ -197,7 +245,9 @@ class scopira::coreui::split_layout : public scopira::coreui::widget
 class scopira::coreui::tab_layout : public scopira::coreui::widget
 {
   protected:
-    typedef std::vector<scopira::tool::count_ptr<widget> > children_t;
+    typedef std::pair<scopira::tool::count_ptr<widget>,
+            scopira::tool::count_ptr<widget> > widgetpair_t;
+    typedef std::vector<widgetpair_t > children_t;
     children_t dm_children;
 
   public:
@@ -220,7 +270,25 @@ class scopira::coreui::tab_layout : public scopira::coreui::widget
      * @return the index of this tab, starts at 0 etc
      * @author Aleksander Demko
      */
+    SCOPIRAUI_EXPORT int add_widget(widget *wid, widget *labelwidget);
+
+    /**
+     * Adds a widget with the given tab title.
+     * @param wid the widget to add
+     * @param tablabel the label to assign this widget in the tab
+     * @return the index of this tab, starts at 0 etc
+     * @author Aleksander Demko
+     */
     SCOPIRAUI_EXPORT int add_widget_prepend(widget *wid, const std::string &tablabel);
+
+    /**
+     * Adds a widget with the given tab title.
+     * @param wid the widget to add
+     * @param tablabel the label to assign this widget in the tab
+     * @return the index of this tab, starts at 0 etc
+     * @author Aleksander Demko
+     */
+    SCOPIRAUI_EXPORT int add_widget_prepend(widget *wid, widget *labelwidget);
 
     /**
      * switch the view to the given tabbed pane
@@ -249,7 +317,7 @@ class scopira::coreui::tab_layout : public scopira::coreui::widget
      * Removes a tab, by id.
      *
      * @author Aleksander Demko
-     */ 
+     */
     SCOPIRAUI_EXPORT void remove_tab(int idx);
 };
 
@@ -292,6 +360,31 @@ class scopira::coreui::grid_layout : public scopira::coreui::widget
      * @author Marina Mandelzweig
      */
     SCOPIRAUI_EXPORT void add_widget(widget *wid, int x, int y, int w=1, int h=1, bool expandH=true, bool expandV=true, int paddingH=2, int paddingV=2);
+};
+
+/**
+ * A decorative frame and an optional label.
+ *
+ * @author Aleksander Demko
+ */
+class scopira::coreui::frame : public virtual scopira::coreui::widget
+{
+  public:
+    /// ctor
+    SCOPIRAUI_EXPORT frame(void);
+
+    /// ctor
+    SCOPIRAUI_EXPORT frame(const std::string &label);
+
+    /// api access routines
+    SCOPIRAUI_EXPORT void set_label(const std::string &label);
+
+    /// add a container inside
+    SCOPIRAUI_EXPORT void add_widget(scopira::coreui::widget *w);
+
+  private:
+    /// contained widget
+    scopira::tool::count_ptr<scopira::coreui::widget> dm_child;
 };
 
 /**
@@ -350,7 +443,7 @@ class scopira::coreui::button_layout : public scopira::coreui::widget,
      * @author Aleksander Demko
      */
     SCOPIRAUI_EXPORT button_layout(widget *mainwidget);
-    
+
     /**
      * Gets the action area, for you to add stuff too.
      * This will already have mainwidget added to it.
@@ -374,12 +467,19 @@ class scopira::coreui::button_layout : public scopira::coreui::widget,
     SCOPIRAUI_EXPORT void add_button(widget *but);
 
     /**
+     * Use this instead of direct box manipulation for extra consistancy.
+     *
+     * @author Aleksander Demko
+     */
+    SCOPIRAUI_EXPORT void add_button_end(widget *but);
+
+    /**
      * Adds a collection of stock buttons with the given listener.
      *
      * @param button_mask a bitmask of button_*_c defines. It may be 0, which makes this method do nothing.
      * @param reac the listener that will receive the button events, cannot be null.
      * @author Aleksander Demko
-     */ 
+     */
     SCOPIRAUI_EXPORT void add_stock_buttons(int button_mask, scopira::coreui::button_reactor_i *reac);
 
   private:

@@ -1,6 +1,6 @@
 
 /*
- *  Copyright (c) 2002    National Research Council
+ *  Copyright (c) 2002-2007    National Research Council
  *
  *  All rights reserved.
  *
@@ -23,7 +23,11 @@ namespace scopira
     class hexiflow;
     class hexoflow;
 
+    /// array of the 16 digits of hex
     extern const char* hexchars; // "0123...EF"
+    /// array of the 16 digits of hex (lowercase, which you should probably prefer)
+    extern const char* lowerhexchars; // "0123...ef"
+
     /// converts a '0'..'F' (or '0'..'f') to 0-15
     inline byte_t char_to_hex(char c) {
       // a == 97, A == 65, '0' == 48
@@ -51,9 +55,10 @@ class scopira::tool::hexiflow : public scopira::tool::iflow_i
 
   public:
     /**
-     * constrcutor
+     * Constructor.
      *
-     * @param is the input stream to use. this object will "own" it
+     * @param doref should this class reference count the source stream
+     * @param in source stream to use
      * @author Aleksander Demko
      */
     hexiflow(bool doref, iflow_i* in);

@@ -71,7 +71,7 @@ namespace scopira
     /// sclaes a color. factor is 1000 for no change (alpha aware)
     SCOPIRA_EXPORT int color_scale(int factor, int packedcol);
 
-    // layers a colour (alpha aware)
+    /// layers a colour (alpha aware)
     SCOPIRA_EXPORT int layer_color(int basecolor, int layercolor);
 
     /// set colors, suitable for picking
@@ -79,18 +79,29 @@ namespace scopira
     /// set a gradient (alpha aware)
     SCOPIRA_EXPORT void fill_color_gradient(nslice<int> target, int startpcol, int endpcol);
 
-    // palette mfns
+    /// makes a palette
     SCOPIRA_EXPORT void make_gray_palette(const nslice<int> &pal);
+    /// makes a palette
     SCOPIRA_EXPORT void make_red_palette(const nslice<int> &pal);
+    /// makes a palette
     SCOPIRA_EXPORT void make_green_palette(const nslice<int> &pal);
+    /// makes a palette
     SCOPIRA_EXPORT void make_blue_palette(const nslice<int> &pal);
+    /// makes a palette
     SCOPIRA_EXPORT void make_pick_palette(const nslice<int> &pal);
+    /// makes a palette
     SCOPIRA_EXPORT void make_heat_palette(const nslice<int> &pal);
+    /// makes a palette
     SCOPIRA_EXPORT void make_rainbow_palette(const nslice<int> &pal);
+    /// makes a palette
     SCOPIRA_EXPORT void make_bluered_palette(const nslice<int> &pal);
+    /// makes a palette
     SCOPIRA_EXPORT void make_bone_palette(const nslice<int> &pal);
+    /// makes a palette
     SCOPIRA_EXPORT void make_copper_palette(const nslice<int> &pal);
+    /// makes a palette
     SCOPIRA_EXPORT void make_spectra_palette(const nslice<int> &pal);
+    /// makes a palette
     SCOPIRA_EXPORT void make_opus_palette(const nslice<int> &pal);   // yes, this is in basekit, even though its opusish
   }
 }

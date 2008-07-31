@@ -61,7 +61,8 @@ basic_loop::basic_loop(int &argc, char **&argv)
       dm_appctx = "untitled";
   }
 
-  dm_currentstacklevel = 0;
+  dm_parse_context.pm_creatorid = 1;
+  dm_parse_context.pm_disk = false;
 
   // parse the configuration stuff
   parse_config(argc, argv);
@@ -76,6 +77,16 @@ basic_loop::~basic_loop()
   dm_instance = 0;
 
   commit_config();
+}
+
+void basic_loop::list_config(std::vector<std::string> &out) const
+{
+  configmap_t::const_iterator ii;
+
+  out.clear();
+
+  for (ii=dm_configmap.begin(); ii != dm_configmap.end(); ++ii)
+    out.push_back(ii->first);
 }
 
 bool basic_loop::has_config(const std::string &key) const
@@ -101,17 +112,7 @@ bool basic_loop::get_config(const std::string &key, std::string &out) const
 
 void basic_loop::set_config(const std::string &key, const std::string &val)
 {
-  if (dm_configmap.count(key) > 0) {
-    value_t &current(dm_configmap[key]);
-    std::auto_ptr<value_t> oldstack(current.pm_stack);
-    value_t oldv(current);
-
-    // do a push operation
-    current = value_t(val, dm_currentstacklevel);
-    current.pm_stack = std::auto_ptr<value_t>(new value_t(oldv));
-    current.pm_stack->pm_stack = oldstack;
-  } else
-    dm_configmap[key] = value_t(val, dm_currentstacklevel);   // simple insert
+  dm_configmap[key] = value_t(val, dm_parse_context.pm_creatorid);   // simple insert
 }
 
 void basic_loop::set_config_default(const std::string &key, const std::string &val)
@@ -128,8 +129,6 @@ void basic_loop::set_config_save(const std::string &key, const std::string &val)
 
 void basic_loop::commit_config(void)
 {
-  if (dm_currentstacklevel != 0)
-    return; // saves only work at the root level
   configmap_t::iterator ii;
   fileflow out;
   bool opened = false;
@@ -226,31 +225,6 @@ bool basic_loop::load_object(const std::string &name, scopira::tool::count_ptr<s
   return inf.read_object_type<object>(out);
 }
 
-void basic_loop::push_configstack(void)
-{
-  ++dm_currentstacklevel;
-}
-
-void basic_loop::pop_configstack(void)
-{
-  assert(dm_currentstacklevel>0);
-  
-  // go purge all the current level values
-  configmap_t::iterator ii;
-  for (ii=dm_configmap.begin(); ii!=dm_configmap.end(); ++ii)
-    if (ii->second.pm_stacklevel == dm_currentstacklevel) {
-      value_t &v = ii->second;
-      value_t &sub = *v.pm_stack;
-      // do a pop!
-      v.pm_val = sub.pm_val;
-      v.pm_disk = sub.pm_disk;
-      v.pm_stacklevel = sub.pm_stacklevel;
-      v.pm_stack = sub.pm_stack;
-    }
-
-  --dm_currentstacklevel;
-}
-
 void basic_loop::parse_config(int argc, char **argv)
 {
   const char *cc = ::getenv("HOME");
@@ -267,25 +241,37 @@ void basic_loop::parse_config(int argc, char **argv)
 
   // process environtment (general)
   cc = ::getenv("SCOPIRA_CONFIG");
-  if (cc)
+  if (cc) {
+    dm_parse_context.pm_creatorid++;
     parse_config_string(cc, false);
+  }
   // process environtment (app)
   cc = ::getenv((upper_ctx + "_CONFIG").c_str());
-  if (cc)
+  if (cc) {
+    dm_parse_context.pm_creatorid++;
     parse_config_string(cc, false);
+  }
   // process config file (general)
+  dm_parse_context.pm_creatorid++;
   parse_config_file(dm_configdir + "config", false);
   // process config file (app)
+  dm_parse_context.pm_creatorid++;
   parse_config_file(dm_configdir + get_context_name() + ".config", false);
   // process config file (app, user-saved)
+  dm_parse_context.pm_creatorid++;
+  dm_parse_context.pm_disk = true;
   parse_config_file(dm_configdir + get_context_name() + ".config.saved", false);
+  dm_parse_context.pm_disk = false;
 
   // in the future, add registry checks under win32? :)
   
   // finally, do the command line
+  dm_parse_context.pm_creatorid = 10;
   if (argv)
     for (; *argv; ++argv)
       parse_config_pair(*argv);
+
+  dm_parse_context.pm_creatorid = 100;
 }
 
 void basic_loop::parse_config_file(const std::string &filename, bool cryonerrors)
@@ -331,20 +317,34 @@ static void clean_win32newlines(std::string &s)
 
 void basic_loop::parse_config_pair(const std::string &s)
 {
-  std::string left, right;
+  std::string left, right, withplusses;
+  configmap_t::iterator ii;
 
   // perhaps in the future add addtional += operators (or just allow multiple specifications?
   // then how do you override?)
   // and unset operator?
 
-  if (!split_char(s, '=', left, right))
-    return;
+  if (!split_char(s, '=', left, right)) {
+    left = "param";
+    right = s;
+  }
     
   clean_win32newlines(left);
   clean_win32newlines(right);
   file::expand_homedir(right);
   file::expand_envvar(right);
-  dm_configmap[left] = value_t(right, dm_currentstacklevel);
+
+  // add + to the end of the name, to prevent same level collisions
+  ii = dm_configmap.find(left);
+  withplusses = left;
+  while ( ii != dm_configmap.end() && ii->second.pm_creatorid == dm_parse_context.pm_creatorid ) {
+    withplusses += "+";
+    ii = dm_configmap.find(withplusses);
+  }
+  // finally, add the key
+  dm_configmap[withplusses] = value_t(right, dm_parse_context.pm_creatorid);
+  if (dm_parse_context.pm_disk)
+    dm_configmap[withplusses].pm_disk = true;
 
   // check for sub processing
   if (left == "config")

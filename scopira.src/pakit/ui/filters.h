@@ -86,6 +86,7 @@ class pakit::pattern_rankorder_v : public scopira::coreui::viewwidget
     virtual void bind_model(scopira::core::model_i *sus);
     void rankPointsWithin(patterns_t &pat);
     void rankPointsBetween(patterns_t &pat);
+    void sortPointsWithin(patterns_t &pat);
     virtual void react_button(scopira::coreui::button *source, int actionid);
 };
 

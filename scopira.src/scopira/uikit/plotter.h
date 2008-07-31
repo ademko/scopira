@@ -18,6 +18,7 @@
 #include <scopira/coreui/export.h>
 #include <scopira/coreui/window.h>
 #include <scopira/coreui/checkbutton.h>
+#include <scopira/coreui/radiobutton.h>
 #include <scopira/coreui/spinbutton.h>
 #include <scopira/coreui/entry.h>
 #include <scopira/coreui/checkbutton.h>
@@ -33,11 +34,14 @@ namespace scopira
     class plotter_options;
     class plotter_options_bar;
 
+    class plotter_properties_reactor_i;  // may want to know when plotter properties changed by user (RV)
     class plotter_properties_dialog;
 
     class plotter;
   }
 }
+
+enum scaling_mode_t { scale_auto_c, scale_to_max_c, scale_user_c };
 
 /**
  * all the state needed for the 2d plot
@@ -53,9 +57,7 @@ class scopira::uikit::plotter_options : public virtual scopira::tool::object
     std::string dm_name, dm_xlabel, dm_ylabel, dm_style;
     
     int dm_backcol;       // in packed colour format (0xRRGGBB)
-    
-    double dm_ymin, dm_ymax;
-    bool dm_freey;            // auto calc y?
+    int dm_scaling_mode;
     
   public:
     /// ctor
@@ -81,18 +83,10 @@ class scopira::uikit::plotter_options : public virtual scopira::tool::object
     SCOPIRAUI_EXPORT void set_ylabel(const std::string &lab);
     /// ylabel getter
     const std::string & get_ylabel(void) const { return dm_ylabel; }
-
-    /// sets freeform y calculation (the default)
-    SCOPIRAUI_EXPORT void set_freey(void);
-    /// turns off freeform y calculation, use these values instead
-    void set_yaxis_range(double ymin, double ymax);
-
-    /// is this a free y range
-    bool is_freey(void) const { return dm_freey; }
-    /// get the min y val, if non free
-    double get_y_min(void) const { return dm_ymin; }
-    /// get the max y val, if non free
-    double get_y_max(void) const { return dm_ymax; }
+    /// scaling mode setter
+    SCOPIRAUI_EXPORT void set_scaling_mode(int val);
+    /// get scaling mode
+    int get_scaling_mode(void) const { return dm_scaling_mode; }
     /// get the style
     const std::string & get_style(void) const { return dm_style; }
 };
@@ -108,6 +102,18 @@ class scopira::uikit::plotter_options_bar : public scopira::uikit::plotter_optio
     SCOPIRAUI_EXPORT plotter_options_bar(const plotter_options_bar &src);
 };
 
+
+/**
+ * To inform clients when plotter properties changed by user.
+ *
+ * @author Rodrigo Vivanco
+ */
+class scopira::uikit::plotter_properties_reactor_i : public virtual scopira::tool::object
+{
+  public:
+    virtual void border_colour_changed( scopira::uikit::plotter *plotter_obj, int colour ) {};
+};
+
 /**
  * plotter_properties_dialog : a properties dialog class
  *
@@ -119,6 +125,7 @@ class scopira::uikit::plotter_options_bar : public scopira::uikit::plotter_optio
 class scopira::uikit::plotter_properties_dialog : public scopira::coreui::dialog,
   public virtual scopira::coreui::checkbutton_reactor_i,
   public virtual scopira::uikit::colorbutton_reactor_i,
+  public virtual scopira::coreui::radiobutton_reactor_i,
   public virtual scopira::tool::destroy_reactor_i
 {
   protected:
@@ -146,7 +153,10 @@ class scopira::uikit::plotter_properties_dialog : public scopira::coreui::dialog
     /// spinbutton for font size
     scopira::tool::count_ptr<scopira::coreui::spinbutton> dm_font_size;
     /// checkboxes for turning properties on and off
-    scopira::tool::count_ptr<scopira::coreui::checkbutton> dm_auto_col, dm_auto_size, dm_auto_line;
+    scopira::tool::count_ptr<scopira::coreui::checkbutton> dm_auto_col, /* dm_auto_size, */ dm_auto_line;
+    /// radio buttons for scaling options
+    scopira::tool::count_ptr<scopira::coreui::radiobutton> dm_scaling_buttons;
+    //int dm_scale_how;
   
     /// tab layout for all widgets
     scopira::tool::count_ptr<scopira::coreui::tab_layout> dm_tab;
@@ -161,7 +171,7 @@ class scopira::uikit::plotter_properties_dialog : public scopira::coreui::dialog
     /// current color selection win, if any
     scopira::uikit::colorwindow *dm_colorwin;
     int dm_selected_color;
-  
+
   public:
     /// default constructor
     SCOPIRAUI_EXPORT plotter_properties_dialog(const std::string &title);
@@ -176,6 +186,7 @@ class scopira::uikit::plotter_properties_dialog : public scopira::coreui::dialog
     /// called when checkbutton is clicked
     SCOPIRAUI_EXPORT virtual void react_checkbutton(scopira::coreui::checkbutton *source, bool val);
     SCOPIRAUI_EXPORT virtual void react_colorbutton(scopira::uikit::colorbutton *source, int newcol);
+    SCOPIRAUI_EXPORT virtual void react_radiobutton(scopira::coreui::radiobutton *source, int actionid);
 
     /// functions to get the property values from the dialog
     SCOPIRAUI_EXPORT int get_color(int c) const;
@@ -193,6 +204,7 @@ class scopira::uikit::plotter_properties_dialog : public scopira::coreui::dialog
     SCOPIRAUI_EXPORT double get_ymin(void) const;
     SCOPIRAUI_EXPORT double get_ymax(void) const;
     SCOPIRAUI_EXPORT scopira::basekit::narray<int> get_line_colors(void) const;
+    SCOPIRAUI_EXPORT int get_scaling_method(void) const;
 
     /// functions to set the property values within the dialog
     SCOPIRAUI_EXPORT void set_color(int c,int col);
@@ -210,6 +222,7 @@ class scopira::uikit::plotter_properties_dialog : public scopira::coreui::dialog
     SCOPIRAUI_EXPORT void set_ymin(double y);
     SCOPIRAUI_EXPORT void set_ymax(double y);
     SCOPIRAUI_EXPORT void set_line_colors(const scopira::basekit::narray<int> &colors);
+    SCOPIRAUI_EXPORT void set_scaling_method(int method);
 
     /// set the real range values of the data (ie values before being clipped)
     SCOPIRAUI_EXPORT void set_default_range(double xmin, double xmax, double ymin, double ymax);
@@ -254,7 +267,7 @@ class scopira::uikit::plotter : public scopira::coreui::zoomed_scrolled_canvas_b
     /// axes / tick marks
     struct tick_label {  /// number label for a tick
       //pix positions for a number
-      int x_pos;
+      int x_pos;      // if this is -1, then that means "no label here"
       int y_pos;
       //number label
       std::string num;
@@ -329,9 +342,13 @@ class scopira::uikit::plotter : public scopira::coreui::zoomed_scrolled_canvas_b
     enum menu_list {  /// menu items
       cmd_show_properties_c = 1000,
     };
+
+    /// scaling method
+    int dm_scaling_method;
     
     scopira::uikit::plotter_properties_dialog *dm_prop_window;  /// properties window
   
+    scopira::uikit::plotter_properties_reactor_i *dm_reactor;
   public:
     /// ctor
     SCOPIRAUI_EXPORT plotter(bool scroll=true, bool zoom=true);
@@ -388,8 +405,11 @@ class scopira::uikit::plotter : public scopira::coreui::zoomed_scrolled_canvas_b
     /// sets the percentage of the y-range to be used to pad the top and bottom
     SCOPIRAUI_EXPORT void set_pad_percent(double p);
     
-    /// se the line colours
+    /// set the line colours
     SCOPIRAUI_EXPORT void set_line_colors(scopira::basekit::narray<int> colors);
+
+    /// set the scaling method
+    SCOPIRAUI_EXPORT void set_scaling_method(int method);
 
     /// returns the number digits (after the decimal) for the y axis
     short get_ydigits(void) const { return dm_ydigits; }
@@ -445,6 +465,10 @@ class scopira::uikit::plotter : public scopira::coreui::zoomed_scrolled_canvas_b
 
     /// Update view. you must call this after set_meta/label/plot_data
     void update_gui(void) { request_redraw(); }
+
+    void set_reactor( scopira::uikit::plotter_properties_reactor_i *reactor ){
+      dm_reactor = reactor;
+    }
 
   protected:
     /**

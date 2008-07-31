@@ -1,6 +1,6 @@
 
 /*
- *  Copyright (c) 2002-2003    National Research Council
+ *  Copyright (c) 2002-2007    National Research Council
  *
  *  All rights reserved.
  *
@@ -160,6 +160,36 @@ namespace scopira
      * @author Aleksander Demko
      */
     SCOPIRA_EXPORT bool string_to_size_t(const std::string &s, size_t &outsize_t);
+
+    /**
+     * Converts an int64_t to a string
+     * @param i the int64_t
+     * @return the string representation of the int64_t
+     * @author Aleksander Demko
+     */
+    SCOPIRA_EXPORT std::string int64_t_to_string(int64_t i);
+    /**
+     * Converts an int64_t to a string. Write out to an existing string
+     * @param i the int64_t
+     * @param out the string to save the convertion to
+     * @author Aleksander Demko
+     */
+    inline void int64_t_to_string(int64_t i, std::string &out) { out = int64_t_to_string(i); }
+    /**
+     * Converts a string to an int64_t (without reporting failure)
+     * @param s the string to convert
+     * @return the int64_t representation of the string
+     * @author Aleksander Demko
+     */
+    SCOPIRA_EXPORT int64_t string_to_int64_t(const std::string &s);
+    /**
+     * Converts a string to an int64_t, and reports failure, if any
+     * @param s the string to convert
+     * @param outint64_t the int64_t read from the string
+     * @return true on success
+     * @author Aleksander Demko
+     */
+    SCOPIRA_EXPORT bool string_to_int64_t(const std::string &s, int64_t &outint64_t);
 
     /**
      * Converts a double to string
@@ -436,29 +466,39 @@ namespace scopira
         ( (x & 0xFF000000) >> 24 );
     }
     /**
-     * Swaps the byte (endianess) of an int64_t. Currently only used
-     * in binflow.
+     * Swaps the byte (endianess) of an int64_t.
      * @author Aleksander Demko
      */
     template <>
       inline int64_t byte_swap<int64_t>(int64_t x)
     {
       return
-#ifdef PLATFORM_64
-      ( (x & 0xFF) << (8*7) ) |
-      ( (x & 0xFF00) << (8*5) ) |
-      ( (x & 0xFF0000) << (8*3) ) |
-      ( (x & 0xFF000000) << 8 ) |
-      ( (x & 0xFF00000000) >> 8 ) |
-      ( (x & 0xFF0000000000) >> (8*3) ) |
-      ( (x & 0xFF000000000000) >> (8*5) ) |
-      ( (x & 0xFF00000000000000) >> (8*7) );
-#else
-      ( (x & 0xFF) << 24 ) |
-      ( (x & 0xFF00) << 8 ) |
-      ( (x & 0xFF0000) >> 8 ) |
-      ( (x & 0xFF000000) >> 24 );;
-#endif
+        ( (x & 0xFFll) << (8*7) ) |
+        ( (x & 0xFF00ll) << (8*5) ) |
+        ( (x & 0xFF0000ll) << (8*3) ) |
+        ( (x & 0xFF000000ll) << 8 ) |
+        ( (x & 0xFF00000000ll) >> 8 ) |
+        ( (x & 0xFF0000000000ll) >> (8*3) ) |
+        ( (x & 0xFF000000000000ll) >> (8*5) ) |
+        ( (x & 0xFF00000000000000ll) >> (8*7) );
+    }
+
+    /**
+     * Swaps the byte (endianess) of an uint64_t.
+     * @author Aleksander Demko
+     */
+    template <>
+      inline uint64_t byte_swap<uint64_t>(uint64_t x)
+    {
+      return
+        ( (x & 0xFFull) << (8*7) ) |
+        ( (x & 0xFF00ull) << (8*5) ) |
+        ( (x & 0xFF0000ull) << (8*3) ) |
+        ( (x & 0xFF000000ull) << 8 ) |
+        ( (x & 0xFF00000000ull) >> 8 ) |
+        ( (x & 0xFF0000000000ull) >> (8*3) ) |
+        ( (x & 0xFF000000000000ull) >> (8*5) ) |
+        ( (x & 0xFF00000000000000ull) >> (8*7) );
     }
 
     /**

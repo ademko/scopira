@@ -203,47 +203,101 @@ class scopira::tool::timestamp
 };
 
 /**
- * A stop watch/chrono graph.
+ * A handy class that like a stop watch, can be used to measure
+ * the passing of time.
+ *
+ * The chrono has two states:
+ *   - stopped
+ *   - running
+ *
+ * And two counters:
+ *   - the total time (total of all start() stop() segments)
+ *   - the lap time (the time of only the last start() stop() segment)
+ *
+ * Sample usage:
+ * @code
+ *    scopira::tool::chrono c;
+ *
+ *    c.start();
+ *    while (true) {
+ *      // do work
+ *      if (c.get_running_time() > 60) {
+ *        OUTPUT << "Operation taking too long, aborting.\n";
+ *        break;
+ *      }
+ *    }
+ *    c.stop();
+ *    OUTPUT << "Total elapsed time (in seconds): " << c.get_total_time() << '\n';
+ * @endcode
  *
  * @author Aleksander Demko
  */ 
 class scopira::tool::chrono
 {
-  // a stop watch
   public:
-    /// ctor, total is 0
+    /**
+     * Constructor. The initial state of the chrono is stopped, so you
+     * must explicitly start() it.
+     *
+     * The chrono has two counters, both of which are zeroed:
+     *   - the total time counter
+     *   - the last lap counter
+     *
+     * @author Aleksander Demko
+     */ 
     SCOPIRA_EXPORT chrono(void);
 
     /**
-     * Resets the stop watch (by zeroing total).
+     * Resets the stop watch counters to zero.
+     *
      * @author Aleksander Demko
      */ 
     SCOPIRA_EXPORT void reset(void);
 
-    /// start the stop watch
+    /**
+     * Starts the chrono.
+     *
+     * @author Aleksander Demko
+     */ 
     SCOPIRA_EXPORT void start(void);
 
     /**
-     * Stops the stop watch (you must have "started" it) sometime.
-     * Adds the laptime (time since the last start()) to the "total" time.
+     * Stops the stop watch (you must have start() it) previously.
+     *
+     * get_lap_time() may be used to retreave the time since the start().
+     * This time will be added to the total time, which can be retreived
+     * with get_total_time()
+     *
      * @author Aleksander Demko
      */ 
     SCOPIRA_EXPORT void stop(void);
 
     /**
      * Gets the total time, in seconds.
+     *
+     * The total time is the sum of all the start() - stop() segments
+     * since the last reset.
+     *
+     * @return the total time, in seconds.
      * @author Aleksander Demko
      */ 
     SCOPIRA_EXPORT double get_total_time(void) const;
     /**
-     * Gets the lap top, in seconds.
-     * This is the time between the last start()-stop().
+     * Gets the lap time, in seconds.
+     *
+     * This is the time between the last start() and stop().
+     *
+     * @return the lap time, in seconds.
      * @author Aleksander Demko
      */ 
     SCOPIRA_EXPORT double get_lap_time(void) const;
     /**
      * Gets the current time, in seconds, since the last start().
-     * This does not modify any of the chrono's states.
+     *
+     * This is called when the chrono is running, and can be
+     * used to poll the chrono.
+     *
+     * @return the running time, in seconds.
      * @author Aleksander Demko
      */ 
     SCOPIRA_EXPORT double get_running_time(void) const;

@@ -12,6 +12,7 @@
  */
 
 #include <scopira/coreui/output.h>
+#include <scopira/tool/output.h>  // for OUTPUT mostly, quick/dirty debugging
 
 //BBlibs scopira
 //BBtargets libscopiraui.so
@@ -24,7 +25,19 @@ outputwidget::outputwidget(void)
 
   init_gui();
 }
-    
+
+void outputwidget::set_font( std::string font_str )
+{
+  PangoFontDescription *font;
+
+  font = pango_font_description_from_string( font_str.c_str() );
+  gtk_widget_modify_font( dm_text_widget, font );
+
+  gtk_widget_queue_resize( GTK_WIDGET(dm_text_widget) );
+
+  pango_font_description_free( font );
+}
+
 void outputwidget::set_output(const std::string &buf)
 {
   set_output(buf.c_str(), buf.size());

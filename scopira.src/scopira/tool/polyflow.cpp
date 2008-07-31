@@ -1,6 +1,6 @@
 
 /*
- *  Copyright (c) 2002-2003    National Research Council
+ *  Copyright (c) 2002-2007    National Research Council
  *
  *  All rights reserved.
  *
@@ -78,6 +78,12 @@ bool polyiflow::read_size_t(size_t& ret)
 {
   assert(dm_file.get());
   return dm_file->read_size_t(ret);
+}
+
+bool polyiflow::read_int64_t(int64_t& ret)
+{
+  assert(dm_file.get());
+  return dm_file->read_int64_t(ret);
 }
 
 /// read an long
@@ -255,6 +261,12 @@ void polyoflow::write_size_t(size_t val)
 {
   assert(dm_file.get());
   dm_file->write_size_t(val);
+}
+
+void polyoflow::write_int64_t(int64_t val)
+{
+  assert(dm_file.get());
+  dm_file->write_int64_t(val);
 }
 
 /// write an long

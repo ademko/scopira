@@ -35,25 +35,47 @@ int main(int argc, char **argv)
 {
   scopira::core::basic_loop bl(argc, argv);
 
-  if (!(bl.has_config("network") || bl.has_config("cluster")) && !bl.has_config("task")) {
-    OUTPUT << "You need to provide either:\n"
-      " task=TASK\n"
+  if (!(bl.has_config("clusterquit") || bl.has_config("cluster")) && !bl.has_config("task")) {
+    OUTPUT <<
+      "Load one or more plug-in libraries with:\n"
+      " lib=path/to/libplugin.so\n"
       "\n"
-      " cluster=server\n"
-      " cluster=serveronly\n"
-      " cluster=auto\n"
-      " cluster=autoclient\n"
-      " cluster=SOMEURL\n"
-      " cluster=SOMEURL task=TASK\n"
-      "         SOMEURL is like scopira://hostname:port/options\n"
+      "To use the auto cluster boot facility:\n"
+      " clusterboot=macchine,list   (auto run a cluster with the given machines as the slave list)\n"
+      " clusterboot_ssh=sshclient   (use the given sshclient. \"ssh\" is the default)\n"
+      " clusterboot_exe=agentclient (use the given sshagent client. the current executable is the default)\n"
       "\n"
-      /*" network=auto\n"
-      " network=SOMEURL\n"
-      " network=SOMEURL task=TASK\n"
-      "\n"*/
-      " (you also usually have a few lib= params)\n";
+      "To join or setup a network-based agent system, provide one of:\n"
+      " cluster=server              (be a coordination/routing server)\n"
+      " cluster=serveronly          (be a server, but don't host jobs)\n"
+      " cluster=autoclient          (auto find an existing network, and only run my own jobs)\n"
+      " cluster=autoworker          (auto find an existing network)\n"
+      " cluster=autoserver          (auto find an existing network, and be a server if none found)\n"
+      " cluster=SOMEURL             (SOMEURL is of the form scopira://hostname:port/options,options)\n"
+      "Options when using cluster=\n"
+      " clusterport=port#           (use the given TCP port, when not specified elsewhere)\n"
+      " clusterquit=1               (shutdown the cluster)\n"
+      //" clusterpassword=password    (use the given password, not yet used)\n"
+      "\n"
+      "Options for the SOMEURL are:\n"
+      " broadcast                   (search for the server, via the wild card hostname given)\n"
+      " client                      (same as tunnel,nojobs)\n"
+      " direct                      (no need for via-master routing -- default)\n"
+      " tunnel                      (needs via-master routing)\n"
+      " alljobs                     (runs all jobs -- default)\n"
+      " myjobs                      (only run jobs I myself instantiate)\n"
+      " nojobs                      (refuse all jobs)\n"
+      "\n"
+      "To initiate a job/task on the network, provide:\n"
+      " task=TASK                   (the C++ classname of the task to run)\n"
+      " numcpu=X                    (run with X CPUs, or 0 for ALL (the default))\n"
+      "\n";
     return 1;
   }
+
+  // a niceity
+  if (bl.has_config("clusterquit"))
+    bl.set_config_default("cluster", "autoclient");
 
   scopira::agent::agent_loop cl(argc, argv);
 
@@ -68,7 +90,6 @@ int main(int argc, char **argv)
     // have a task, run it
     scopira::tool::count_ptr<scopira::tool::object> obj;
     scopira::agent::agent_task_i *t;
-    int ret = 1;
 
     if (!scopira::tool::objflowloader::instance()->has_typeinfo(bl.get_config("task"))) {
       OUTPUT << "Unregistered task type: " << bl.get_config("task") << '\n';
@@ -89,18 +110,14 @@ int main(int argc, char **argv)
     OUTPUT << "Running task=" << bl.get_config("task") << '\n';
     scopira::agent::task_context ctx;
 
-    // finally, run the sucker
-    // do this proper?
-    while (ret != 0)
-      ret = t->run(ctx);
+    // finally, run the task using the driver routine
+    run_task(ctx, *t);
+  }
+  else if (bl.get_config("clusterquit") == "1") {
+    scopira::agent::agent_i::instance()->enqueue_network_quit();
+    cl.set_wait_for_quit();
   } else {
     // i dont have a task? lets just wait around then
-    cl.set_wait_for_quit();
-  }
-
-  // should we be sending a quit signal?
-  if (bl.get_config("allquit") == "1") {
-    scopira::agent::agent_i::instance()->enqueue_network_quit();
     cl.set_wait_for_quit();
   }
 

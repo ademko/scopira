@@ -243,7 +243,7 @@ void vcrbutton::set_entry(void)
   dm_entry = gtk_entry_new();
 
   gtk_widget_set_size_request(dm_entry, 70, -1);
-  gtk_editable_set_editable(GTK_EDITABLE(dm_entry), FALSE);
+  gtk_editable_set_editable(GTK_EDITABLE(dm_entry), TRUE);
   gtk_box_pack_start(GTK_BOX(dm_entry_box), dm_entry, FALSE, FALSE, 0);
   gtk_widget_show(dm_entry);
 

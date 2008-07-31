@@ -92,7 +92,10 @@ class scopira::coreui::viewtabs : public scopira::coreui::widget,
       scopira::tool::count_ptr<widget> pm_widget;
       scopira::tool::count_ptr<scopira::core::model_i> pm_model;
       scopira::tool::count_ptr<scopira::core::view_i> pm_view;
+
       GtkWidget *pm_label;
+
+      std::string pm_title; // may be empty for "not-set"
     };
     typedef std::vector< child_t > children_t;
     children_t dm_children;

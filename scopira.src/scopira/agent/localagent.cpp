@@ -1,6 +1,6 @@
 
 /*
- *  Copyright (c) 2005    National Research Council
+ *  Copyright (c) 2005-2008    National Research Council
  *
  *  All rights reserved.
  *
@@ -20,12 +20,15 @@
 #include <scopira/tool/printflow.h>
 #include <scopira/tool/util.h>
 #include <scopira/core/loop.h>
+#include <scopira/agent/ids.h>
+#include <scopira/agent/register.h>
 
 //BBtargets libscopira.so
 
 using namespace scopira::tool;
 using namespace scopira::agent;
 using scopira::basekit::narray;
+
 
 //
 //
@@ -128,17 +131,8 @@ local_agent::local_agent(void)
   dm_spec.set_auto_detect();
   assert(dm_spec.pm_numcpu>0);
 
-  if (scopira::core::basic_loop::instance()->has_config("numcpu")) {
-    int numcpu;
-    if (!string_to_int(scopira::core::basic_loop::instance()->get_config("numcpu"), numcpu) || numcpu<1) {
-      OUTPUT << "Failed to parse a valid number of CPUs from numcpu=" << scopira::core::basic_loop::instance()->get_config("numtask") << '\n';
-      // yeah, bail now
-      return;
-    }
+  dm_agentclock.start();
 
-    OUTPUT << "Overriding cpu value from " << la_get_spec().pm_numcpu << " to " << numcpu << '\n';
-    dm_spec.pm_numcpu = numcpu;
-  }
   // start the threads
 
   // lets do two for now, but in the future, we'll have base this off a
@@ -195,10 +189,15 @@ local_agent::~local_agent()
 
 void local_agent::notify_stop(void)
 {
-  event_ptr<kernel_area> L(dm_kernel);
+  {
+    event_ptr<kernel_area> L(dm_kernel);
 
-  L->pm_alive = false;
-  L.notify_all();
+    L->pm_alive = false;
+    L.notify_all();
+  }
+
+  // do this last so that all the threads see the dead state
+  kill_all_local_tasks();
 }
 
 void local_agent::wait_stop(void)
@@ -207,24 +206,6 @@ void local_agent::wait_stop(void)
 
   while (L->pm_alive)
     L.wait();
-}
-
-void local_agent::set_service(scopira::tool::uuid ctxid, scopira::tool::uuid serviceid, bool enable)
-{
-  event_ptr<kernel_area> L(dm_kernel);
-  // do a removal
-  servicemap_t::iterator ii, endii;
-  ii = L->pm_services.lower_bound(serviceid);
-  endii = L->pm_services.upper_bound(serviceid);
-
-  for (; ii != endii; ++ii)
-    if (ii->second == ctxid)
-      break;    // found it
-
-  if (enable && ii == endii)
-    L->pm_services.insert(servicemap_t::value_type(serviceid, ctxid));
-  if (!enable && ii != endii)
-    L->pm_services.erase(ii);
 }
 
 void local_agent::reg_context(scopira::tool::uuid &ctxid, taskmsg_reactor_i *reac)
@@ -257,12 +238,46 @@ void local_agent::unreg_context(scopira::tool::uuid ctxid)
 
   assert(!ctxid.is_zero());
   assert(L->pm_ps.find(ctxid) != L->pm_ps.end());
-  erase_services(L->pm_services, ctxid);
   L->pm_ps.erase(L->pm_ps.find(ctxid));
 }
 
-scopira::tool::uuid local_agent::launch_task(const std::type_info &t)
+int local_agent::find_services(scopira::tool::uuid &serviceid, scopira::basekit::narray<scopira::tool::uuid> &out)
 {
+  std::vector<scopira::tool::uuid> targetlist;    // no pre reserve, this will usually be a small/empty list for the most part
+
+  // find all the local tasks that support this service
+  if (serviceid == agent_service_c || serviceid == worker_agent_service_c) {
+    // send back an agent list instead
+    targetlist.push_back(where_this_c);
+  } else {
+    event_ptr<kernel_area> L(dm_kernel);
+
+    for (psmap_t::iterator ii=L->pm_ps.begin(); ii != L->pm_ps.end(); ++ii)
+      if ((*ii->second).pm_services.count(serviceid))
+        targetlist.push_back(ii->first);
+  }
+
+  // finally, return this list to the caller
+  out.resize(targetlist.size());
+  std::copy(targetlist.begin(), targetlist.end(), out.begin());
+
+  return targetlist.size();
+}
+
+int local_agent::universe_size(void)
+{
+  assert(dm_spec.pm_numcpu>0);
+  return dm_spec.pm_numcpu;
+}
+
+scopira::tool::uuid local_agent::get_agent_id(void)
+{
+  return where_this_c;
+}
+
+scopira::tool::uuid local_agent::launch_task(const std::type_info &t, scopira::tool::uuid where)
+{
+  //local_agent version of launch_task ignores the where
   uuid psid;
   count_ptr<process_t> p;
 
@@ -272,6 +287,8 @@ scopira::tool::uuid local_agent::launch_task(const std::type_info &t)
   dm_uugen.next(psid);
 
   p = new process_t(psid);
+
+  p->load_services(t);
 
   object *o = objflowloader::instance()->load_object(t);
   assert(o);
@@ -300,9 +317,7 @@ scopira::tool::uuid local_agent::launch_group(int numps, const std::type_info &t
 {
   int x;
 
-  if (numps <= 0)
-    numps = dm_spec.pm_numcpu - numps;
-  assert(numps> 0);
+  assert(numps>0 && "[launch_group numps must be >0");
 
   narray<uuid> id;
   std::vector<count_ptr<process_t> > p;
@@ -319,6 +334,8 @@ scopira::tool::uuid local_agent::launch_group(int numps, const std::type_info &t
   // create the processes
   for (x=0; x<id.size(); ++x) {
     p[x] = new process_t(x, id);
+
+    p[x]->load_services(t);
 
     // instantiate the slave nodes
     object *o = objflowloader::instance()->load_object(t);
@@ -353,9 +370,7 @@ void local_agent::launch_slaves(scopira::tool::uuid masterid,
   int x;
   std::vector<count_ptr<process_t> > p;
 
-  if (numtotalps <= 0)
-    numtotalps = dm_spec.pm_numcpu - numtotalps;
-  assert(numtotalps> 0);
+  assert(numtotalps>0 && "[launch_slaves numps must be >0");
 
   assert(!masterid.is_zero());
   assert(objflowloader::instance()->has_typeinfo(t) && "[Given type to launch_slaves is not registered]");
@@ -373,6 +388,8 @@ void local_agent::launch_slaves(scopira::tool::uuid masterid,
   // the first one is the caller
   for (x=1; x<peers.size(); ++x) {
     p[x] = new process_t(x, peers);
+
+    p[x]->load_services(t);
 
     // instantiate the slave nodes
     object *o = objflowloader::instance()->load_object(t);
@@ -499,11 +516,37 @@ bool local_agent::is_alive_task(scopira::tool::uuid ps)
   return L->pm_mode != process_t::ps_done_c;
 }
 
+bool local_agent::is_killed_task(scopira::tool::uuid ps)
+{
+  count_ptr<process_t> foundps;
+
+  // find the process and set its kill flag
+  {
+    event_ptr<kernel_area> L(dm_kernel);
+    psmap_t::iterator ii;
+
+    ii = L->pm_ps.find(ps);
+
+    if (ii == L->pm_ps.end()) {
+      assert(false);    // this task should always exist
+      return false;   // not found
+    }
+
+    foundps = ii->second;
+  }
+
+  assert(foundps.get());
+
+  event_ptr<process_t::state_area> L(foundps->pm_state);
+  return L->pm_killreq;
+}
+
 bool local_agent::wait_msg(const uuid_query &srcq, scopira::tool::uuid &foundsrc, scopira::tool::uuid dest, int timeout)
 {
   count_ptr<process_t> ps;
 
   assert(!dest.is_zero());
+  assert(timeout>=0 || timeout == -7734);
 
   get_ps(dest, ps);
 
@@ -522,7 +565,7 @@ bool local_agent::wait_msg(const uuid_query &srcq, scopira::tool::uuid &foundsrc
 
     // no? do some waiting
     if (timeout < 0)
-      return false;   // 2nd pass of a timed wait, fail
+      return false;   // 2nd pass of a timed wait OR -7734/has_msg, fail.
     else if (timeout > 0) {
       LL.wait(timeout);   //TODO do proper compound
       timeout = -1;
@@ -590,12 +633,9 @@ void local_agent::send_msg_bcast(scopira::tool::uuid src, scopira::tool::uuid de
   {
     event_ptr<kernel_area> L(dm_kernel);
 
-    servicemap_t::iterator ii, endii;
-    ii = L->pm_services.lower_bound(destserviceid);
-    endii = L->pm_services.upper_bound(destserviceid);
-
-    for (; ii != endii; ++ii)
-      targetlist.push_back(ii->second);
+    for (psmap_t::iterator ii=L->pm_ps.begin(); ii != L->pm_ps.end(); ++ii)
+      if ((*ii->second).pm_services.count(destserviceid))
+        targetlist.push_back(ii->first);
   }
 
   // finally, deliver the msg to all of them via send_msg calls
@@ -671,6 +711,7 @@ bool local_agent::la_launch_task(int myindex, const narray<uuid> &taskids, const
 
   p = new process_t(myindex, taskids);
 
+  p->load_services(objflowloader::instance()->get_typeinfo(typestring));
   p->pm_task = thetask;
 
   {
@@ -787,9 +828,16 @@ void* local_agent::worker_func(void *data)
             {
               event_ptr<process_t::state_area> PL(subps->pm_state);
 
-              if (PL->pm_mode == process_t::ps_ready_c ||
-                  (PL->pm_mode == process_t::ps_sleep_c && !PL->pm_msgqueue.empty()) ||
-                  (PL->pm_mode == process_t::ps_sleep_c && PL->pm_killreq)) {
+              if (
+                  // ready to run
+                  PL->pm_mode == process_t::ps_ready_c ||
+                  // sleeping on a msg, and a msg comes
+                  (PL->pm_mode == process_t::ps_sleep_c && PL->pm_onmsg && !PL->pm_msgqueue.empty()) ||
+                  // sleeping on a timeout, and that time comes
+                  (PL->pm_mode == process_t::ps_sleep_c && PL->pm_ontime != 0 && here->dm_agentclock.get_running_time() >= PL->pm_ontime) ||
+                  // to be killed
+                  (PL->pm_mode == process_t::ps_sleep_c && PL->pm_killreq)
+                 ) {
                 // BINGO, we found a process we can run
                 PL->pm_mode = process_t::ps_running_c;
                 ps = subps;
@@ -815,7 +863,7 @@ void* local_agent::worker_func(void *data)
         }//if-hunt
 
         if (ps.is_null())
-          L.wait();   // gotta wait for something to do
+          L.wait(1000);   // gotta wait for something to do (need the timeout to constantly check of time-sleep jobs)
       }//while(alive && ps is null)
     }//event_ptr L
 
@@ -823,30 +871,46 @@ void* local_agent::worker_func(void *data)
       break;
 
     // run the job, if any
-    retcode = agent_task_i::run_done_c;
+    retcode = 0;
     if (ps.get()) {
       task_context ctx(ps->pm_index, ps->pm_peers);
       assert(!ps->pm_id.is_zero());
 
       stillrun = !event_ptr<process_t::state_area>(ps->pm_state)->pm_killreq;
       while (stillrun) {
+        double timedelta = 0;
         // run the thing
         //OUTPUT << "<\033[33mrun\033[0m>\n";
         retcode = ps->pm_task->run(ctx);
         //OUTPUT << "</\033[33mrun\033[0m>\n";
 
-        stillrun = retcode == agent_task_i::run_again_c || retcode == agent_task_i::run_again_immovable_c;
+        stillrun = (retcode & 0xFF) == agent_task_i::run_again_0_c;
 
-        if (stillrun) {
-          // check for kill signals
-          event_ptr<process_t::state_area> LL(ps->pm_state);
+        event_ptr<process_t::state_area> LL(ps->pm_state);
 
-          if (LL->pm_killreq)
-            stillrun = false;
+        // decompose their return code into flags within their process struct
+        LL->pm_canmove = (retcode & agent_task_i::run_canmove_c) != 0;
+        LL->pm_onmsg = (retcode & agent_task_i::run_onmsg_c) != 0;
+
+        // do the run nxet time
+        switch (retcode & 0xFF) { // lower 8 bits are for run next
+          case agent_task_i::run_again_1_c: timedelta = 1; break;
+          case agent_task_i::run_again_10_c: timedelta = 10; break;
+          case agent_task_i::run_again_100_c: timedelta = 100; break;
         }
-      }
+        if (timedelta == 0)
+          LL->pm_ontime = 0;
+        else
+          LL->pm_ontime = here->dm_agentclock.get_running_time() + timedelta;
 
-      if (retcode == agent_task_i::run_sleep_c || retcode == agent_task_i::run_sleep_immovable_c) {
+        // check for kill signals
+        if (stillrun && LL->pm_killreq)
+          stillrun = false;
+      }//while stillrun
+
+      // check if we need to sleep this process
+      if (retcode != 0) {
+        // non-done ret code, yet stillrun is false, therefore: sleep
         event_ptr<process_t::state_area> LL(ps->pm_state);
 
         LL->pm_mode = process_t::ps_sleep_c;
@@ -857,7 +921,6 @@ void* local_agent::worker_func(void *data)
           event_ptr<kernel_area> L(here->dm_kernel);
 
           assert(L->pm_ps.find(ps->pm_id) != L->pm_ps.end());
-          erase_services(L->pm_services, ps->pm_id);
           L->pm_ps.erase(L->pm_ps.find(ps->pm_id));
         }
         // signal its destruction
@@ -871,10 +934,10 @@ void* local_agent::worker_func(void *data)
 
         // finally, upstream this to any decendants
         here->la_dead_task(ps->pm_id);
-      }
+      }//end of else
 
-    }//if ps
-  }
+    }//if ps.get()
+  }//while alive (big loop)
 
   return 0;
 }
@@ -912,15 +975,49 @@ void local_agent::set_min_threads(void)
   dm_kernel.pm_condition.notify_all();
 }
 
-void local_agent::erase_services(servicemap_t &m, scopira::tool::uuid taskid)
+void local_agent::kill_all_local_tasks(void)
 {
-  servicemap_t::iterator ii = m.begin();
+  typedef std::vector<count_ptr<process_t> > pslist_t;
+  pslist_t pslist;
+  pslist_t::iterator jj;
 
-  while (ii != m.end())
-    if (ii->second == taskid) {
-      m.erase(ii);
-      ii = m.begin();
-    } else
-      ++ii;
+  // really paranoid here
+  // we're doing this in two completely seperate locking areas to avoid deadlocks and race conditions
+  // even though it means we have to use a temporary, internal list of processes
+
+  // find the process and set its kill flag
+  {
+    event_ptr<kernel_area> L(dm_kernel);
+    psmap_t::iterator ii;
+
+    pslist.resize(L->pm_ps.size());
+    jj = pslist.begin();
+
+    for (ii = L->pm_ps.begin(); ii != L->pm_ps.end(); ++ii, ++jj)
+      *jj = ii->second;
+  }
+
+  // set the kill flag for all the processes
+  for (jj=pslist.begin(); jj != pslist.end(); ++jj) {
+    event_ptr<process_t::state_area> L((*jj)->pm_state);
+
+    if (L->pm_mode != process_t::ps_done_c)
+      L->pm_killreq = true;
+
+    // notify everyone
+    L.notify_all();
+  }
+}
+
+void local_agent::process_t::load_services(const std::type_info &nfo)
+{
+  service_registrar *note = service_registrar::instance();
+  std::vector<uuid> serv;
+
+  if (!note)
+    return; // nothing to do
+  note->get_service(objflowloader::instance()->get_name(nfo), serv);
+  for (int x=0; x<serv.size(); ++x)
+    pm_services.insert(serv[x]);
 }
 

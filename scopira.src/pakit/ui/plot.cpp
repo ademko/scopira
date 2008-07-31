@@ -13,9 +13,12 @@
 
 #include <pakit/ui/plot.h>
 
+#include <scopira/basekit/vectormath.h>
 #include <scopira/core/register.h>
 #include <scopira/coreui/spinbutton.h>
 #include <scopira/coreui/label.h>
+
+#include <scopira/tool/output.h>
 
 //BBlibs scopiraui
 //BBtargets libpauikit.so
@@ -44,8 +47,12 @@ plot_spectra_v::plot_spectra_v(void)
   : parent_type(0), dm_model(this)
 {
 	dm_slice = 0;
+  dm_overall_ymin = -1.0;
+  dm_overall_ymax = 1.0;
 	
 	init_gui();
+  if ( dm_meta.is_null() )
+    set_options(new scopira::uikit::plotter_options);
 }
 
 void plot_spectra_v::react_spinbutton(scopira::coreui::spinbutton *source, int intval, double doubleval)
@@ -79,15 +86,18 @@ void plot_spectra_v::bind_model(scopira::core::model_i *sus)
 
 void plot_spectra_v::react_model_update(scopira::core::model_i *sus, scopira::core::view_i *src)
 {
-  if (dm_model.get())
+  if (dm_model.get()) {
+    scopira::basekit::min( dm_model->pm_data.ref(), dm_overall_ymin );
+    scopira::basekit::max( dm_model->pm_data.ref(), dm_overall_ymax );
     update_gui();
+  }
 }
 
 void plot_spectra_v::init_gui(void)
 {
   count_ptr<grid_layout> grid = new grid_layout(5, 2);
 
-  dm_spinner = new spinbutton(0, 1, 1);;
+  dm_spinner = new spinbutton( 0, 1, 1, 0, true);;
   //dm_spinner->set_attrib("label","Slice:");
   dm_spinner->set_spinbutton_reactor(this);
   
@@ -119,9 +129,18 @@ void plot_spectra_v::update_gui(void)
 
   dm_spinner->set_value(dm_slice);
   dm_title->set_label(dm_model->pm_labels->get(dm_slice));
-  dm_class ->set_label(scopira::tool::int_to_string(dm_model->pm_classes->get(dm_slice)));
+  dm_class->set_label(scopira::tool::int_to_string(dm_model->pm_classes->get(dm_slice)));
+  if ( !dm_meta.is_null() && 
+       ( dm_meta->get_scaling_mode() == scale_to_max_c ) ) {
+    dm_ymin = dm_overall_ymin;
+    dm_ymax = dm_overall_ymax;
+    dm_ymin_orig = dm_ymin;
+    dm_ymax_orig = dm_ymax;
+    dm_ymin_clip = dm_ymin;
+    dm_ymax_clip = dm_ymax;
+    dm_clip = false;
+  }
   set_plot_data(p.get());
 
   request_resize();
 }
-

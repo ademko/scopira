@@ -189,6 +189,19 @@ bool propiflow::read_size_t(size_t& ret)
   return string_to_size_t(s, ret);
 }
 
+bool propiflow::read_int64_t(int64_t& ret)
+{
+  if (failed())
+    return false;
+
+  byte_t b = non_whitespace();
+  std::string s(reinterpret_cast<char*>(&b), 1);
+  while ( dm_in->read_byte(b)>0 && !is_whitespace(b))
+    s.push_back(b);
+
+  return string_to_int64_t(s, ret);
+}
+
 bool propiflow::read_long(long& ret)
 {
   if (failed())
@@ -447,6 +460,16 @@ void propoflow::write_size_t(size_t val)
 
   assert(dm_out.get());
   s = size_t_to_string(val);
+
+  dm_out->write(reinterpret_cast<const byte_t*>(s.c_str()), s.size());
+}
+
+void propoflow::write_int64_t(int64_t val)
+{
+  std::string s;
+
+  assert(dm_out.get());
+  s = int64_t_to_string(val) + " ";
 
   dm_out->write(reinterpret_cast<const byte_t*>(s.c_str()), s.size());
 }

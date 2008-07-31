@@ -15,6 +15,7 @@
 
 #include <assert.h>
 
+#include <glib-object.h>
 #include <gtk/gtk.h>
 
 using namespace scopira::coreui;
@@ -24,7 +25,7 @@ widget::widget(GtkWidget *w)
 {
   // in lue of a full init_gui call...
   assert(dm_widget);
-  gtk_widget_ref(dm_widget);
+  g_object_ref(G_OBJECT(dm_widget));
 }
 
 widget::widget(void)
@@ -35,7 +36,7 @@ widget::widget(void)
 widget::~widget()
 { 
   if (dm_widget)
-    gtk_widget_unref(dm_widget);
+    g_object_unref(G_OBJECT(dm_widget));
 }
 
 void widget::set_attach_gtk(GtkWidget *w)
@@ -116,8 +117,8 @@ void widget::init_gui()
 {
   assert(dm_widget);
 
-  gtk_widget_ref(dm_widget);
-  
+  g_object_ref(G_OBJECT(dm_widget));
+
   // window focus in handler
   g_signal_connect_after(G_OBJECT(dm_widget),"focus_in_event",G_CALLBACK(h_focus_in), this);
   // window focus in handler

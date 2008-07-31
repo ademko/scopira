@@ -30,7 +30,6 @@
 #include <scopira/tool/nullflow.h>
 #include <scopira/tool/printflow.h>
 #include <scopira/tool/output.h>
-#include <scopira/uikit/frame.h>
 
 //BBtargets libpauikit.so
 

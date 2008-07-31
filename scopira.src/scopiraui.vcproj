@@ -264,6 +264,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\scopira\coreui\progressbar.cpp"
+						>
+					</File>
+					<File
 						RelativePath=".\scopira\coreui\project.cpp"
 						>
 					</File>
@@ -312,15 +316,19 @@
 						>
 					</File>
 					<File
+						RelativePath=".\scopira\uikit\canvasplot.cpp"
+						>
+					</File>
+					<File
 						RelativePath=".\scopira\uikit\color.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\scopira\uikit\directio.cpp"
+						RelativePath=".\scopira\uikit\cpuentry.cpp"
 						>
 					</File>
 					<File
-						RelativePath=".\scopira\uikit\frame.cpp"
+						RelativePath=".\scopira\uikit\directio.cpp"
 						>
 					</File>
 					<File
@@ -341,6 +349,10 @@
 					</File>
 					<File
 						RelativePath=".\scopira\uikit\plotter.cpp"
+						>
+					</File>
+					<File
+						RelativePath=".\scopira\uikit\seedentry.cpp"
 						>
 					</File>
 					<File

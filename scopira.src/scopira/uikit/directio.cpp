@@ -21,6 +21,7 @@
 #include <scopira/coreui/messagewindow.h>
 #include <scopira/uikit/models.h>
 
+//BBlibs scopiraxml
 //BBtargets libscopiraui.so
 
 using namespace scopira::tool;
@@ -29,75 +30,75 @@ using namespace scopira::coreui;
 using namespace scopira::uikit;
 
 static scopira::core::register_view<new_array_v> x1("scopira::uikit::new_array_v",
-    scopira::core::project_type_c, "Basic/New array data",
+    scopira::core::project_type_c, "Basic/New array",
     scopira::core::windowonly_uimode_c);
 
 static scopira::core::register_view<load_array_v> x2("scopira::uikit::load_array_v",
-    scopira::core::project_type_c, "Basic/Load array data from file",
+    scopira::core::project_type_c, "Basic/Open binary array file",
     scopira::core::windowonly_uimode_c);
 
 static scopira::core::register_view<export_array_v<char,1> > c1("scopira::uikit::export_array_v<char,1>",
-    "scopira::uikit::narray_m<char,1>", "Export array data to file",
+    "scopira::uikit::narray_m<char,1>", "Save as data file",
     scopira::core::windowonly_uimode_c);
 static scopira::core::register_view<export_array_v<short,1> > r1("scopira::uikit::export_array_v<short,1>",
-    "scopira::uikit::narray_m<short,1>", "Export array data to file",
+    "scopira::uikit::narray_m<short,1>", "Save as data file",
     scopira::core::windowonly_uimode_c);
 static scopira::core::register_view<export_array_v<int,1> > r2("scopira::uikit::export_array_v<int,1>",
-    "scopira::uikit::narray_m<int,1>", "Export array data to file",
+    "scopira::uikit::narray_m<int,1>", "Save as data file",
     scopira::core::windowonly_uimode_c);
 static scopira::core::register_view<export_array_v<float,1> > r3("scopira::uikit::export_array_v<float,1>",
-    "scopira::uikit::narray_m<float,1>", "Export array data to file",
+    "scopira::uikit::narray_m<float,1>", "Save as data file",
     scopira::core::windowonly_uimode_c);
 static scopira::core::register_view<export_array_v<double,1> > r4("scopira::uikit::export_array_v<double,1>",
-    "scopira::uikit::narray_m<double,1>", "Export array data to file",
+    "scopira::uikit::narray_m<double,1>", "Save as data file",
     scopira::core::windowonly_uimode_c);
 
 static scopira::core::register_view<export_array_v<char,2> > c5("scopira::uikit::export_array_v<char,2>",
-    "scopira::uikit::narray_m<char,2>", "Export array data to file",
+    "scopira::uikit::narray_m<char,2>", "Save as data file",
     scopira::core::windowonly_uimode_c);
 static scopira::core::register_view<export_array_v<short,2> > r5("scopira::uikit::export_array_v<short,2>",
-    "scopira::uikit::narray_m<short,2>", "Export array data to file",
+    "scopira::uikit::narray_m<short,2>", "Save as data file",
     scopira::core::windowonly_uimode_c);
 static scopira::core::register_view<export_array_v<int,2> > r6("scopira::uikit::export_array_v<int,2>",
-    "scopira::uikit::narray_m<int,2>", "Export array data to file",
+    "scopira::uikit::narray_m<int,2>", "Save as data file",
     scopira::core::windowonly_uimode_c);
 static scopira::core::register_view<export_array_v<float,2> > r7("scopira::uikit::export_array_v<float,2>",
-    "scopira::uikit::narray_m<float,2>", "Export array data to file",
+    "scopira::uikit::narray_m<float,2>", "Save as data file",
     scopira::core::windowonly_uimode_c);
 static scopira::core::register_view<export_array_v<double,2> > r8("scopira::uikit::export_array_v<double,2>",
-    "scopira::uikit::narray_m<double,2>", "Export array data to file",
+    "scopira::uikit::narray_m<double,2>", "Save as data file",
     scopira::core::windowonly_uimode_c);
 
 static scopira::core::register_view<export_array_v<char,3> > c9("scopira::uikit::export_array_v<char,3>",
-    "scopira::uikit::narray_m<char,3>", "Export array data to file",
+    "scopira::uikit::narray_m<char,3>", "Save as data file",
     scopira::core::windowonly_uimode_c);
 static scopira::core::register_view<export_array_v<short,3> > r9("scopira::uikit::export_array_v<short,3>",
-    "scopira::uikit::narray_m<short,3>", "Export array data to file",
+    "scopira::uikit::narray_m<short,3>", "Save as data file",
     scopira::core::windowonly_uimode_c);
 static scopira::core::register_view<export_array_v<int,3> > r10("scopira::uikit::export_array_v<int,3>",
-    "scopira::uikit::narray_m<int,3>", "Export array data to file",
+    "scopira::uikit::narray_m<int,3>", "Save as data file",
     scopira::core::windowonly_uimode_c);
 static scopira::core::register_view<export_array_v<float,3> > r11("scopira::uikit::export_array_v<float,3>",
-    "scopira::uikit::narray_m<float,3>", "Export array data to file",
+    "scopira::uikit::narray_m<float,3>", "Save as data file",
     scopira::core::windowonly_uimode_c);
 static scopira::core::register_view<export_array_v<double,3> > r12("scopira::uikit::export_array_v<double,3>",
-    "scopira::uikit::narray_m<double,3>", "Export array data to file",
+    "scopira::uikit::narray_m<double,3>", "Save as data file",
     scopira::core::windowonly_uimode_c);
 
 static scopira::core::register_view<export_array_v<char,4> > c13("scopira::uikit::export_array_v<char,4>",
-    "scopira::uikit::narray_m<char,4>", "Export array data to file",
+    "scopira::uikit::narray_m<char,4>", "Save as data file",
     scopira::core::windowonly_uimode_c);
 static scopira::core::register_view<export_array_v<short,4> > r13("scopira::uikit::export_array_v<short,4>",
-    "scopira::uikit::narray_m<short,4>", "Export array data to file",
+    "scopira::uikit::narray_m<short,4>", "Save as data file",
     scopira::core::windowonly_uimode_c);
 static scopira::core::register_view<export_array_v<int,4> > r14("scopira::uikit::export_array_v<int,4>",
-    "scopira::uikit::narray_m<int,4>", "Export array data to file",
+    "scopira::uikit::narray_m<int,4>", "Save as data file",
     scopira::core::windowonly_uimode_c);
 static scopira::core::register_view<export_array_v<float,4> > r15("scopira::uikit::export_array_v<float,4>",
-    "scopira::uikit::narray_m<float,4>", "Export array data to file",
+    "scopira::uikit::narray_m<float,4>", "Save as data file",
     scopira::core::windowonly_uimode_c);
 static scopira::core::register_view<export_array_v<double,4> > r16("scopira::uikit::export_array_v<double,4>",
-    "scopira::uikit::narray_m<double,4>", "Export array data to file",
+    "scopira::uikit::narray_m<double,4>", "Save as data file",
     scopira::core::windowonly_uimode_c);
 
 //
@@ -130,7 +131,7 @@ new_array_v::new_array_v(void)
   g->add_widget(new label("Example dimensions:"), 0, 2);
   g->add_widget(new label("10\n20 30\n30 30 30"), 1, 2);
 
-  set_view_title("New array data");
+  set_view_title("New array");
 
   viewwidget::init_gui(g.get(), button_ok_c|button_apply_c|button_close_c);
 }
@@ -243,8 +244,8 @@ load_array_v::load_array_v(void)
   dm_type = new dropdown;
   dm_filename = new fileentry;
 
-  dm_type->add_selection(load_directio_c, "Load DirectIO");
-  dm_type->add_selection(bind_directio_c, "Bind (Memory Map) DirectIO");
+  dm_type->add_selection(load_directio_c, "Open DirectIO");
+  dm_type->add_selection(bind_directio_c, "Open DirectIO (via Memory Map)");
 
   dm_filename->set_filename("outfile.xml");
 
@@ -253,7 +254,7 @@ load_array_v::load_array_v(void)
   g->add_widget(new label("File type:"), 0, 0);
   g->add_widget(new label("File name:"), 0, 1);
 
-  set_view_title("Load array data");
+  set_view_title("Open binary array file");
 
   viewwidget::init_gui(g.get(), button_ok_c|button_apply_c|button_close_c);
 }
@@ -438,8 +439,8 @@ export_array_base::export_array_base(void)
   dm_type = new dropdown;
   dm_filename = new fileentry;
 
-  dm_type->add_selection(directio_c, "DirectIO (xml + binary)");
-  dm_type->add_selection(textfile_c, "Text File");
+  dm_type->add_selection(directio_c, "Binary (xml + binary)");
+  dm_type->add_selection(textfile_c, "Text file");
 
   dm_filename->set_filename("outfile.xml");
 
@@ -448,7 +449,7 @@ export_array_base::export_array_base(void)
   g->add_widget(new label("File type:"), 0, 0);
   g->add_widget(new label("File ename:"), 0, 1);
 
-  set_view_title("Export array data");
+  set_view_title("Save as data file");
   viewwidget::init_gui(g.get(), button_ok_c|button_apply_c|button_close_c);
 }
 

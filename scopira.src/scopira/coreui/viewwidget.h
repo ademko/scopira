@@ -48,6 +48,9 @@ class scopira::coreui::viewwidget : public virtual scopira::coreui::widget,
   public virtual scopira::coreui::button_reactor_i,
   public scopira::coreui::button_constants
 {
+    //you almost always need a bind_model and maybe even a 
+    //virtual void bind_model(scopira::core::model_i *sus);
+    //virtual void react_model_update(scopira::core::model_i *sus, scopira::core::view_i *src);
   protected:
     scopira::tool::count_ptr<widget> dm_viewwidget;
 

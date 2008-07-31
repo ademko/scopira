@@ -29,6 +29,8 @@ namespace scopira
   {
     class node_spec;
     class cluster_agent;
+
+    class uptime_task;//forward
   }
 }
 
@@ -75,8 +77,12 @@ class scopira::agent::cluster_agent : public scopira::agent::local_agent
   public:
     /// default port used by the master
     enum { default_port_c = 5555 };
+
   private:
     typedef local_agent parent_type;
+
+    friend class scopira::agent::uptime_task;
+
   public:
     /// ctor
     cluster_agent(void);
@@ -95,22 +101,31 @@ class scopira::agent::cluster_agent : public scopira::agent::local_agent
     virtual bool failed(void) const;
     virtual void set_agenterror_reactor(agenterror_reactor_i *r);
 
+    virtual int find_services(scopira::tool::uuid &serviceid, scopira::basekit::narray<scopira::tool::uuid> &out);
+
     virtual void reg_context(scopira::tool::uuid &ctxid, taskmsg_reactor_i *reac);
     virtual void unreg_context(scopira::tool::uuid ctxid);
 
-    virtual scopira::tool::uuid launch_task(const std::type_info &t);
+    virtual int universe_size(void);
+    virtual scopira::tool::uuid get_agent_id(void);
+
+    virtual scopira::tool::uuid launch_task(const std::type_info &t, scopira::tool::uuid where);
     virtual scopira::tool::uuid launch_group(int numps, const std::type_info &t);
     virtual void launch_slaves(scopira::tool::uuid masterid, int numtotalps, const std::type_info &t,
       scopira::basekit::narray<scopira::tool::uuid> &peers);
     virtual void kill_task(scopira::tool::uuid ps);
     virtual bool wait_task(scopira::tool::uuid ps, int msec);
     virtual bool is_alive_task(scopira::tool::uuid ps);
+    //SCOPIRA_EXPORT virtual bool is_killed_task(scopira::tool::uuid ps) = 0;  // using the local agent one directly!
 
     /* using local_agent's version for all of these:
     virtual bool wait_msg(scopira::tool::uuid src, scopira::tool::uuid dest, int timeout);
     virtual void send_msg(scopira::tool::uuid src, scopira::tool::uuid dest, scopira::tool::bufferflow *buf);
     virtual void recv_msg(scopira::tool::uuid &src, scopira::tool::uuid dest, scopira::tool::count_ptr<scopira::tool::bufferflow> &buf);*/
     virtual void send_msg_bcast(scopira::tool::uuid src, scopira::tool::uuid destserviceid, scopira::tool::bufferflow *buf);
+
+    // needed by agent_i::get_cluster_server_url
+    const node_spec & spec(void) const { return dm_nodespec; }
 
   protected:
     virtual void la_send_msg(scopira::tool::uuid src, scopira::tool::uuid dest, scopira::tool::bufferflow *buf);
@@ -144,6 +159,7 @@ class scopira::agent::cluster_agent : public scopira::agent::local_agent
     class network_msg : public admin_msg
     {
       public:
+        // internal class
         struct xtion_t {
           scopira::tool::uuid pm_src;
           int pm_id;
@@ -227,8 +243,11 @@ class scopira::agent::cluster_agent : public scopira::agent::local_agent
     class client_is_alive_msg;
     class send_data_msg;
     class bcast_data_msg;
+    class find_services_msg;
+    class reply_find_services_msg;
     class reg_context_msg;
     class dead_task_msg;
+    class default_group_size_msg;
     static scopira::core::register_flow<cluster_agent::reply_msg> r81123;
     static scopira::core::register_flow<cluster_agent::peer_hello_msg> r09344;
     static scopira::core::register_flow<cluster_agent::nottmp_hello_msg> r55123;
@@ -245,8 +264,11 @@ class scopira::agent::cluster_agent : public scopira::agent::local_agent
     static scopira::core::register_flow<cluster_agent::client_is_alive_msg> r44512;
     static scopira::core::register_flow<cluster_agent::send_data_msg> r49075;
     static scopira::core::register_flow<cluster_agent::bcast_data_msg> r49076;
+    static scopira::core::register_flow<cluster_agent::find_services_msg> r4834444;
+    static scopira::core::register_flow<cluster_agent::reply_find_services_msg> r4834445;
     static scopira::core::register_flow<cluster_agent::reg_context_msg> r89063;
     static scopira::core::register_flow<cluster_agent::dead_task_msg> r85221;
+    static scopira::core::register_flow<cluster_agent::default_group_size_msg> r85553;
 
     /**
      * The actually socket
@@ -361,6 +383,8 @@ class scopira::agent::cluster_agent : public scopira::agent::local_agent
           bool tmpaddress, const scopira::tool::url &initterurl = scopira::tool::url("dummy://hostname/"));
 
         bool is_tmpaddress(void) const { return dm_tmpaddress; }
+
+        scopira::tool::uuid get_uuid(void) const { assert(!dm_tmpaddress); return dm_peeruuid; }
 
         // does locking!
         bool has_link(void);

@@ -16,10 +16,12 @@
 
 #include <map>
 #include <list>
+#include <set>
 #include <vector>
 
 #include <scopira/tool/thread.h>
 #include <scopira/tool/output.h>
+#include <scopira/tool/time.h>
 #include <scopira/agent/context.h>
 
 namespace scopira
@@ -28,6 +30,8 @@ namespace scopira
   {
     class machine_spec;
     class local_agent;
+
+    class uptime_task;//forward
   }
 }
 
@@ -65,6 +69,9 @@ scopira::tool::oflow_i& operator<<(scopira::tool::oflow_i& o, const scopira::age
  */ 
 class scopira::agent::local_agent : public scopira::agent::agent_i
 {
+  private:
+    friend class scopira::agent::uptime_task;
+
   public:
     /// ctor
     local_agent(void);
@@ -81,18 +88,22 @@ class scopira::agent::local_agent : public scopira::agent::agent_i
     virtual bool failed(void) const { return false; }
     virtual void set_agenterror_reactor(agenterror_reactor_i *r) { } //im never goin to call this, so ill just ignore this
 
-    virtual void set_service(scopira::tool::uuid ctxid, scopira::tool::uuid serviceid, bool enable);
-
     virtual void reg_context(scopira::tool::uuid &ctxid, taskmsg_reactor_i *reac);
     virtual void unreg_context(scopira::tool::uuid ctxid);
 
-    virtual scopira::tool::uuid launch_task(const std::type_info &t);
+    virtual int find_services(scopira::tool::uuid &serviceid, scopira::basekit::narray<scopira::tool::uuid> &out);
+
+    virtual int universe_size(void);
+    virtual scopira::tool::uuid get_agent_id(void);
+
+    virtual scopira::tool::uuid launch_task(const std::type_info &t, scopira::tool::uuid where);
     virtual scopira::tool::uuid launch_group(int numps, const std::type_info &t);
     virtual void launch_slaves(scopira::tool::uuid masterid, int numtotalps, const std::type_info &t,
       scopira::basekit::narray<scopira::tool::uuid> &peers);
     virtual void kill_task(scopira::tool::uuid ps);
     virtual bool wait_task(scopira::tool::uuid ps, int msec);
     virtual bool is_alive_task(scopira::tool::uuid ps);
+    virtual bool is_killed_task(scopira::tool::uuid ps);
 
     virtual bool wait_msg(const uuid_query &srcq, scopira::tool::uuid &foundsrc, scopira::tool::uuid dest, int timeout);
     virtual void send_msg(scopira::tool::uuid src, scopira::tool::uuid dest, scopira::tool::bufferflow *buf);
@@ -150,7 +161,7 @@ class scopira::agent::local_agent : public scopira::agent::agent_i
           ps_born_c,      // a process in phase 1 of a 2 phase creation sequence. this process is not yet runnable
           ps_ready_c,     // ready to run
           ps_running_c,   // currently being run by a worker thread
-          ps_sleep_c,     // waiting for a MSG
+          ps_sleep_c,     // waiting for a MSG or for wake up time
           ps_done_c,      // process should die/is dieing
 
           // spcial ones, but ARE schedulable
@@ -170,9 +181,16 @@ class scopira::agent::local_agent : public scopira::agent::agent_i
         int pm_index;   // my index in the group
         scopira::basekit::narray<scopira::tool::uuid> pm_peers;    // this list should never be empty (ie. it should always contain atleast myself)
 
+        // the services this task has. it is const after its initial creation
+        std::set<scopira::tool::uuid> pm_services;
+
+        // internal class
         struct state_area {
           short pm_mode;
-          bool pm_killreq;
+          bool pm_killreq;      // this a kill requested been made of this task
+          bool pm_canmove;      // can this process be migrated
+          bool pm_onmsg;       // should this proces be awoken on a msg
+          double pm_ontime;     // the agent-clock time (or any time after) this process should run. 0 means, not by time
 
           msglist_t pm_msgqueue;
 
@@ -180,7 +198,8 @@ class scopira::agent::local_agent : public scopira::agent::agent_i
           taskmsg_reactor_i *pm_reactor;
 
           // ctor
-          state_area(void) : pm_mode(ps_empty_c), pm_killreq(false), pm_reactor(0) { }
+          state_area(void) : pm_mode(ps_empty_c), pm_killreq(false), pm_canmove(false),
+            pm_onmsg(false), pm_ontime(0), pm_reactor(0) { }
         };
 
         scopira::tool::event_area<state_area> pm_state;
@@ -190,15 +209,16 @@ class scopira::agent::local_agent : public scopira::agent::agent_i
           pm_index(0) { pm_peers.resize(1); pm_peers[0]=id; pm_state.pm_data.pm_mode = specialstate; }
         process_t(int myindex, const scopira::basekit::narray<scopira::tool::uuid> &peers)
           : pm_id(peers[myindex]), pm_index(myindex), pm_peers(peers) { }
+
+        // this will populate the pm_services vector from the global registry
+        void load_services(const std::type_info &nfo);
     };
 
     typedef std::map<scopira::tool::uuid, scopira::tool::count_ptr<process_t> > psmap_t;
-    typedef std::multimap<scopira::tool::uuid, scopira::tool::uuid> servicemap_t;
     typedef std::vector<scopira::tool::count_ptr<scopira::tool::thread> > threadlist_t;
 
     struct kernel_area {
       psmap_t pm_ps;    // the processes
-      servicemap_t pm_services;   // maps serviceid -> task/ctx id
 
       bool pm_alive;    // if this is false, Ive been sent the kill signal.
 
@@ -211,6 +231,8 @@ class scopira::agent::local_agent : public scopira::agent::agent_i
 
     scopira::tool::uuid_generator dm_uugen;
 
+    scopira::tool::chrono dm_agentclock;
+
     machine_spec dm_spec;
 
     // never try to lock the kernel if youre holdin any process locks!
@@ -221,8 +243,8 @@ class scopira::agent::local_agent : public scopira::agent::agent_i
     /// this does its own locking, do not call it within any locks
     /// will wake up the threads too
     void set_min_threads(void);
-    /// erase all the services associated with this taskid
-    static void erase_services(servicemap_t &m, scopira::tool::uuid taskid);
+    /// sends a kill request to all the tasks here
+    void kill_all_local_tasks(void);
 };
 
 #endif

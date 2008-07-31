@@ -17,7 +17,6 @@
 #include <scopira/core/loop.h>
 #include <scopira/agent/localagent.h>
 #include <scopira/agent/clusteragent.h>
-#include <scopira/agent/networkagent.h>
 
 //BBtargets libscopira.so
 
@@ -174,25 +173,6 @@ agent_i::~agent_i()
 agent_i * agent_i::new_agent(void)
 {
   if (scopira::core::basic_loop::instance() &&
-      scopira::core::basic_loop::instance()->has_config("network")) {
-    agent_i *server_link;
-
-    server_link = new network_agent;
-
-    // we cant use ref counting here (as wed unref the object on return as our
-    // local count_ptr would go out of scope
-    // obviously NOT exception safe
-
-    if (server_link->failed()) {
-      delete server_link;
-      // we failed, give them a local agent instead
-      // by simply dropping to the end of this function :)
-      OUTPUT << "Failed to start network_agent; using local_agent\n";
-    } else
-      return server_link;
-  }
-    else    /// network or cluster, never both.
-  if (scopira::core::basic_loop::instance() &&
       scopira::core::basic_loop::instance()->has_config("cluster")) {
     agent_i *server_link;
 
@@ -213,5 +193,17 @@ agent_i * agent_i::new_agent(void)
 
   // default and on error, just return local
   return new local_agent;
+}
+
+bool agent_i::get_cluster_server_url(std::string &serverurl)
+{
+  cluster_agent *ca = dynamic_cast<cluster_agent*>(instance());
+
+  if (!ca)
+    return false;
+
+  serverurl = ca->spec().pm_url.get_url();
+
+  return true;
 }
 

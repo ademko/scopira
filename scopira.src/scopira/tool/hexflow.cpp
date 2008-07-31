@@ -1,6 +1,6 @@
 
 /*
- *  Copyright (c) 2002    National Research Council
+ *  Copyright (c) 2002-2007    National Research Council
  *
  *  All rights reserved.
  *
@@ -20,6 +20,7 @@
 using namespace scopira::tool;
 
 const char* scopira::tool::hexchars = "0123456789ABCDEF";
+const char* scopira::tool::lowerhexchars = "0123456789abcdef";
 
 hexiflow::hexiflow(bool doref, iflow_i* in)
   : dm_in(doref, 0)

@@ -26,6 +26,16 @@ namespace scopira
   namespace coreui
   {
     class ui_loop;
+
+    /**
+     * Process some UI events.
+     *
+     * This should be called a GUI threads that want to flush/process all/any pending UI
+     * events before proceeding.
+     *
+     * @author Aleksander Demko
+     */ 
+    void process_ui_events(void);
   }
 }
 
@@ -132,7 +142,7 @@ class scopira::coreui::ui_loop : public scopira::core::basic_loop, protected sco
 */
 
 /**
-  \page scopiraappspage Scopira Applications
+  \page scopiraappspage Scopira applications
 
   Scopira is predomenantly an library for building domain-specific
   applications. However two generic applications are provides.

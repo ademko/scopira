@@ -409,6 +409,10 @@
 						>
 					</File>
 					<File
+						RelativePath=".\scopira\agent\ids.cpp"
+						>
+					</File>
+					<File
 						RelativePath=".\scopira\agent\localagent.cpp"
 						>
 					</File>
@@ -420,7 +424,8 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
-								ObjectFile="$(IntDir)/$(InputName)1.obj"
+								ObjectFile="$(IntDir)\$(InputName)1.obj"
+								XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
 							/>
 						</FileConfiguration>
 						<FileConfiguration
@@ -428,13 +433,10 @@
 							>
 							<Tool
 								Name="VCCLCompilerTool"
-								ObjectFile="$(IntDir)/$(InputName)1.obj"
+								ObjectFile="$(IntDir)\$(InputName)1.obj"
+								XMLDocumentationFileName="$(IntDir)\$(InputName)1.xdc"
 							/>
 						</FileConfiguration>
-					</File>
-					<File
-						RelativePath=".\scopira\agent\networkagent.cpp"
-						>
 					</File>
 					<File
 						RelativePath=".\scopira\agent\task.cpp"

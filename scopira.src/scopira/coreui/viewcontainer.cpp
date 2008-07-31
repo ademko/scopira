@@ -117,6 +117,7 @@ void viewtabs::react_view_set_title(scopira::core::view_i *source, const std::st
   // find the page entry in our children list, then operate on the associated gtk label
   for (children_t::iterator ii=dm_children.begin(); ii != dm_children.end(); ++ii)
     if (ii->pm_widget.get() == wsource) {
+      ii->pm_title = newtitle;
       gtk_label_set_text(GTK_LABEL(ii->pm_label), newtitle.c_str());
       break;
     }
@@ -231,6 +232,8 @@ void viewtabs::h_on_detach_tab_button(GtkButton *but, gpointer data)
   // now, open a new viewwindow on the stuff in cd. this might rebind
   // the model and view. so what
   vw = new viewwindow(cd.pm_model.get(), cd.pm_view.get());
+  if (!cd.pm_title.empty())
+    vw->set_title(cd.pm_title);
   vw->show_all();
 }
 

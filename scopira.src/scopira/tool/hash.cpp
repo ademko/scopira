@@ -1,6 +1,6 @@
 
 /*
- *  Copyright (c) 2005    National Research Council
+ *  Copyright (c) 2005-2007    National Research Council
  *
  *  All rights reserved.
  *
@@ -31,8 +31,8 @@ std::string scopira::tool::close_and_hexhash(hashoflow &o)
   s.resize(h.size() * 2);
 
   for (int x=0; x<h.size(); ++x) {
-    s[x*2] = hexchars[ h[x] >> 4 ];
-    s[x*2+1] = hexchars[ h[x] & 0x0F ];
+    s[x*2] = lowerhexchars[ h[x] >> 4 ];
+    s[x*2+1] = lowerhexchars[ h[x] & 0x0F ];
   }
 
   return s;

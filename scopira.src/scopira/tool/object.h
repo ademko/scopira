@@ -22,14 +22,14 @@
 // THIS FILE HAS BEEN FULLY DOCUMENTED
 
 /**
- * All Scopira subsytems fall under the top level scopira namespace
+ * All Scopira subsytems fall under the top level scopira namespace.
  *
  * @author Aleksander Demko
  */
 namespace scopira
 {
   /**
-   * Tool contains scopira-independant utitlies, like autopointers,
+   * The scopira::tool namespace contains scopira-independant utitlies, like autopointers,
    * virtual stream system (with file and network support), threads,
    * property files and a simple vector template.
    *
@@ -51,14 +51,21 @@ namespace scopira
 }
 
 /**
- * Generic base class for many object types. Facilities
- * provided: 1) virtual destructor 2) reference counting
- * 3) optional serialization 4) optional human-readable printing
- * 5) validity testing.
+ * Generic base class for many object types. The class is the common base
+ * class for many scopira classes. You may also use it for your own classes.
+ *
+ * It provides (all optional services):
+ *  - a reference counting mechanism (which you can then use manually, or use scopira::tool::count_ptr
+ *  - a serialization interface
+ *  - a print() function that will be called when the user wants to do human readable printing
+ *  - validity testing with is_alive_object()
  *
  * The Programmers Guide details information on how
  * reference counting and serialization works.
  *
+ *
+ * @see scopira::tool::count_ptr
+ * @see @ref scopiratoolobject
  * @author Aleksander Demko
  */
 class scopira::tool::object
@@ -146,10 +153,10 @@ class scopira::tool::object
      * a class which lacks its own load method)
      *
      * @param in the stream to load from
-     * @param returns true on success
+     * @return true on success
      * @author Aleksander Demko
      */
-    SCOPIRA_EXPORT virtual bool load(iobjflow_i& in);
+    SCOPIRA_EXPORT virtual bool load(scopira::tool::iobjflow_i& in);
     /**
      * Serialization saver.
      * Writes the object's state information to the given
@@ -162,7 +169,7 @@ class scopira::tool::object
      * @param out the stream to write to
      * @author Aleksander Demko
      */
-    SCOPIRA_EXPORT virtual void save(oobjflow_i& out) const;
+    SCOPIRA_EXPORT virtual void save(scopira::tool::oobjflow_i& out) const;
 
 #ifndef NDEBUG
     /**
@@ -180,14 +187,14 @@ class scopira::tool::object
 
   protected:
     /**
-     * default constructor
+     * Default constructor
      *
      * @author Aleksander Demko
      */
     SCOPIRA_EXPORT object(void);
 
     /**
-     * alternate constructor.
+     * Alternate constructor.
      *
      * If neverusecounter is true the object will never use the debug ref counting system,
      * even if it's available.
@@ -215,11 +222,34 @@ class scopira::tool::object
 };
 
 /**
- * A reference counting auto pointer of object and its decendants.
+ * A reference counting auto pointer of scopira::tool::object and its decendants.
  * This class has the following key characteristics:
- * 1) save, null initialization 2) always maintain one (and only one)
- * count to its given pointer
+ *  - safe, null initialization
+ *  - always maintain one (and only one) * count to its given pointer
  *
+ * You can use this class like so:
+ * @code
+ *  {
+ *    scopira::tool::countr_ptr<X> x = new X;
+ *    // you need not (and must not) delete explicitly now
+ *  }//at this point, x will automatically delete the pointer
+ * @endcode
+ *
+ * Here is a more complex example:
+ * @code
+ *  {
+ *    scopira::tool::countr_ptr<X> x;  //x will be initialized to null
+ *
+ *    {
+ *      scopira::tool::countr_ptr<X> y = new X; // y points to a new instace of X
+ *
+ *      x = y;    // y and x now both reference the same, new instance
+ *    }//y is destroyed here, however, the instance is now as x still has a reference
+ *  }//x is destroyed, as since its the last reference, so is the actual instance of X
+ * @endcode
+ *
+ * @see scopira::tool::object
+ * @see @ref scopiratoolobject
  * @author Aleksander Demko
  */
 template <class T> class scopira::tool::count_ptr
@@ -253,6 +283,13 @@ template <class T> class scopira::tool::count_ptr
     count_ptr(const count_ptr<T> &o)
       : dm_ptr(o.dm_ptr) { if (dm_ptr) dm_ptr->add_ref(); }
     /**
+     * Copy constructor
+     *
+     * @author Aleksander Demko
+     */
+    template <class Y> count_ptr(const count_ptr<Y> &o)
+      : dm_ptr(o.get()) { if (dm_ptr) dm_ptr->add_ref(); }
+    /**
      * Destructor
      * @author Aleksander Demko
      */
@@ -268,7 +305,7 @@ template <class T> class scopira::tool::count_ptr
     void set(T* o)
       { if (o) o->add_ref(); if (dm_ptr) dm_ptr->sub_ref(); dm_ptr = o; }
     /**
-     * Assignment.
+     * Basic assignment.
      *
      * @author Aleksander Demko
      */
@@ -276,33 +313,42 @@ template <class T> class scopira::tool::count_ptr
       { set(o); return *this; }
 
     /**
-     * Assignment.
+     * Basic assignment.
      *
      * @author Aleksander Demko
      */
     count_ptr & operator = (const count_ptr<T> &o)
       { set(o.dm_ptr); return *this; }
     /**
-     * Comparison (equals) - compares internal pointer values.
+     * Comparison (equals) operator - compares the internal pointer values.
      *
      * @author Aleksander Demko
      */
-    bool operator == (const count_ptr<T> &rhs) const
-      { return dm_ptr == rhs.dm_ptr; }
+    bool operator == (const count_ptr<T> &rhs) const { return dm_ptr == rhs.dm_ptr; }
     /**
-     * Comparison (not equals) - compares internal pointer values.
+     * Comparison (equals) operator - compares the internal pointer value to the given pointer.
      *
      * @author Aleksander Demko
      */
-    bool operator != (const count_ptr<T> &rhs) const
-      { return dm_ptr != rhs.dm_ptr; }
+    bool operator == (const T* rhs) const { return dm_ptr == rhs; }
     /**
-     * Comparison (less than) - compares internal pointer values.
+     * Comparison (not equals) operator - compares the internal pointer values.
      *
      * @author Aleksander Demko
      */
-    bool operator < (const count_ptr<T> &rhs) const
-      { return dm_ptr < rhs.dm_ptr; }
+    bool operator != (const count_ptr<T> &rhs) const { return dm_ptr != rhs.dm_ptr; }
+    /**
+     * Comparison (not equals) operator - compares the internal pointer value to the given pointer.
+     *
+     * @author Aleksander Demko
+     */
+    bool operator != (const T* rhs) const { return dm_ptr != rhs; }
+    /**
+     * Comparison (less than) operator - compares the internal pointer values.
+     *
+     * @author Aleksander Demko
+     */
+    bool operator < (const count_ptr<T> &rhs) const { return dm_ptr < rhs.dm_ptr; }
 
     /**
      * Pretty ascii printer, redirects to internal class.
@@ -315,14 +361,11 @@ template <class T> class scopira::tool::count_ptr
     // do save and load like the above?
 
     /**
-     * Gets the current object
+     * Gets the current object as a regular pointer.
      *
      * @author Aleksander Demko
      */
-    T* get(void) const
-      { return dm_ptr; }
-    //T* get(void)
-      //{ return dm_ptr; }
+    T* get(void) const { return dm_ptr; }
 
     /**
      * Gets the current object, as a reference
@@ -355,6 +398,7 @@ template <class T> class scopira::tool::count_ptr
     /**
      * Is the pointer null?
      *
+     * @return true if the internal pointer is null.
      * @author Aleksander Demko
      */
     bool is_null(void) const { return dm_ptr == 0; }
@@ -362,15 +406,19 @@ template <class T> class scopira::tool::count_ptr
 
 /**
  * This auto pointer is a more flexibile (but much less
- * used and usefull) version of count_ptr.
+ * used and usefull) version of scopira::tool::count_ptr.
  *
- * It stores an internal bool (which is set only via the
+ * This version is used in only special cases, you typically should prefer the popular
+ * scopira::tool::count_ptr.
+ *
+ * This pointer stores an internal bool (which is set only via the
  * constructor) that controls weither or not this auto pointer
  * does any reference counting at all. If set to true,
  * then it acts like a normal count_ptr. If set to false,
  * it will not call any reference counting methods, but just
  * act like a plain, vanilla pointer.
  *
+ * @see scopira::tool::count_ptr
  * @author Aleksander Demko
  */
 template <class T> class scopira::tool::count2_ptr
@@ -439,22 +487,31 @@ template <class T> class scopira::tool::count2_ptr
      *
      * @author Aleksander Demko
      */
-    bool operator==(const count2_ptr<T>& rhs) const
-      { return dm_ptr == rhs.dm_ptr; }
+    bool operator == (const count2_ptr<T>& rhs) const { return dm_ptr == rhs.dm_ptr; }
+    /**
+     * Comparison (equals) operator - compares the internal pointer value to the given pointer.
+     *
+     * @author Aleksander Demko
+     */
+    bool operator == (const T* rhs) const { return dm_ptr == rhs; }
     /**
      * Comparison (not equals) - compares internal pointer values.
      *
      * @author Aleksander Demko
      */
-    bool operator!=(const count2_ptr<T>& rhs) const
-      { return dm_ptr != rhs.dm_ptr; }
+    bool operator != (const count2_ptr<T>& rhs) const { return dm_ptr != rhs.dm_ptr; }
+    /**
+     * Comparison (not equals) operator - compares the internal pointer value to the given pointer.
+     *
+     * @author Aleksander Demko
+     */
+    bool operator != (const T* rhs) const { return dm_ptr != rhs; }
     /**
      * Comparison (less than) - compares internal pointer values.
      *
      * @author Aleksander Demko
      */
-    bool operator<(const count2_ptr<T>& rhs) const
-      { return dm_ptr < rhs.dm_ptr; }
+    bool operator < (const count2_ptr<T>& rhs) const { return dm_ptr < rhs.dm_ptr; }
 
     /**
      * Pretty ascii printer, redirects to internal class.
@@ -467,12 +524,19 @@ template <class T> class scopira::tool::count2_ptr
     // do save and load like the above?
 
     /**
-     * Gets the current object
+     * Gets the current object as a regular pointer.
      *
      * @author Aleksander Demko
      */
-    T* get(void) const
-      { return dm_ptr; }
+    T* get(void) const { return dm_ptr; }
+
+    /**
+     * Returns the current object as a regular pointer.
+     * This is an implicit conversion.
+     *
+     * @author Aleksander Demko
+     */ 
+    operator T*(void) const { return dm_ptr; }
     //T* get(void)
       //{ return dm_ptr; }
 
@@ -507,6 +571,7 @@ template <class T> class scopira::tool::count2_ptr
     /**
      * Is the pointer null?
      *
+     * @return true if the internal pointer is null.
      * @author Aleksander Demko
      */
     bool is_null(void) const { return dm_ptr == 0; }
@@ -537,7 +602,7 @@ SCOPIRA_EXPORT scopira::tool::oflow_i & operator << (scopira::tool::oflow_i &o, 
  * Output operator varient for count_ptr's.
  *
  * @param o the output stream
- * @param vl the object
+ * @param ptr the object
  * @return the same stream
  * @author Aleksander Demko
  */
@@ -622,54 +687,7 @@ class scopira::tool::objrefcounter
 #endif
 
 /**
-  \page scopirasyspage Scopira Core Reference
-
-  \section introsec Introduction
-
-  Scopira is a C++ API and framework for application development. It is designed to be
-  an efficient, modular and flexible toolkit for the development of graphical,
-  visualization, distributed and/or scientific applications.
-
-  \section userssec User Documention
-
-  Documentation pages userful for users:
-    - \subpage scopiraappspage
-    - \subpage scopiraconfigpage
-
-  \section tutsys Tutorials and Examples
-
-   - \subpage basicexamplespage
-
-  \section subsyssec Subsystem API Reference
-
-  This is the core Scopira library. All applications uses this.
-  It includes no graphical components.
-
-  This library provides reference counting, networking, IO, many utilities,
-  core loop processing, Agents and basic numerics.
-
-  Some sections include:
-    - \subpage scopiracoreloop
-    - \subpage scopiratoolobject
-    - \subpage scopiratooloutput
-    - \subpage scopirabasekitnarray
-    - \subpage scopiraagentssyspage
-
-  Namespaces that comprise this library are: scopira::tool, scopira::core
-  and scopira::basekit
-
-  \subsection othersubsyssec Other subsystems
-
-  Scopira utilizes a modular architecture designed to allow application developers
-  to only use the subsystems that they need. This also reduces the dependancy
-  on unused 3rd party libraries.
-
-  See the "Related Pages" tab for a full list of subsystem manuals.
-
-*/
-
-/**
-  \page scopiratoolobject Core object and reference counting
+  \page scopiratoolobject Reference counting
 
   \section introsec Introduction
 
@@ -741,51 +759,10 @@ class scopira::tool::objrefcounter
   All scopira::tool::object descendants can be reference counted by scopira::tool::count_ptr
   by simply proving your own add_ref() and sub_ref() methods. This is typically only done
   in the most sepecialized of cases, however.
-*/
 
-/**
-  \page basicexamplespage Basic Examples
+  \section setobjsec Serializable Objects
 
-  \section hellosec Full Hello World Example
-
-  You may utilize the Scopira data objects and other algorithms without having to code up modules. The simplest example would be like this:
-
-  \code
-  #include <scopira/tool/output.h>
-  #include <scopira/basekit/narray.h>
-  //BBlibs scopira
-  //BBtargets test.exe
-  int main(void)
-  {
-    scopira::basekit::narray<double, 2> thematrix;
-    thematrix.resize(4,4);
-    thematrix.set_all(1);
-    thematrix.diagonal_slice().set_all(5);
-    OUTPUT << thematrix;
-    return 0;
-  }
-  \endcode
-
-  Save this as test.cpp. Run buildboss on it, make then run it:
-
-  \verbatim
-  buildboss test.cpp
-  make
-  ./test.cpp
-  \endverbatim
-
-  Your output should be:
-
-  \verbatim
-  autoinit: default flow for OUTPUT.
-  Matrix, w=4 h=4:
-                0:       1:       2:       3:
-      0:      5.00     1.00     1.00     1.00
-      1:      1.00     5.00     1.00     1.00
-      2:      1.00     1.00     5.00     1.00
-      3:      1.00     1.00     1.00     5.00
-  \endverbatim
-
+  To make your own objects serialization, see \ref scopiracoreserializationpage
 */
 
 #endif

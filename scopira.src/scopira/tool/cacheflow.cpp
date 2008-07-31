@@ -1,6 +1,6 @@
 
 /*
- *  Copyright (c) 2003    National Research Council
+ *  Copyright (c) 2003-2007    National Research Council
  *
  *  All rights reserved.
  *
@@ -10,10 +10,13 @@
  *  in accordance with the terms of the license agreement.
  *
  */
- 
+
 #include <scopira/tool/cacheflow.h>
 
 #include <assert.h>
+
+//BBlibs
+//BBtargets libscopira.so
 
 using namespace scopira::tool;
 
@@ -36,11 +39,11 @@ size_t cacheiflow::read(byte_t* _buf, size_t _maxsize)
 {
   if ((_maxsize == 0) || (dm_failed && dm_cache.empty()))
     return 0;
- 
+
   // read what we can from the cache
   byte_t * N;
   size_t togo;
-  
+
   if (dm_cache.empty())
     N = _buf;
   else
@@ -146,7 +149,6 @@ cacheoflow::cacheoflow(bool doref, oflow_i* out, size_t buffersize)
     open(out);
 }
 
-
 cacheoflow::~cacheoflow()
 {
   flush_cache();
@@ -160,7 +162,7 @@ size_t cacheoflow::write(const byte_t* _buf, size_t _size)
   // is it bigger than the amount of free space we have?
   if (_size > dm_cache.free()) {
     flush_cache();
- 
+
     // is to "too big" to nicely store in our cache at all?
     if (_size > dm_cache.capacity()/4) {
       size_t ret = dm_out->write(_buf, _size);
@@ -189,7 +191,7 @@ void cacheoflow::open(oflow_i* out)
   assert(out);
   dm_out = out;
 
-  dm_failed = out->failed();
+  dm_failed = false;
   dm_cache.clear();
 }
 
@@ -236,8 +238,4 @@ void cacheoflow::flush_cache(void)
 
   dm_cache.pop_all();
 }
-
-
-//BBlibs
-//BBtargets libscopira.so
 

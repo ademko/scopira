@@ -176,6 +176,7 @@ class pakit::rdp_2d_m : public scopira::uikit::narray_m<double,2>
      * @author Aleksander Demko
      */
     PAUIKIT_EXPORT void calc_rdp(scopira::basekit::narray<double,2> *dmatrix = 0);
+    PAUIKIT_EXPORT void calc_rdp_ratios(scopira::basekit::narray<double,2> *dmatrix = 0);
 
     /**
      * Calls set_title with some fixed string that uses N1, 2, etc

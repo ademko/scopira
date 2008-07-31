@@ -13,6 +13,8 @@
 
 #include <scopira/tool/fileflow.h>
 
+#include <scopira/tool/file.h> //for copy_file
+
 #ifdef PLATFORM_win32
 #include <io.h>
 // disable depreacted warnings
@@ -39,6 +41,47 @@
 
 using namespace scopira::tool;
 using namespace std;
+
+//
+// function
+//
+
+bool scopira::tool::copy_file(const std::string &srcfile, const std::string &destfile, short copytype)
+{
+  std::string realdestfile;
+
+  if (scopira::tool::file(destfile).is_dir()) {
+    std::string dummy, justname;
+
+    file::split_path(srcfile, dummy, justname);
+
+    realdestfile = destfile + dir_seperator_c + justname;
+  } else
+    realdestfile = destfile;
+
+#ifdef PLATFORM_UNIX
+  if (copytype == copysoftlink_c)
+    return ::symlink(srcfile.c_str(), realdestfile.c_str()) == 0;
+  if (copytype == copyhardlink_c)
+    return ::link(srcfile.c_str(), realdestfile.c_str()) == 0;
+#endif
+  // ok, do a full copy
+  fileflow inf, outf;
+
+  inf.open(srcfile, scopira::tool::fileflow::input_c);
+
+  if (inf.failed())
+    return false;
+
+  outf.open(realdestfile, scopira::tool::fileflow::output_c);
+
+  if (outf.failed())
+    return false;
+
+  outf << inf;
+
+  return true;
+}
 
 //
 //

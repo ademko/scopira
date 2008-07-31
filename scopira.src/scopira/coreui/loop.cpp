@@ -24,6 +24,18 @@
 using namespace scopira::tool;
 using namespace scopira::coreui;
 
+void scopira::coreui::process_ui_events(void)
+{
+  while (gtk_events_pending())
+    gtk_main_iteration();
+}
+
+//
+//
+// ui_loop
+//
+//
+
 ui_loop::ui_loop(int &argc, char **&argv)
   : scopira::core::basic_loop(argc, argv)
 {

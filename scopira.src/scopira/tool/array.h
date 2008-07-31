@@ -323,7 +323,7 @@ template <class T> class scopira::tool::basic_array
       * An internal implementation goes against the principals.
       * of this structure.
       *
-      * @param ary The array to swap with.
+      * @param other The array to swap with.
       * @author Aleksander Demko
       */
     void array_swap(basic_array<T> &other) {
@@ -986,6 +986,98 @@ template <class T, size_t RES>
 
   return *this;
 }
+
+/**
+  \page scopiratoolarraypage Generic arrays
+
+  Note! See \ref scopirabasekitnarray if you want arrays (and multidimentional arrays)
+  for numeric computing.
+
+  Scopira includes several basic, generic arrays. These classes have several distinct
+  characterists when compared to std::vector.
+
+  \section basicsec basic_array
+
+  scopira::tool::basic_array is a simple template class that implements a straight 
+  dynamic array. It can be of any type. This template should be used instead 
+  of dynamic C arrays.
+  
+  For example:
+
+  \code
+  mytype *foo = 0; 
+  foo = new mytype[500]; 
+  delete foo;
+  foo = new mytype[200];
+  delete foo;
+  \endcode
+
+  Could be replaced with:
+
+  \code
+  scopira::tool::basic_array<mytype> foo(500);
+  foo.resize(200);
+  \endcode
+
+  Note that basic_array's constructor, destructor and resize methods all 
+  take care of any proper memory clean up needs.
+
+  Other features of scopira::tool::basic_array include:
+
+  - All methods (except for resize()) are inline, incurring no performance 
+    penalty for use. scopira::tool::basic_array::resize() itself is made non-inline to reduce code instantiation bloat.
+  - Compared to (C++ STL's) std::vector, basic_array has decidedly 
+    less features. In particular, resize()s (like C arrays) are destructive. 
+    Incremental element addition is also not provided.
+  - Debug mode builds have bounds checking on all elements accesses, via assert().
+  - STL-compatible iterators are provided, thereby making the structure 
+    usable with many generic functions.
+  - basic_array guarantees that the internal structure is that of a 
+    C array. This makes it usable in many places where a C array is needed.
+    You may access this array via scopira::tool::basic_array::c_array()
+
+  \section fixedarraysec fixed_array
+
+  scopira::tool::fixed_array is a template class that implements constant size C 
+  arrays. For example, code like this:
+
+  \code
+  char foo[100]; 
+  \endcode
+
+  Could be replaced by:
+
+  \code
+  scopira::tool::fixed_array<char,100> foo;
+  \endcode
+
+
+  Fixed arrays provide the following benefits:
+    - Access methods consistent with scopira::tool::basic_array and other Scopira vector classes.
+    - Debug mode bounds checking via assert().
+    - STL-compatible iterators.
+    - All methods are inline - resulting in no performance costs over C arrays.
+
+  \section basicmatrixsec basic_matrix
+
+  scopira::tool::basic_matrix is a template class that that implements a two dimensional
+  matrix or grid of objects. The matrix has a width and height. The matrix is thought to have
+  graphics-like coordinates. That is, the first coordinate (x) go from 0 to width, left to right.
+  The second coordinate (y) goes from 0 to height, top down.
+
+  Internally, this class utilizes scopira::tool::basic_array. The following additional methods
+  are provided:
+    - width() and height() that return the dimetions of the structure.
+    - set(), get() and resize() methods, that work as expected but all require two dimensions.
+
+  \section hybridarraysec hybrid_array
+
+  scopira::tool::hybrid_array is a scopira::tool::basic_array that has some preallocaed
+  storage via an internal scopira::tool::fixed_array.
+  This is particularly handy when most of the uses of the array will only require a few elements, but still
+  need the flexibily of heap allocated storage for the few cases that go over this threshold.
+
+*/
 
 #endif
 

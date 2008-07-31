@@ -95,7 +95,7 @@ class scopira::tool::property : public virtual scopira::tool::object
     object * get_value_as_object(void) const { return dm_obj.get(); }
 };
 
-/*
+/**
  * a string-prop_string list "record" of properties
  *
  * @author Aleksander Demko

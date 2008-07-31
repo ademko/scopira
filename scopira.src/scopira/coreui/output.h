@@ -50,6 +50,9 @@ class scopira::coreui::outputwidget : public scopira::coreui::widget,
      */ 
     SCOPIRAUI_EXPORT outputwidget(void);
     
+    // text string describing font, ex: "Monospace 10"
+    SCOPIRAUI_EXPORT void set_font( std::string font_str );
+
     /// sets the diplsay buffer
     SCOPIRAUI_EXPORT void set_output(const std::string &buf);
     /// sets the diplsay buffer, -1 == null terminated

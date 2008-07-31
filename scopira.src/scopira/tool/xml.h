@@ -1,6 +1,6 @@
 
 /*
- *  Copyright (c) 2003    National Research Council
+ *  Copyright (c) 2003-2007    National Research Council
  *
  *  All rights reserved.
  *
@@ -38,6 +38,7 @@ namespace scopira
 //
 // TIPS:
 //  use xmllint.
+//  or xmlstarlet val
 //
 
 /**
@@ -62,6 +63,20 @@ class scopira::tool::xml_doc : public scopira::tool::object
     /// Destructor
     ~xml_doc() { clear(); }
 
+    /// returns the internal pointer -- use with care
+    xmlDocPtr get_ptr(void) const { return dm_doc; }
+
+    /**
+     * Is this an empty doc?
+     * @author Aleksander Demko
+     */ 
+    bool is_null(void) const { return dm_doc == 0; }
+    /**
+     * Is this doc not-empty (valid)?
+     * @author Aleksander Demko
+     */ 
+    bool is_valid(void) const { return dm_doc != 0; }
+
     /**
      * Gets the name of this document as a C string
      * @author Aleksander Demko
@@ -85,6 +100,23 @@ class scopira::tool::xml_doc : public scopira::tool::object
      * @author Aleksander Demko
      */
     SCOPIRA_EXPORT void init(const std::string &rootnodename);
+
+    /**
+     * Adds a new processing instruction (PI) to the doc.
+     *
+     * @author Aleksander Demko
+     */ 
+    SCOPIRA_EXPORT void add_pi(const std::string &name, const std::string &content = "");
+
+    /**
+     * Replacements the current doc with the supplied one -- use with
+     * care. The current doc, if any, will be released. The new doc
+     * may be null.
+     *
+     * @param newdoc the new doc
+     * @author Aleksander Demko
+     */ 
+    SCOPIRA_EXPORT void load_ptr(xmlDocPtr newdoc);
 
     /**
      * Load a document from the given file. Will be decompressed if
@@ -184,6 +216,9 @@ class scopira::tool::xml_node
      * @author Aleksander Demko
      */ 
     explicit xml_node(xmlNodePtr ptr) : dm_node(ptr) { }
+
+    /// returns the internal pointer -- use with care
+    xmlNodePtr get_ptr(void) const { return dm_node; }
 
     /**
      * Gets the node type
@@ -303,6 +338,19 @@ class scopira::tool::xml_node
      * @author Aleksander Demko
      */ 
     SCOPIRA_EXPORT xml_node add_child(const std::string &name);
+
+    /**
+     * Adds a comment to this node and returns it.
+     * @author Aleksander Demko
+     */ 
+    SCOPIRA_EXPORT xml_node add_comment(const std::string &comment_contents);
+
+    /**
+     * Removes THIS node from the parent and deletes itself.
+     * After this call, THIS node is no longer valid.
+     * @author Aleksander Demko
+     */ 
+    SCOPIRA_EXPORT void clear_this(void);
     /**
      * Sets/adds the given attribute and value
      * @author Aleksander Demko
@@ -313,6 +361,12 @@ class scopira::tool::xml_node
      * @author Aleksander Demko
      */ 
     SCOPIRA_EXPORT xml_node add_content_child(const std::string &content);
+    /**
+     * Remove any and all text sub nodes from this node.
+     *
+     * @author Aleksander Demko
+     */ 
+    SCOPIRA_EXPORT void clear_content_children(void);
 
     /**
      * Gets the first text/content block's text.
@@ -400,6 +454,9 @@ class scopira::tool::xml_attrib
      * @author Aleksander Demko
      */ 
     xml_attrib(xmlAttrPtr ptr) : dm_attr(ptr) { }
+
+    /// returns the internal pointer -- use with care
+    xmlAttrPtr get_ptr(void) const { return dm_attr; }
 
     /**
      * Gets the name of this attribute, as a C string

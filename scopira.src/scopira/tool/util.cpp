@@ -1,6 +1,6 @@
 
 /*
- *  Copyright (c) 2002    National Research Council
+ *  Copyright (c) 2002-2007    National Research Council
  *
  *  All rights reserved.
  *
@@ -134,6 +134,49 @@ bool tool::string_to_size_t(const std::string &s, size_t &outsize_t)
   char *blah;
 
   outsize_t = strtol(s.c_str(), &blah, 10);
+
+  return *blah == '\0';
+}
+
+std::string tool::int64_t_to_string(int64_t i)
+{
+  char buf[90];
+
+  buf[0] = 0;
+#ifdef PLATFORM_win32
+  _snprintf(buf, 90, "%Iu", i);
+#else
+#ifdef PLATFORM_64
+  snprintf(buf, 90, "%ld", i);
+#else
+  snprintf(buf, 90, "%lld", i);
+#endif
+#endif
+
+  return buf;
+}
+
+int64_t tool::string_to_int64_t(const std::string &s)
+{
+#ifdef PLATFORM_win32
+  return _atoi64(s.c_str());
+#else
+  return atoll(s.c_str());
+#endif
+}
+
+bool tool::string_to_int64_t(const std::string &s, int64_t &outint64_t)
+{
+  if (s.empty())
+    return false;
+
+  char *blah;
+
+#ifdef PLATFORM_win32
+  outint64_t = _strtoi64(s.c_str(), &blah, 10);
+#else
+  outint64_t = strtoll(s.c_str(), &blah, 10);
+#endif
 
   return *blah == '\0';
 }

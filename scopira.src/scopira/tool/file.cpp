@@ -74,6 +74,11 @@ void tool::file::set(const std::string &fname)
 
 bool tool::file::exists(void) const
 {
+  return !dm_error;
+}
+
+bool tool::file::is_file(void) const
+{
   if (dm_error)
     return false;
   else
@@ -217,6 +222,28 @@ void tool::file::split_path(const std::string &fullname, std::string &path, std:
     name.clear();
   else
     name = fullname.substr(slash);
+}
+
+std::string tool::file::realpath(const std::string &name)
+{
+  char *resolved = 0;
+  std::string ret(name);
+
+#ifdef PLATFORM_win32
+  assert(false); // need realpath() implementation
+  return "";
+#else
+  resolved = ::realpath(name.c_str(), 0);   // use the GNU extension version
+#endif
+
+  if (resolved) {
+    ret = resolved;
+    free(resolved);
+  }
+
+  assert(ret.size() < 2 || ret[ret.size()-1] != '/');
+
+  return ret;
 }
 
 void tool::file::create_directory(const std::string &dirname)

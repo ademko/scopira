@@ -1,6 +1,6 @@
 
 /*
- *  Copyright (c) 2002-2005    National Research Council
+ *  Copyright (c) 2002-2007    National Research Council
  *
  *  All rights reserved.
  *
@@ -13,6 +13,9 @@
 
 #ifndef __INCLUDED_SCOPIRA_BASEKIT_NARRAY_H__
 #define __INCLUDED_SCOPIRA_BASEKIT_NARRAY_H__
+
+#include <iostream>
+#include <iomanip>
 
 #include <scopira/tool/platform.h>
 #include <scopira/tool/flow.h>
@@ -30,6 +33,10 @@
 
 namespace scopira
 {
+  /**
+   * basekit provides basic math, array and direct I/O facilities.
+   * @author Aleksander Demko
+   */ 
   namespace basekit
   {
     enum {
@@ -86,29 +93,47 @@ namespace scopira
     template <class T, int DIM = 1> class const_nslice;
     template <class T, int DIM = 1> class const_niterator;
 
+    /// element printing helper
     template <class E>
       inline void print_element(scopira::tool::oflow_i &o, E el);   // default uses <<
+    /// element printing helper (specialization)
     template <>
       inline void print_element<long>(scopira::tool::oflow_i &o, long el);
+    /// element printing helper (specialization)
     template <>
       inline void print_element<unsigned long>(scopira::tool::oflow_i &o, unsigned long el);
+    /// element printing helper (specialization)
     template <>
       inline void print_element<int>(scopira::tool::oflow_i &o, int el);
+    /// element printing helper (specialization)
     template <>
       inline void print_element<unsigned int>(scopira::tool::oflow_i &o, unsigned int el);
+    /// element printing helper (specialization)
     template <>
       inline void print_element<short>(scopira::tool::oflow_i &o, short el);
+    /// element printing helper (specialization)
     template <>
       inline void print_element<char>(scopira::tool::oflow_i &o, char el);
+    /// element printing helper (specialization)
     template <>
       inline void print_element<double>(scopira::tool::oflow_i &o, double el);
+    /// element printing helper (specialization)
     template <>
       inline void print_element<float>(scopira::tool::oflow_i &o, float el);
 
+    /// internal
     template <class C>
       scopira::tool::oflow_i & print_vector_slice(scopira::tool::oflow_i &o, const const_nslice<C,1> &V);
+    /// internal
     template <class C>
       scopira::tool::oflow_i & print_matrix_slice(scopira::tool::oflow_i &o, const const_nslice<C,2> &M);
+
+    /// internal
+    template <class C>
+      std::ostream & print_vector_slice(std::ostream &o, const const_nslice<C,1> &V);
+    /// internal
+    template <class C>
+      std::ostream & print_matrix_slice(std::ostream &o, const const_nslice<C,2> &M);
 
     //
     // In the future, a N-dimen base interface class could be put between
@@ -120,68 +145,257 @@ namespace scopira
     //
     // many type defs, for convieinence...
     //
-    // please note that all of these are registered under their "unaliased" name, that is, the
-    // full narray_o spec
-    //
+    /**
+     * Simply typedef narray<bool,1> boolvec_t;
+     * @author Aleksander Demko
+     */ 
     typedef narray<bool,1> boolvec_t;
+    /**
+     * Simply typedef narray<char,1> charvec_t;
+     * @author Aleksander Demko
+     */ 
     typedef narray<char,1> charvec_t;
+    /**
+     * Simply typedef narray<short,1> shortvec_t;
+     * @author Aleksander Demko
+     */ 
     typedef narray<short,1> shortvec_t;
+    /**
+     * Simply typedef narray<int,1> intvec_t;
+     * @author Aleksander Demko
+     */ 
     typedef narray<int,1> intvec_t;
+    /**
+     * Simply typedef narray<float,1> floatvec_t;
+     * @author Aleksander Demko
+     */ 
     typedef narray<float,1> floatvec_t;
+    /**
+     * Simply typedef narray<double,1> doublevec_t;
+     * @author Aleksander Demko
+     */ 
     typedef narray<double,1> doublevec_t;
 
+    /**
+     * Simply typedef narray<bool,2> boolmatrix_t;
+     * @author Aleksander Demko
+     */ 
     typedef narray<bool,2> boolmatrix_t;
+    /**
+     * Simply typedef narray<char,2> charmatrix_t;
+     * @author Aleksander Demko
+     */ 
     typedef narray<char,2> charmatrix_t;
+    /**
+     * Simply typedef narray<short,2> shortmatrix_t;
+     * @author Aleksander Demko
+     */ 
     typedef narray<short,2> shortmatrix_t;
+    /**
+     * Simply typedef narray<int,2> intmatrix_t;
+     * @author Aleksander Demko
+     */ 
     typedef narray<int,2> intmatrix_t;
+    /**
+     * Simply typedef narray<float,2> floatmatrix_t;
+     * @author Aleksander Demko
+     */ 
     typedef narray<float,2> floatmatrix_t;
+    /**
+     * Simply typedef narray<double,2> doublematrix_t;
+     * @author Aleksander Demko
+     */ 
     typedef narray<double,2> doublematrix_t;
 
+    /**
+     * Simply typedef narray<bool,3> boolcube_t;
+     * @author Aleksander Demko
+     */ 
     typedef narray<bool,3> boolcube_t;
+    /**
+     * Simply typedef narray<char,3> charcube_t;
+     * @author Aleksander Demko
+     */ 
     typedef narray<char,3> charcube_t;
+    /**
+     * Simply typedef narray<short,3> shortcube_t;
+     * @author Aleksander Demko
+     */ 
     typedef narray<short,3> shortcube_t;
+    /**
+     * Simply typedef narray<int,3> intcube_t;
+     * @author Aleksander Demko
+     */ 
     typedef narray<int,3> intcube_t;
+    /**
+     * Simply typedef narray<float,3> floatcube_t;
+     * @author Aleksander Demko
+     */ 
     typedef narray<float,3> floatcube_t;
+    /**
+     * Simply typedef narray<double,3> doublecube_t;
+     * @author Aleksander Demko
+     */ 
     typedef narray<double,3> doublecube_t;
 
+    /**
+     * Simply typedef narray<bool,4> boolquad_t;
+     * @author Aleksander Demko
+     */ 
     typedef narray<bool,4> boolquad_t;
+    /**
+     * Simply typedef narray<char,4> charquad_t;
+     * @author Aleksander Demko
+     */ 
     typedef narray<char,4> charquad_t;
+    /**
+     * Simply typedef narray<short,4> shortquad_t;
+     * @author Aleksander Demko
+     */ 
     typedef narray<short,4> shortquad_t;
+    /**
+     * Simply typedef narray<int,4> intquad_t;
+     * @author Aleksander Demko
+     */ 
     typedef narray<int,4> intquad_t;
+    /**
+     * Simply typedef narray<float,4> floatquad_t;
+     * @author Aleksander Demko
+     */ 
     typedef narray<float,4> floatquad_t;
+    /**
+     * Simply typedef narray<double,4> doublequad_t;
+     * @author Aleksander Demko
+     */ 
     typedef narray<double,4> doublequad_t;
 
+    /**
+     * Simply typedef narray_o<bool,1> boolvec_o;
+     * @author Aleksander Demko
+     */ 
     typedef narray_o<bool,1> boolvec_o;
+    /**
+     * Simply typedef narray_o<char,1> charvec_o;
+     * @author Aleksander Demko
+     */ 
     typedef narray_o<char,1> charvec_o;
+    /**
+     * Simply typedef narray_o<short,1> shortvec_o;
+     * @author Aleksander Demko
+     */ 
     typedef narray_o<short,1> shortvec_o;
+    /**
+     * Simply typedef narray_o<int,1> intvec_o;
+     * @author Aleksander Demko
+     */ 
     typedef narray_o<int,1> intvec_o;
+    /**
+     * Simply typedef narray_o<float,1> floatvec_o;
+     * @author Aleksander Demko
+     */ 
     typedef narray_o<float,1> floatvec_o;
+    /**
+     * Simply typedef narray_o<double,1> doublevec_o;
+     * @author Aleksander Demko
+     */ 
     typedef narray_o<double,1> doublevec_o;
 
+    /**
+     * Simply typedef narray_o<bool,2> boolmatrix_o;
+     * @author Aleksander Demko
+     */ 
     typedef narray_o<bool,2> boolmatrix_o;
+    /**
+     * Simply typedef narray_o<char,2> charmatrix_o;
+     * @author Aleksander Demko
+     */ 
     typedef narray_o<char,2> charmatrix_o;
+    /**
+     * Simply typedef narray_o<short,2> shortmatrix_o;
+     * @author Aleksander Demko
+     */ 
     typedef narray_o<short,2> shortmatrix_o;
+    /**
+     * Simply typedef narray_o<int,2> intmatrix_o;
+     * @author Aleksander Demko
+     */ 
     typedef narray_o<int,2> intmatrix_o;
+    /**
+     * Simply typedef narray_o<float,2> floatmatrix_o;
+     * @author Aleksander Demko
+     */ 
     typedef narray_o<float,2> floatmatrix_o;
+    /**
+     * Simply typedef narray_o<double,2> doublematrix_o;
+     * @author Aleksander Demko
+     */ 
     typedef narray_o<double,2> doublematrix_o;
 
+    /**
+     * Simply typedef narray_o<bool,3> boolcube_o;
+     * @author Aleksander Demko
+     */ 
     typedef narray_o<bool,3> boolcube_o;
+    /**
+     * Simply typedef narray_o<char,3> charcube_o;
+     * @author Aleksander Demko
+     */ 
     typedef narray_o<char,3> charcube_o;
+    /**
+     * Simply typedef narray_o<short,3> shortcube_o;
+     * @author Aleksander Demko
+     */ 
     typedef narray_o<short,3> shortcube_o;
+    /**
+     * Simply typedef narray_o<int,3> intcube_o;
+     * @author Aleksander Demko
+     */ 
     typedef narray_o<int,3> intcube_o;
+    /**
+     * Simply typedef narray_o<float,3> floatcube_o;
+     * @author Aleksander Demko
+     */ 
     typedef narray_o<float,3> floatcube_o;
+    /**
+     * Simply typedef narray_o<double,3> doublecube_o;
+     * @author Aleksander Demko
+     */ 
     typedef narray_o<double,3> doublecube_o;
 
+    /**
+     * Simply typedef narray_o<bool,4> boolquad_o;
+     * @author Aleksander Demko
+     */ 
     typedef narray_o<bool,4> boolquad_o;
+    /**
+     * Simply typedef narray_o<char,4> charquad_o;
+     * @author Aleksander Demko
+     */ 
     typedef narray_o<char,4> charquad_o;
+    /**
+     * Simply typedef narray_o<short,4> shortquad_o;
+     * @author Aleksander Demko
+     */ 
     typedef narray_o<short,4> shortquad_o;
+    /**
+     * Simply typedef narray_o<int,4> intquad_o;
+     * @author Aleksander Demko
+     */ 
     typedef narray_o<int,4> intquad_o;
+    /**
+     * Simply typedef narray_o<float,4> floatquad_o;
+     * @author Aleksander Demko
+     */ 
     typedef narray_o<float,4> floatquad_o;
+    /**
+     * Simply typedef narray_o<double,4> doublequad_o;
+     * @author Aleksander Demko
+     */ 
     typedef narray_o<double,4> doublequad_o;
   }
 }
 
-// *1nindex***********************************************************************
+// NINDEX
 
 /**
  * A n-dimen coordinate specifier.
@@ -529,12 +743,26 @@ scopira::basekit::nindex<DIM-1> scopira::basekit::nindex<DIM>::shrink(void) cons
   return ret;
 }
 
-// *1narray***********************************************************************
+// NARRAY
 
 /**
- * N-Dimension, templated array base class. Foundation
- * for all N-Dimensional data in Scopira.
+ * The is the core N-dimension numerical array class.
+ * 
+ * It a templated class that allows you to build N-dimensional arrays
+ * of any type.
  *
+ * See @ref scopirabasekitnarray for a introduction.
+ *
+ * Arrays contains the elements in a C-like fasion. You can use the access methods
+ * to access the elements, STL style iteration or the c_array() function to get
+ * at the data.
+ *
+ * The nslice class allow you to create subset views within narrays.
+ * The nindex class is a tiny array class that lets you do N-dimensional coordinate referencing.
+ *
+ * @see @ref scopirabasekitnarray
+ * @see scopira::basekit::nslice
+ * @see scopira::basekit::nindex
  * @author Aleksander Demko
  */
 template <class T, int DIM> class scopira::basekit::narray
@@ -542,12 +770,16 @@ template <class T, int DIM> class scopira::basekit::narray
   private:
     typedef narray<T, DIM> this_type;
   public:
+    /// the type of the elements in the narray
     typedef T data_type;
+    /// the index type that this narray likes (usually an nindex type)
     typedef nindex<DIM> index_type;
+    /// the interator type
     typedef T* iterator;
+    /// the const_interator type
     typedef const T* const_iterator;
 
-  protected:
+  private:
     T* dm_ary;              /// the actual array, newed or direct
     size_t dm_len;          /// the length of the above
     index_type dm_size;     /// dimensionality (or length in all dimensions)
@@ -607,12 +839,45 @@ template <class T, int DIM> class scopira::basekit::narray
     /// gets the size of this array
     const index_type & dimen(void) const { return dm_size; }
 
-    /// resizes the array (1D)
-    void resize(size_t idx) { resize(nindex<1>(idx)); }
-    /// matrix like access (1D)
+    /**
+     * Resize the vector to the new length.
+     *
+     * This destroys the previous contents.
+     *
+     * @param len the length of the vector (x dimension)
+     * @author Aleksander Demko
+     */ 
+    void resize(size_t len) { resize(nindex<1>(len)); }
+    /**
+     * Resize the matrix to the new dimensions.
+     *
+     * This destroys the previous contents.
+     *
+     * @param neww the new width (x dimension)
+     * @param newh the new width (y dimension)
+     * @author Aleksander Demko
+     */
     void resize(size_t neww, size_t newh) { resize(nindex<2>(neww, newh)); }
-    /// resizes the narray
+    /**
+     * Resize the cube (3 dimensional array) to the new dimensions.
+     *
+     * This destroys the previous contents.
+     *
+     * @param neww the new width (x dimension)
+     * @param newh the new width (y dimension)
+     * @param newd the new depth (z dimension)
+     * @author Aleksander Demko
+     */
+    void resize(size_t neww, size_t newh, size_t newd) { resize(nindex<3>(neww, newh, newd)); }
+    /**
+     * Generic resize function that takes a index_type.
+     *
+     * This destroys the previous contents.
+     *
+     * @author Aleksander Demko
+     */ 
     void resize(const index_type &news);
+
     /**
      * Sets this narray to be a "direct" array. That is, the array will
      * utilize an externally managed C array.
@@ -636,15 +901,20 @@ template <class T, int DIM> class scopira::basekit::narray
 
     /// main slicer
     template <int SIM>
-      nslice<T,SIM> slicer(index_type base, nindex<SIM> dimen,
-          nindex<SIM> direction);
+      nslice<T,SIM> slicer(index_type base, nindex<SIM> dimen, nindex<SIM> direction);
     /// default directions
     template <int SIM>
       nslice<T,SIM> slicer(index_type base, nindex<SIM> dimen);
     /// 1D specialized slicer, just to be nice
     nslice<T,1> slicer(index_type base, size_t len, size_t direction = x_axis_c);
 
-    /// diagnol
+    /**
+     * This returns a slice vector that goes across the diagonal.
+     *
+     * This only works on matrix narrays (for now).
+     *
+     * @author Aleksander Demko
+     */ 
     nslice<T,1> diagonal_slice(void);
 
     // slice stuff
@@ -691,6 +961,7 @@ template <class T, int DIM> class scopira::basekit::narray
     nslice<T,1> tslice(index_type base, size_t len)
       { return slicer(base, nindex<1>(len), nindex<1>(t_axis_c)); }
 
+    /// matrix slice
     nslice<T,2> xyslice(index_type base, size_t width, size_t height)
       { return slicer(base, nindex<2>(width, height)); }
 
@@ -755,6 +1026,7 @@ template <class T, int DIM> class scopira::basekit::narray
     const_nslice<T,1> tslice(index_type base, size_t len) const
       { return slicer(base, nindex<1>(len), nindex<1>(t_axis_c)); }
 
+    /// matrix slice
     const_nslice<T,2> xyslice(index_type base, size_t width, size_t height) const
       { return slicer(base, nindex<2>(width, height)); }
 
@@ -824,7 +1096,9 @@ template <class T, int DIM> class scopira::basekit::narray
     // *** 2D matrix like access ***
 
     /**
-     * Nice, referece-based element access
+     * 2-dimensional (matrix) array access operator.
+     * This is only valid on two dimentional arrays.
+     *
      * @param x the x value of the element to reference
      * @param y the y value of the element to reference
      * @return a reference to the specified value
@@ -835,7 +1109,9 @@ template <class T, int DIM> class scopira::basekit::narray
       return dm_ary[x+y*width()];
     }
     /**
-     * Nice, referece-based element access
+     * 2-dimensional (matrix) array access operator.
+     * This is only valid on two dimentional arrays.
+     *
      * @param x the x value of the element to reference
      * @param y the y value of the element to reference
      * @return a reference to the specified value
@@ -846,7 +1122,9 @@ template <class T, int DIM> class scopira::basekit::narray
       return dm_ary[x+y*width()];
     }
     /**
-     * Sets an individual element
+     * Sets an individual element out of a matrix.
+     * This is only valid on two dimentional arrays.
+     *
      * @param x the x value of the element to reference
      * @param y the y value of the element to reference
      * @param v the new value
@@ -857,15 +1135,62 @@ template <class T, int DIM> class scopira::basekit::narray
       dm_ary[x+y*width()] = v;
     }
     /**
-     * Gets an individual element
+     * Gets an individual element out of a matrix.
+     * This is only valid on two dimentional arrays.
+     *
      * @param x the x value of the element to reference
      * @param y the y value of the element to reference
      * @return the value of the specified element
      * @author Aleksander Demko
      */
     T get(size_t x, size_t y) const {
-      assert("[narray element access out of bounds]" && (x<width()) && (y<height()) );
+      assert("[narray element access out of bounds]" && (x<width()) && (y<height()));
       return dm_ary[x+y*width()];
+    }
+
+    // 3D
+    
+    /**
+     * 3-dimensional (cube) array access operator.
+     * This is only valid on three dimentional arrays.
+     *
+     * @param x the x value of the element to reference
+     * @param y the y value of the element to reference
+     * @param z the z value of the element to reference
+     * @return a reference to the specified value
+     * @author Aleksander Demko
+     */
+    T& operator()(size_t x, size_t y, size_t z) {
+      assert("[narray element access out of bounds]" && (x<width()) && (y<height()) && (z<depth()));
+      return dm_ary[x+y*width()+z*width()*height()];
+    }
+    /**
+     * Sets an individual element out of a cube.
+     * This is only valid on three dimentional arrays.
+     *
+     * @param x the x value of the element to reference
+     * @param y the y value of the element to reference
+     * @param z the z value of the element to reference
+     * @param v the new value
+     * @author Aleksander Demko
+     */
+    void set(size_t x, size_t y, size_t z, T v) {
+      assert("[narray element access out of bounds]" && (x<width()) && (y<height()) && (z<depth()));
+      dm_ary[x+y*width()+z*width()*height()] = v;
+    }
+    /**
+     * Gets an individual element out of a cube.
+     * This is only valid on three dimentional arrays.
+     *
+     * @param x the x value of the element to reference
+     * @param y the y value of the element to reference
+     * @param z the z value of the element to reference
+     * @return the value of the specified element
+     * @author Aleksander Demko
+     */
+    T get(size_t x, size_t y, size_t z) const {
+      assert("[narray element access out of bounds]" && (x<width()) && (y<height()) && (z<depth()));
+      return dm_ary[x+y*width()+z*width()*height()];
     }
 };
 
@@ -1074,8 +1399,8 @@ scopira::basekit::nslice<T,1> scopira::basekit::narray<T,DIM>::slicer(index_type
 template <class T, int DIM>
 scopira::basekit::nslice<T,1> scopira::basekit::narray<T,DIM>::diagonal_slice(void)
 {
-  assert(DIM == 2);
-  assert(dm_size[0] == dm_size[1]);
+  assert(DIM == 2 && "[called diagonal_slice() on a non-matrix]\n");
+  assert(dm_size[0] == dm_size[1] && "[diagonal_slice() matrix must be square]\n");
   return nslice<T,1>(dm_ary, 0, dm_size[0], dm_size[0]+1);
 }
 
@@ -1125,8 +1450,8 @@ scopira::basekit::const_nslice<T,1> scopira::basekit::narray<T,DIM>::slicer(inde
 template <class T, int DIM>
 scopira::basekit::const_nslice<T,1> scopira::basekit::narray<T,DIM>::diagonal_slice(void) const
 {
-  assert(DIM == 2);
-  assert(dm_size[0] == dm_size[1]);
+  assert(DIM == 2 && "[called diagonal_slice() on a non-matrix]\n");
+  assert(dm_size[0] == dm_size[1] && "[diagonal_slice() matrix must be square]\n");
   return const_nslice<T,1>(dm_ary, 0, dm_size[0], dm_size[0]+1);
 }
 
@@ -1209,12 +1534,25 @@ void scopira::basekit::narray<T,DIM>::copy(const const_nslice<T,DIM> &at)
     *ii = *kk;
 }
 
-// *1nslice***********************************************************************
+// NSLICE
 
 /**
- * Natural partner for narray. A light ("pointer") like
- * pointer into another narray.
+ * The nslice class is a lightweight array-like class that lets you
+ * view a subset of an narray. You can thing of them as a pointer
+ * to the contents of a narray.
  *
+ * Some other notes:
+ *  - nslice does not itself contain data, it refers to the data in the
+ *  host narray
+ *  - Do not destroy (or resize) the host narray. If you do so, you
+ *  must aquire new nslice instances from the narray.
+ *  - nslice is fully copyable and ease to pass around
+ *
+ * See @ref scopirabasekitnarray for a introduction.
+ *
+ * @see @ref scopirabasekitnarray
+ * @see scopira::basekit::nslice
+ * @see scopira::basekit::nindex
  * @author Aleksander Demko
  */
 template <class T, int DIM> class scopira::basekit::nslice
@@ -1230,7 +1568,14 @@ template <class T, int DIM> class scopira::basekit::nslice
   private:
     T* dm_var;
     size_t dm_prime, dm_end_prime;
-    index_type dm_size, dm_stride;
+    // this is the size of each dimension
+    index_type dm_size;
+    // this is the striding factor
+    // for each index, it contains the number of elements per-unit in that index
+    // for example, dm_stride[0] is the number of elements per x (often 1)
+    // for example, dm_stride[1] is the number of elements per y (often, this would be the width)
+    // for example, dm_stride[2] is the number of elements per z (often, width()*height()
+    index_type dm_stride;
   public:
     /// default ctor, makes a null slice
     nslice(void);
@@ -1256,11 +1601,27 @@ template <class T, int DIM> class scopira::basekit::nslice
      */
     void save(scopira::tool::otflow_i &out) const;
 
-    /// gets the slice as a raw C array. only valid if the X stride is 1
+    /**
+     * Gets the contents of the slice as a ray C array.
+     *
+     * This is only valid if the X stride is 1.
+     *
+     * @author Aleksander Demko
+     */ 
     T * c_array(void) const { assert(dm_stride[0] == 1); return dm_var+dm_prime; }
 
+    /**
+     * Returns the start of the nslice, as an STL-style iterator
+     *
+     * @author Aleksander Demko
+     */ 
     niterator<T, DIM> begin(void) const
       { return niterator<T,DIM>( dm_var+dm_prime, false, dm_size, dm_stride); }
+    /**
+     * Returns the end of the nslice, as an STL-style iterator
+     *
+     * @author Aleksander Demko
+     */ 
     niterator<T, DIM> end(void) const
       { return niterator<T,DIM>( dm_var+dm_end_prime, true, dm_size, dm_stride); }
 
@@ -1282,11 +1643,43 @@ template <class T, int DIM> class scopira::basekit::nslice
     /// gets the width
     const index_type & dimen(void) const { return dm_size; }
 
-    /// resizes the array (1D)
-    void resize(size_t idx) { resize(nindex<1>(idx)); }
-    /// matrix like access (1D)
+    /**
+     * Resize the vector to the new length.
+     *
+     * This destroys the previous contents.
+     *
+     * @param len the length of the vector (x dimension)
+     * @author Aleksander Demko
+     */ 
+    void resize(size_t len) { resize(nindex<1>(len)); }
+    /**
+     * Resize the matrix to the new dimensions.
+     *
+     * This destroys the previous contents.
+     *
+     * @param neww the new width (x dimension)
+     * @param newh the new width (y dimension)
+     * @author Aleksander Demko
+     */
     void resize(size_t neww, size_t newh) { resize(nindex<2>(neww, newh)); }
-    /// resizes the narray
+    /**
+     * Resize the cube (3 dimensional array) to the new dimensions.
+     *
+     * This destroys the previous contents.
+     *
+     * @param neww the new width (x dimension)
+     * @param newh the new width (y dimension)
+     * @param newd the new depth (z dimension)
+     * @author Aleksander Demko
+     */
+    void resize(size_t neww, size_t newh, size_t newd) { resize(nindex<3>(neww, newh, newd)); }
+    /**
+     * Generic resize function that takes a index_type.
+     *
+     * This destroys the previous contents.
+     *
+     * @author Aleksander Demko
+     */ 
     void resize(const index_type &news);
 
     /// slicer cire
@@ -1301,6 +1694,15 @@ template <class T, int DIM> class scopira::basekit::nslice
     nslice<T,1> slicer(index_type base, size_t len, size_t direction = 0) const;
 
     // slice stuff
+
+    /**
+     * This returns a slice vector that goes across the diagonal.
+     *
+     * This only works on matrix nslices (for now).
+     *
+     * @author Aleksander Demko
+     */ 
+    nslice<T,1> diagonal_slice(void);
 
     /// all slice
     nslice<T,DIM> all_slice(void) const;
@@ -1344,6 +1746,7 @@ template <class T, int DIM> class scopira::basekit::nslice
     nslice<T,1> tslice(index_type base, size_t len) const
       { return slicer(base, nindex<1>(len), nindex<1>(t_axis_c)); }
 
+    /// matrix slice
     nslice<T,2> xyslice(index_type base, size_t width, size_t height) const
       { return slicer(base, nindex<2>(width, height)); }
 
@@ -1385,7 +1788,9 @@ template <class T, int DIM> class scopira::basekit::nslice
     // *** 2D matrix like access ***
 
     /**
-     * Nice, referece-based element access
+     * 2-dimensional (matrix) array access operator.
+     * This is only valid on two dimentional arrays.
+     *
      * @param x the x value of the element to reference
      * @param y the y value of the element to reference
      * @return a reference to the specified value
@@ -1396,7 +1801,9 @@ template <class T, int DIM> class scopira::basekit::nslice
       return dm_var[dm_prime+x*dm_stride[0]+y*dm_stride[1]];
     }
     /**
-     * Sets an individual element
+     * Sets an individual element out of a matrix.
+     * This is only valid on two dimentional arrays.
+     *
      * @param x the x value of the element to reference
      * @param y the y value of the element to reference
      * @param v the new value
@@ -1407,15 +1814,62 @@ template <class T, int DIM> class scopira::basekit::nslice
       dm_var[dm_prime+x*dm_stride[0]+y*dm_stride[1]] = v;
     }
     /**
-     * Gets an individual element
+     * Gets an individual element out of a matrix.
+     * This is only valid on two dimentional arrays.
+     *
      * @param x the x value of the element to reference
      * @param y the y value of the element to reference
      * @return the value of the specified element
      * @author Aleksander Demko
      */
     T get(size_t x, size_t y) const {
-      assert("[nslice element access out of bounds]" &&  (x<width()) && (y<height()) );
+      assert("[nslice element access out of bounds]" &&  (x<width()) && (y<height()));
       return dm_var[dm_prime+x*dm_stride[0]+y*dm_stride[1]];
+    }
+
+    // 3D
+
+    /**
+     * 3-dimensional (cube) array access operator.
+     * This is only valid on three dimentional arrays.
+     *
+     * @param x the x value of the element to reference
+     * @param y the y value of the element to reference
+     * @param z the z value of the element to reference
+     * @return a reference to the specified value
+     * @author Aleksander Demko
+     */
+    T& operator()(size_t x, size_t y, size_t z) const {
+      assert("[nslice element access out of bounds]" &&  (x<width()) && (y<height()) && (z<depth()));
+      return dm_var[dm_prime+x*dm_stride[0]+y*dm_stride[1]+z*dm_stride[2]];
+    }
+    /**
+     * Sets an individual element out of a cube.
+     * This is only valid on three dimentional arrays.
+     *
+     * @param x the x value of the element to reference
+     * @param y the y value of the element to reference
+     * @param z the z value of the element to reference
+     * @param v the new value
+     * @author Aleksander Demko
+     */
+    void set(size_t x, size_t y, size_t z, T v) const {
+      assert("[nslice element access out of bounds]" &&  (x<width()) && (y<height()) && (z<depth()));
+      dm_var[dm_prime+x*dm_stride[0]+y*dm_stride[1]+z*dm_stride[2]] = v;
+    }
+    /**
+     * Gets an individual element out of a cube.
+     * This is only valid on three dimentional arrays.
+     *
+     * @param x the x value of the element to reference
+     * @param y the y value of the element to reference
+     * @param z the z value of the element to reference
+     * @return the value of the specified element
+     * @author Aleksander Demko
+     */
+    T get(size_t x, size_t y, size_t z) const {
+      assert("[nslice element access out of bounds]" &&  (x<width()) && (y<height()) && (z<depth()));
+      return dm_var[dm_prime+x*dm_stride[0]+y*dm_stride[1]+z*dm_stride[2]];
     }
 };
 
@@ -1568,6 +2022,14 @@ scopira::basekit::nslice<T,1> scopira::basekit::nslice<T,DIM>::slicer(index_type
 }
 
 template <class T, int DIM>
+scopira::basekit::nslice<T,1> scopira::basekit::nslice<T,DIM>::diagonal_slice(void)
+{
+  assert(DIM == 2 && "[called diagonal_slice() on a non-matrix]\n");
+  assert(dm_size[0] == dm_size[1] && "[diagonal_slice() matrix must be square]\n");
+  return nslice<T,1>(dm_var, dm_prime, nindex<1>(dm_size[0]), nindex<1>(dm_stride[1]+1));
+}
+
+template <class T, int DIM>
 scopira::basekit::nslice<T,DIM> scopira::basekit::nslice<T,DIM>::all_slice(void) const
 {
   return slicer(index_type(0), dm_size, nindex<DIM>::steps());
@@ -1656,6 +2118,7 @@ template <class T, int DIM>
 class scopira::basekit::niterator
 {
   public:
+    /// the element data type of this iterator
     typedef T data_type;
   private:
     typedef niterator<T, DIM> this_type;
@@ -1755,7 +2218,7 @@ void scopira::basekit::niterator<T, DIM>::operator--(void)
 }
 
 
-// *1const_nslice***********************************************************************
+// CONST_NSLICE
 
 /**
  * Natural partner for narray. A light ("pointer") like
@@ -1790,7 +2253,11 @@ template <class T, int DIM> class scopira::basekit::const_nslice
     const_nslice(const narray<T,DIM> *rhs);
     /// init, ctor
     const_nslice(const T * _var, size_t _prime, index_type _size, index_type _stride);
-    /// you can always (implicitly) convert a nslice to a const_nslice
+    /**
+     * Implicit convert for nslice to const_nslice
+     *
+     * @author Aleksander Demko
+     */ 
     const_nslice(const nslice<T, DIM> &rhs);
 
     /**
@@ -1803,8 +2270,18 @@ template <class T, int DIM> class scopira::basekit::const_nslice
     /// gets the slice as a raw C array. only valid if the X stride is 1
     const T * c_array(void) const { assert(dm_stride[0] == 1); return dm_var; }
 
+    /**
+     * Returns the start of the const_nslice, as an STL-style iterator
+     *
+     * @author Aleksander Demko
+     */ 
     const_niterator<T, DIM> begin(void) const
       { return const_niterator<T,DIM>( dm_var+dm_prime, false, dm_size, dm_stride); }
+    /**
+     * Returns the end of the const_nslice, as an STL-style iterator
+     *
+     * @author Aleksander Demko
+     */ 
     const_niterator<T, DIM> end(void) const
       { return const_niterator<T,DIM>( dm_var+dm_end_prime, true, dm_size, dm_stride); }
 
@@ -1826,11 +2303,43 @@ template <class T, int DIM> class scopira::basekit::const_nslice
     /// gets the size of this array
     const index_type & dimen(void) const { return dm_size; }
 
-    /// resizes the array (1D)
-    void resize(size_t idx) { resize(nindex<1>(idx)); }
-    /// matrix like access (1D)
+    /**
+     * Resize the vector to the new length.
+     *
+     * This destroys the previous contents.
+     *
+     * @param len the length of the vector (x dimension)
+     * @author Aleksander Demko
+     */ 
+    void resize(size_t len) { resize(nindex<1>(len)); }
+    /**
+     * Resize the matrix to the new dimensions.
+     *
+     * This destroys the previous contents.
+     *
+     * @param neww the new width (x dimension)
+     * @param newh the new width (y dimension)
+     * @author Aleksander Demko
+     */
     void resize(size_t neww, size_t newh) { resize(nindex<2>(neww, newh)); }
-    /// resizes the narray
+    /**
+     * Resize the cube (3 dimensional array) to the new dimensions.
+     *
+     * This destroys the previous contents.
+     *
+     * @param neww the new width (x dimension)
+     * @param newh the new width (y dimension)
+     * @param newd the new depth (z dimension)
+     * @author Aleksander Demko
+     */
+    void resize(size_t neww, size_t newh, size_t newd) { resize(nindex<3>(neww, newh, newd)); }
+    /**
+     * Generic resize function that takes a index_type.
+     *
+     * This destroys the previous contents.
+     *
+     * @author Aleksander Demko
+     */ 
     void resize(const index_type &news);
 
     /// slicer cire
@@ -1845,6 +2354,15 @@ template <class T, int DIM> class scopira::basekit::const_nslice
     const_nslice<T,1> slicer(index_type base, size_t len, size_t direction = 0) const;
 
     // slice stuff
+
+    /**
+     * This returns a slice vector that goes across the diagonal.
+     *
+     * This only works on matrix nslices (for now).
+     *
+     * @author Aleksander Demko
+     */ 
+    const_nslice<T,1> diagonal_slice(void);
 
     /// all slice
     const_nslice<T,DIM> all_slice(void) const;
@@ -1888,6 +2406,7 @@ template <class T, int DIM> class scopira::basekit::const_nslice
     const_nslice<T,1> tslice(index_type base, size_t len) const
       { return slicer(base, nindex<1>(len), nindex<1>(t_axis_c)); }
 
+    /// matrix slice
     const_nslice<T,2> xyslice(index_type base, size_t width, size_t height) const
       { return slicer(base, nindex<2>(width, height)); }
 
@@ -1913,7 +2432,9 @@ template <class T, int DIM> class scopira::basekit::const_nslice
     // *** 2D matrix like access ***
 
     /**
-     * Nice, referece-based element access
+     * 2-dimensional (matrix) array access operator.
+     * This is only valid on two dimentional arrays.
+     *
      * @param x the x value of the element to reference
      * @param y the y value of the element to reference
      * @return a reference to the specified value
@@ -1924,7 +2445,9 @@ template <class T, int DIM> class scopira::basekit::const_nslice
       return dm_var[dm_prime+x*dm_stride[0]+y*dm_stride[1]];
     }
     /**
-     * Gets an individual element
+     * Gets an individual element out of a matrix.
+     * This is only valid on two dimentional arrays.
+     *
      * @param x the x value of the element to reference
      * @param y the y value of the element to reference
      * @return the value of the specified element
@@ -1933,6 +2456,37 @@ template <class T, int DIM> class scopira::basekit::const_nslice
     T get(size_t x, size_t y) const {
       assert("[const_nslice element access out of bounds]" &&  (x<width()) && (y<height()) );
       return dm_var[dm_prime+x*dm_stride[0]+y*dm_stride[1]];
+    }
+
+    // 3D
+
+    /**
+     * 3-dimensional (cube) array access operator.
+     * This is only valid on three dimentional arrays.
+     *
+     * @param x the x value of the element to reference
+     * @param y the y value of the element to reference
+     * @param z the z value of the element to reference
+     * @return a reference to the specified value
+     * @author Aleksander Demko
+     */
+    T& operator()(size_t x, size_t y, size_t z) const {
+      assert("[nslice element access out of bounds]" &&  (x<width()) && (y<height()) && (z<depth()));
+      return dm_var[dm_prime+x*dm_stride[0]+y*dm_stride[1]+z*dm_stride[2]];
+    }
+    /**
+     * Gets an individual element out of a cube.
+     * This is only valid on three dimentional arrays.
+     *
+     * @param x the x value of the element to reference
+     * @param y the y value of the element to reference
+     * @param z the z value of the element to reference
+     * @return the value of the specified element
+     * @author Aleksander Demko
+     */
+    T get(size_t x, size_t y, size_t z) const {
+      assert("[nslice element access out of bounds]" &&  (x<width()) && (y<height()) && (z<depth()));
+      return dm_var[dm_prime+x*dm_stride[0]+y*dm_stride[1]+z*dm_stride[2]];
     }
 };
 
@@ -1953,6 +2507,14 @@ scopira::basekit::const_nslice<T,DIM>::const_nslice(const this_type &rhs)
   : dm_var(rhs.dm_var), dm_prime(rhs.dm_prime), dm_end_prime(rhs.dm_end_prime),
     dm_size(rhs.dm_size), dm_stride(rhs.dm_stride)
 {
+}
+
+template <class T, int DIM>
+scopira::basekit::const_nslice<T,1> scopira::basekit::const_nslice<T,DIM>::diagonal_slice(void)
+{
+  assert(DIM == 2 && "[called diagonal_slice() on a non-matrix]\n");
+  assert(dm_size[0] == dm_size[1] && "[diagonal_slice() matrix must be square]\n");
+  return const_nslice<T,1>(dm_var, dm_prime, nindex<1>(dm_size[0]), nindex<1>(dm_stride[1]+1));
 }
 
 template <class T, int DIM>
@@ -2069,6 +2631,7 @@ template <class T, int DIM>
 class scopira::basekit::const_niterator
 {
   public:
+    /// the element type this const_niterator
     typedef T data_type;
   private:
     typedef const_niterator<T, DIM> this_type;
@@ -2214,12 +2777,12 @@ template <class T, int DIM> class scopira::basekit::narray_o : public scopira::b
 //
 //
 
+namespace std {
 /**
  * This is a traits specification class for vec_iterator_g to make it
  * random iterator compliant, among other niceties.
  * @author Aleksander Demko
  */
-namespace std {
 template <typename T> struct iterator_traits<scopira::basekit::niterator<T,1> >
 {
   public:
@@ -2235,7 +2798,7 @@ template <typename T> struct iterator_traits<scopira::basekit::niterator<T,1> >
 template <class E>
   inline void scopira::basekit::print_element(scopira::tool::oflow_i &o, E el)
 {
-  o << el;
+  o << ' ' << el;
 }
 
 /// internal print drivers. you may need to define more if you have your own types
@@ -2419,8 +2982,133 @@ scopira::tool::oflow_i & operator << (scopira::tool::oflow_i &o,
   return o << ')';
 }
 
+/// internal
+template <class C>
+  std::ostream & scopira::basekit::print_vector_slice(std::ostream &o, const const_nslice<C,1> &V)
+{
+  size_t i, mx;
+
+  mx = V.size();
+  o << "Vector, len=" << mx << ":";
+  for (i=0; i<mx; i++) {
+    if (i % 5 == 0)
+      o << "\n " << std::setw(4) << i << ":";
+    o.width(8);
+    o << std::setw(14) << V[i];
+  }
+
+  return o << '\n';
+}
+
+/// internal
+template <class C>
+  std::ostream & scopira::basekit::print_matrix_slice
+  (std::ostream &o, const const_nslice<C,2> &M)
+{
+  size_t x, y, w, h;
+
+  w = M.width();
+  h = M.height();
+
+  o << "Matrix, w=" << w << " h=" << h << ":\n     ";
+  for (x=0; x<w; x++)
+    o << std::setw(13) << x << ':';
+  o << '\n';
+  for (y=0; y<h; y++) {
+    o << std::setw(4) << y << ':';
+    for (x=0; x<w; x++)
+      o << std::setw(14) << M(x,y);
+    o << '\n';
+  }
+  return o;
+}
+
 /**
-  \page scopirabasekitnarray narray (core data template class)
+ * Printer
+ * @author Aleksander Demko
+ */
+template <class T, int DIM> std::ostream & operator << (std::ostream &o,
+    const scopira::basekit::const_nslice<T, DIM> &A)
+{
+  size_t k, kmax;
+  for (k=0, kmax=A.size_rows(); k<kmax; ++k) {
+    o << "Sub Slice (depth=" << DIM << ") " << k << ":\n";
+    o << A.row_slice(k) << '\n';
+  }
+
+  return o;
+}
+
+/**
+ * Printer
+ * @author Aleksander Demko
+ */
+template <class T> inline std::ostream & operator << (std::ostream &o,
+    const scopira::basekit::const_nslice<T, 1> &A)
+{
+  return print_vector_slice(o, A);
+}
+
+/**
+ * Printer
+ * @author Aleksander Demko
+ */
+template <class T> inline std::ostream & operator << (std::ostream &o,
+    const scopira::basekit::const_nslice<T, 2> &A)
+{
+  return print_matrix_slice(o, A);
+}
+
+/**
+ * Printer
+ * @author Aleksander Demko
+ */
+template <class T, int DIM> inline std::ostream & operator << (std::ostream &o,
+  const scopira::basekit::nslice<T, DIM> &A)
+{
+  return o << scopira::basekit::const_nslice<T, DIM>(A);
+}
+
+/**
+ * Printer
+ * @author Aleksander Demko
+ */
+template <class T, int DIM>
+inline
+std::ostream & operator << (std::ostream &o,
+    const scopira::basekit::narray<T, DIM> &A)
+{
+  return o << A.all_slice();
+}
+
+/**
+ * Printer
+ * @author Aleksander Demko
+ */
+template <class T, int DIM>
+inline
+std::ostream & operator << (std::ostream &o,
+    const scopira::basekit::narray_o<T, DIM> &A)
+{
+  return o << A.all_slice();
+}
+
+/**
+ * Printer
+ * @author Aleksander Demko
+ */
+template <int DIM>
+std::ostream & operator << (std::ostream &o,
+    const scopira::basekit::nindex<DIM> &d)
+{
+  o << '(' << d[0];
+  for (size_t x=1; x<DIM; ++x)
+    o << ',' << d[x];
+  return o << ')';
+}
+
+/**
+  \page scopirabasekitnarray Numeric arrays
 
   The scopira::basekit::narray template class is the core numerical
   data array class in Scopira. It can be used to make arrays
@@ -2440,6 +3128,10 @@ scopira::tool::oflow_i & operator << (scopira::tool::oflow_i &o,
 
   Use [] for 1-dimention (vector) access. Use () for 2-dimention (matrix) access.
   () is also used for 3+-dimention access via nindex objects.
+
+  When compiled in debug mode, all element access is tested via asserts(). This aids in
+  debugging and development. Under release builds, these check is removed and all
+  accesses are inlined -- just like native arrays.
 
   \section examplessec Basic Example
 
@@ -2509,6 +3201,62 @@ scopira::tool::oflow_i & operator << (scopira::tool::oflow_i &o,
     OUTPUT << subV << '\n';
   }
   \endcode
+
+*/
+
+/**
+  \page scopirabasekitdio Scopira DIO (DirectIO) Array File Format
+
+  This section describes the Scopira DirectIO File Format.
+  This is an easy to use, extensible, XML based data file format.
+
+  The file itself is an XML file (with the .xml extension).
+
+  \section overviewsec Overview
+
+  This is an example DirectIO file:
+
+  \verbatim
+    <scopira_dio>
+      <elem_type>float32</elem_type>
+      <num_dimen>3</num_dimen>
+      <size_0>380</size_0>
+      <size_1>294</size_1>
+      <size_2>500</size_2>
+      <data_file>contraction.xml.data</data_file>
+    </scopira_dio>
+  \endverbatim
+
+  The fields (all required) are:
+    - elem_type: the type of elements, this is either int or float and the number
+      of bits
+    - num_dimen: the number of dimensions in the array (2 for example is a matrix)
+    - size_0, size_1, etc: the size of each dimension, numbering starts from 0
+    - data_file: the actual data file. This (pure binary) datafile contains
+      the elements in Intel byte order. This filename may be a full path
+      or may be a relative filename.
+
+  \section payloadsec Payload File
+
+  This binary file contains the actual elements in Intel byte order.
+  The user never specifies this file (except perhaps in advances dialog boxes),
+  its file name is referenced from the data_file field in the main XML file.
+
+  \section scopirafuncsec Scopira functions
+
+  Scopira provides the following libxml2 based functions for handling
+  DirectIO files.
+
+  Basic loading and saving:
+    - scopira::basekit::load_directio_file
+    - scopira::basekit::save_directio_file
+
+  Information query:
+    - scopira::basekit::query_directio_file
+
+  Memory-mapped driven loading:
+    - scopira::basekit::create_directio_file
+    - scopira::basekit::bind_directio_file
 
 */
 

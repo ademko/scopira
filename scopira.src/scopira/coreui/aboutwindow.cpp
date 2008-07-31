@@ -1,6 +1,6 @@
 
 /*
- *  Copyright (c) 2005    National Research Council
+ *  Copyright (c) 2005-2007    National Research Council
  *
  *  All rights reserved.
  *
@@ -14,13 +14,18 @@
 #include <scopira/coreui/aboutwindow.h>
 
 #include <scopira/tool/platform.h>
+#include <scopira/core/register.h>
+#include <scopira/core/loop.h>
+#include <scopira/core/objecttype.h>
 #include <scopira/coreui/xpmdata.h>
 #include <scopira/coreui/image.h>
 #include <scopira/coreui/label.h>
+#include <scopira/agent/agent.h>
 
 //BBtargets libscopiraui.so
 
 using namespace scopira::tool;
+using namespace scopira::core;
 using namespace scopira::coreui;
 
 aboutwindow::aboutwindow(const std::string &windowtitle)
@@ -39,23 +44,61 @@ aboutwindow::aboutwindow(const std::string &windowtitle)
 
 void aboutwindow::add_tab_scopira(void)
 {
+  std::string agent_string;
+
+  if (scopira::agent::agent_i::instance()) {
+    agent_string = "\nAgent CPUs: ";
+    agent_string += int_to_string(scopira::agent::agent_i::instance()->universe_size());
+  }
+
   add_tab(
     scopira_splash_xpm,
     "\nA C++ Library for Data Analysis, Visualization\nand Parallel Processing\n\n"
     "Version: " SCOPIRA_VERSION " (" __DATE__ " " __TIME__ ")\n"
     "Platform: " PLATFORM_DESC "\n"
 #ifdef PLATFORM_64
-    "Memory model: 64-bit\n"
+    "Memory: 64-bit\n"
 #else
-    "Memory model: 32-bit\n"
+    "Memory: 32-bit\n"
 #endif
 #ifndef NDEBUG
-    "Build: Debug\n"
+    "Optimized: debug\n"
 #else
-    "Build: Optimized\n"
+    "Optimized: yes\n"
 #endif
+    + agent_string
     ,
     "Scopira");
+
+  add_tab_dll();
+}
+
+void aboutwindow::add_tab_dll(void)
+{
+  assert(basic_loop::instance());
+
+  objecttype *ot;
+  objecttype::objecttype_iterator ii;
+
+  ot = basic_loop::instance()->get_root_objecttype();
+  assert(ot);
+
+  ot = ot->find("scopira::coreui::abouttab_i");
+  assert(ot);
+
+  ii = ot->get_child_iterator();
+
+  for (; ii.valid(); ++ii) {
+    count_ptr<object> newo;
+    abouttab_i *newt;
+
+    newo = objflowloader::instance()->load_object(objflowloader::instance()->get_typeinfo((*ii)->get_name()));
+
+    newt = dynamic_cast<abouttab_i*>(newo.get());
+    assert(newt);   // if this fails, then theyve misregistered their sub type
+
+    newt->add_tab(this);
+  }
 }
 
 void aboutwindow::add_tab(widget *wid, const std::string &label)
@@ -82,5 +125,11 @@ void aboutwindow::add_tab(const char **xpm_data, const std::string &desc, const 
   boxer->set_border_size(10);
 
   dm_tabber->add_widget(boxer.get(), tablabel);
+}
+
+static scopira::core::register_object<abouttab_i> r12("scopira::coreui::abouttab_i", 0, 1);
+
+abouttab_i::abouttab_i(void)
+{
 }
 

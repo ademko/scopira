@@ -19,6 +19,7 @@
 //
 
 #include <scopira/tool/limits.h>
+#include <scopira/tool/platform.h>
 
 namespace scopira {
 namespace tool {
@@ -166,6 +167,22 @@ public:
   static IntType add(IntType x, IntType c) { return x+c; }
   static IntType mult(IntType a, IntType x) { return a*x; }
   static IntType mult_add(IntType a, IntType x, IntType c) { return a*x+c; }
+
+  // m is not prime, thus invert is not useful
+private:                      // don't instantiate
+  const_mod();
+};
+
+template<>
+class const_mod<uint64_t, uint64_t(1) << 48>
+{
+  typedef uint64_t IntType;
+public:
+  static IntType add(IntType x, IntType c) { return c == 0 ? x : mod(x+c); }
+  static IntType mult(IntType a, IntType x) { return mod(a*x); }
+  static IntType mult_add(IntType a, IntType x, IntType c)
+    { return mod(a*x+c); }
+  static IntType mod(IntType x) { return x &= ((uint64_t(1) << 48)-1); }
 
   // m is not prime, thus invert is not useful
 private:                      // don't instantiate

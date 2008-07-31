@@ -19,24 +19,6 @@
 
 namespace pakit
 {
-  extern PAKIT_EXPORT const char * distance_func_type_string;
-  typedef void (*distance_func_t)(const scopira::basekit::nslice<double> &a,
-    const scopira::basekit::nslice<double> &b, double &dist);
-
-  // euclidean distance mfn
-  PAKIT_EXPORT void euclidean_distance(const scopira::basekit::nslice<double> &a,
-    const scopira::basekit::nslice<double> &b, double &dist);
-  // cityblock distance mfn
-  PAKIT_EXPORT void cityblock_distance(const scopira::basekit::nslice<double> &a,
-    const scopira::basekit::nslice<double> &b, double &dist);
-  // max distance mfn
-  PAKIT_EXPORT void max_distance(const scopira::basekit::nslice<double> &a,
-    const scopira::basekit::nslice<double> &b, double &dist);
-
-  PAKIT_EXPORT void calc_distance_matrix(const scopira::basekit::nslice<double,2> &patterns,
-    scopira::basekit::narray<double,2> &outmatrix,
-    distance_func_t func = euclidean_distance);
-
   /**
    * given the triangle:
    *
@@ -71,6 +53,9 @@ namespace pakit
     double X3, double Y3, double &X, double &Y, double &Z);
 
   PAKIT_EXPORT void rdp_calc_2d_space(const scopira::basekit::narray<double,2> &distance_matrix,
+      int n1, int n2, scopira::basekit::narray<double,2> &outpts);
+
+  PAKIT_EXPORT void rdp_calc_2d_ratios(const scopira::basekit::narray<double,2> &distance_matrix,
       int n1, int n2, scopira::basekit::narray<double,2> &outpts);
 
   /// returns true on success

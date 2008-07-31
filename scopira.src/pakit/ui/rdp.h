@@ -18,19 +18,13 @@
 #include <scopira/coreui/entry.h>
 #include <scopira/coreui/label.h>
 #include <scopira/coreui/spinbutton.h>
-#include <scopira/uikit/frame.h>
+#include <scopira/coreui/layout.h>
 #include <scopira/uikit/matrix.h>
 
 #include <pakit/ui/models.h>
 
 namespace pakit
 {
-  class calc_distance_matrix_base;
-
-  class calc_distance_via_euclidean_v;
-  class calc_distance_via_cityblock_v;
-  class calc_distance_via_max_distance_v;
-
   class rdp_space_v;
   class rdp_space_patterns_v;
   class rdp_scatterplot_space_patterns_v;
@@ -40,54 +34,6 @@ namespace pakit
 
   class rdp_2d_plot_v;
 }
-
-/**
- * Helper base class for little views that calculate distance matrices.
- * Descedants need only override calc_distance and register their view.
- *
- * This is a gui-less view base class.
- *
- * @author Aleksander Demko
- */
-class pakit::calc_distance_matrix_base : public scopira::core::view_i
-{
-  public:
-    virtual void bind_model(scopira::core::model_i *sus);
-
-    // returns the name
-    virtual std::string calc_distance_matrix(const scopira::basekit::nslice<double,2> &patterns,
-      scopira::basekit::narray<double,2> &outmatrix) = 0;
-};
-
-/**
- * @author Aleksander Demko
- */ 
-class pakit::calc_distance_via_euclidean_v : public pakit::calc_distance_matrix_base
-{
-  public:
-    virtual std::string calc_distance_matrix(const scopira::basekit::nslice<double,2> &patterns,
-      scopira::basekit::narray<double,2> &outmatrix);
-};
-
-/**
- * @author Aleksander Demko
- */ 
-class pakit::calc_distance_via_cityblock_v : public pakit::calc_distance_matrix_base
-{
-  public:
-    virtual std::string calc_distance_matrix(const scopira::basekit::nslice<double,2> &patterns,
-      scopira::basekit::narray<double,2> &outmatrix);
-};
-
-/**
- * @author Aleksander Demko
- */ 
-class pakit::calc_distance_via_max_distance_v : public pakit::calc_distance_matrix_base
-{
-  public:
-    virtual std::string calc_distance_matrix(const scopira::basekit::nslice<double,2> &patterns,
-      scopira::basekit::narray<double,2> &outmatrix);
-};
 
 /**
  * produces initial RDP projections from a distance matrix
@@ -138,7 +84,7 @@ class pakit::rdp_scatterplot_space_patterns_v : public scopira::coreui::viewwidg
 
     /// reference points selection container
     scopira::tool::count_ptr<scopira::coreui::grid_layout> dm_pair1_box, dm_pair2_box;
-    scopira::tool::count_ptr<scopira::uikit::frame> dm_ref_frame;
+    scopira::tool::count_ptr<scopira::coreui::frame> dm_ref_frame;
     /// first pair reference points
     scopira::tool::count_ptr<scopira::coreui::entry> dm_pair1_n1_entry, dm_pair1_n2_entry;
     /// first pair reference points entry labels

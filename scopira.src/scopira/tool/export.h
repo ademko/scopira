@@ -16,7 +16,9 @@
 
 #include <scopira/tool/platform.h>
 // where SCOPIRA below would be replaced with the "dll" that this file is part of (SCOPIRA, SCOPIRAUI, PAKIT, etc)
-#ifdef SCOPIRA_DLL
+#if defined(scopira_STATIC)
+#define SCOPIRA_EXPORT
+#elif defined(SCOPIRA_DLL) || defined(scopira_EXPORTS)
 #define SCOPIRA_EXPORT PLATFORM_INDLL
 #else
 #define SCOPIRA_EXPORT PLATFORM_OUTDLL

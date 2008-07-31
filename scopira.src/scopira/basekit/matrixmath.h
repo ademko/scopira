@@ -55,7 +55,7 @@ namespace scopira
      * Inverts the matrix.
      *
      * @param src the source matrix
-     * @param desc the output matrix
+     * @param dest the output matrix
      * @return true if the result was non-singular (OK)
      * @author Aleksander Demko
      */ 
@@ -66,7 +66,7 @@ namespace scopira
      * Transposes a matrix.
      *
      * @param src the source matrix
-     * @param desc the output matrix (cannot be the same as src)
+     * @param dest the output matrix (cannot be the same as src)
      * @author Aleksander Demko
      */ 
     template <class D, class S>
@@ -93,17 +93,16 @@ namespace scopira
     /**
      *  Calaculates the LU decomposition of a rowwise permutation of the input matrix src 
      *
-     * @param desc the output LU decomposition matrix
+     * @param dest the output LU decomposition matrix
      * @param src the source matrix
      * @param idx is an output vector that records the row permutation effected by the partial pivoting
      * @param odd indicated whether the number of row interchanges was even or odd, respectively.
-     *     
      * @author Marina Mandelzweig
      */ 
     template <class T> 
       bool lu_decomposition(narray<T,2>& dest, const narray<T,2>& src,narray<int>& idx, bool& odd);
     
-    /*
+    /**
     * Linear equation solution, backsubstitution
     * Solves the set of n linear equations a�x = b.
     * @param desc the solution vector x
@@ -121,9 +120,9 @@ namespace scopira
     * svd results are:Mv,Vw,Mu(src matrix modified) return false if was not 
     * able to perform svd.
     *
-    * @param Mu-M x M orthogonal matrix - u (src matrix modified)
-    * @param Vw- N  diagonal vector of singular values
-    * @param Mv-N x M orthogonal matrix
+    * @param Mu M x M orthogonal matrix - u (src matrix modified)
+    * @param Vw  N  diagonal vector of singular values
+    * @param Mv N x M orthogonal matrix
     */
     template <class T>
       bool svd(narray<T,2>& Mu,narray<T>& Vw,narray<T,2>& Mv);
@@ -189,7 +188,7 @@ namespace scopira
    	 * 
    	 * @param matrix the covariance matrix
    	 * @param fitted fitting coefficients
-   	 * 
+   	 * @param mfit (mfit?)
    	 * @author Shantha Ramachandran
    	 */
     template <class T>
@@ -362,7 +361,7 @@ template <class SRC, class DEST>
           xfer = xleft;
           if (xfer + xremainer > 1)
             xfer = 1 - xremainer;
-          dest(xdest,ydest) += src(xsrc,ysrc) * xfer * xdest_rate * yfer * ydest_rate;
+          dest(xdest,ydest) += static_cast<data_type>(src(xsrc,ysrc) * xfer * xdest_rate * yfer * ydest_rate);
           xleft -= xfer;
           xremainer += xfer;
           if (xremainer >= 1) {
@@ -510,6 +509,7 @@ namespace scopira
 {
   namespace basekit
   {
+    /// internal function for svd
     template <class T>
       inline T svd_sign(T v1, T v2) { if (v2>=0.0) return fabs(v1); else return -fabs(v1); }
   }

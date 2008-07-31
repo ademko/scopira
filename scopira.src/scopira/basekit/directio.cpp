@@ -1,6 +1,6 @@
 
 /*
- *  Copyright (c) 2004    National Research Council
+ *  Copyright (c) 2004-2007    National Research Council
  *
  *  All rights reserved.
  *
@@ -18,9 +18,16 @@
 #include <scopira/tool/xml.h>
 #include <scopira/tool/output.h>
 
-//BBtargets libscopira.so
+//BBtargets libscopiraxml.so
+
+//
+// The exact details/manutia of the xml parsing and twin file opening
+// should be factored out into some common functions that the create/load/bin/directio_slice
+// can all share
+//
 
 using namespace scopira::tool;
+using namespace scopira::basekit;
 
 namespace {
 class direct_file_narray_delete : public scopira::basekit::narray_delete_i, public scopira::tool::object
@@ -605,5 +612,179 @@ bool scopira::basekit::query_directio_file(const std::string &filename,
       return false;
 
   return true;
+}
+
+//
+//
+// base_directio_slice
+//
+//
+
+base_directio_slice::base_directio_slice(void)
+{
+  dm_baseoffset = 0;
+  dm_elemname = 0;
+}
+
+bool base_directio_slice::open_file(const std::string &filename, bool readonly,
+        size_t dimlen, size_t elemsize, const char *elemname)
+{
+  std::string header, fullfinalfilename;
+  int fileflags = fileflow::input_c | (readonly?0:fileflow::output_c);
+  fileflow::offset_t totsize, rawdatasize, actsize;
+  size_t skipbo;
+  unsigned char c;
+
+  assert(elemname);
+  assert(dimlen>1);
+  assert(elemname>0);
+  dm_elemname = elemname;
+
+  // close the existing file, if any
+  dm_file.close();
+  dm_dimen.clear();
+
+  fullfinalfilename = filename;
+  dm_file.open(fullfinalfilename, fileflags);
+  if (dm_file.failed())
+    return false;
+
+  header.reserve(4096*2);
+
+  while ( dm_file.read_byte(c) > 0 && c != 0) {
+    assert(c != 0);
+    header.push_back(c);
+
+    if (header.size() > 100000) {                     // this limit can be increased... it's purely informative
+#ifndef NDEBUG
+      OUTPUT << "Aborted read of XML header, getting too large: " << fullfinalfilename << '\n';
+#endif
+      return false;
+    }
+  }
+
+  // parse the header
+  xml_doc doc;
+  xml_node rootnode, xnode, elemtypenode, numdimennode, datafile;
+  //OUTPUT << "((" << header << "))" << '\n';
+
+  if (!doc.load_string(header)) {
+#ifndef NDEBUG
+    OUTPUT << "Failed to parse XML header: " << fullfinalfilename << '\n';
+#endif
+    return false;
+  }
+
+  rootnode = doc.get_root();
+  assert(!rootnode.is_null());
+
+  // extract some needed fields
+  elemtypenode = rootnode.get_first_child_name("elem_type");
+  if (elemtypenode.is_null() || ::strcmp(elemtypenode.get_text_c_content(), elemname) != 0) {
+#ifndef NDEBUG
+    OUTPUT << "Bad type stored in XML header: \"" << elemtypenode.get_text_c_content() << "\" want \"" << elemname << "\"\n";
+#endif
+    return false;
+  }
+
+
+  numdimennode = rootnode.get_first_child_name("num_dimen");
+  if (numdimennode.is_null() || string_to_int(numdimennode.get_text_c_content()) <= 0) {
+#ifndef NDEBUG
+    OUTPUT << "Bad number of dimensions in XML header: " << numdimennode.get_text_c_content() << '\n';
+#endif
+    return false;
+  }
+  dm_dimen.resize(string_to_int(numdimennode.get_text_c_content()));
+
+  totsize = 1;
+  for (short d=0; d<dm_dimen.size(); ++d) {
+    xnode = rootnode.get_first_child_name("size_" + int_to_string(d));
+    if (xnode.is_null() || !string_to_size_t(xnode.get_text_c_content(), dm_dimen[d])) {
+#ifndef NDEBUG
+      OUTPUT << "Failed to parse a dimension size from the XML header: size_" << d << '\n';
+#endif
+      return false;
+    }
+    totsize *= dm_dimen[d];
+  }
+
+  // by default, assume single DIO file
+  rawdatasize = totsize*elemsize;
+  skipbo = header.size() + 1;    // the offset of the data within the file
+
+  datafile = rootnode.get_first_child_name("data_file");
+  if (datafile.is_valid() && datafile.get_text_c_content()[0]) {   // make sure the string is none empty
+    std::string originalpath, dummy, secondfilename;
+    // use alternate data file
+    // we will switch to a twinned read now
+    secondfilename = datafile.get_text_c_content();
+
+    if (!secondfilename.empty()) {
+      file::split_path(filename, originalpath, dummy);
+
+      dm_file.close();
+      fullfinalfilename = secondfilename;
+//OUTPUT << "TRY " << fullfinalfilename << '\n';
+      if (file(fullfinalfilename).exists())
+        dm_file.open(fullfinalfilename, fileflags);
+
+      if (dm_file.failed()) {
+        fullfinalfilename = originalpath + secondfilename;
+//OUTPUT << "TRY " << fullfinalfilename << '\n';
+        if (file(fullfinalfilename).exists())
+          dm_file.open(fullfinalfilename, fileflags);
+      }
+
+      if (dm_file.failed()) {
+#ifndef NDEBUG
+        OUTPUT << "Failed to open secondary data file, tried " << secondfilename
+          << " and " << fullfinalfilename << '\n';
+#endif
+        return false;
+      }
+    }
+
+    if (!string_to_size_t(datafile.get_attrib_c_text("offset"), skipbo))
+      skipbo = 0;
+  }
+  if ( (actsize = file(fullfinalfilename).size()) < skipbo+rawdatasize) {
+#ifndef NDEBUG
+    OUTPUT << "File is too short (minimum " << skipbo+rawdatasize
+      << " actual is " << actsize << ")\n"
+      << "File tried: " << fullfinalfilename << '\n';
+#endif
+    return false;
+  }
+OUTPUT << "Opening: " << fullfinalfilename << " (skipbo=" << skipbo << ",rawdatasize="
+  << rawdatasize << ")\n";
+
+
+  dm_baseoffset = skipbo;
+  dm_dimenprod = totsize;
+
+  return true;
+}
+
+void base_directio_slice::verify_dimen(const char *elemname, size_t subprod)
+{
+  assert(elemname);
+  assert(strcmp(dm_elemname, elemname) == 0);
+
+  assert(dm_dimen.size()>0);
+  assert(dm_dimenprod/dm_dimen[dm_dimen.size()-1] == subprod);
+}
+
+size_t base_directio_slice::seek_slice(size_t r, size_t elemsize)
+{
+  assert(!dm_file.failed());
+  assert(dm_dimen.size()>0);
+  assert(r<dm_dimen[dm_dimen.size()-1]);
+
+  size_t rowlen = dm_dimenprod/dm_dimen[dm_dimen.size()-1];
+
+  dm_file.seek(r*rowlen*elemsize+dm_baseoffset);
+
+  return rowlen;
 }
 

@@ -14,6 +14,8 @@
 #ifndef __INCLUDED_SCOPIRA_COREGL_GLWIDGET_H__
 #define __INCLUDED_SCOPIRA_COREGL_GLWIDGET_H__
 
+#include <string.h>
+
 #include <string>
 
 #include <scopira/tool/array.h>
@@ -92,13 +94,13 @@ class scopira::coregl::glfont
     SCOPIRAGL_EXPORT ~glfont();
 
     /**
-     * You must call this in your handle_init.
+     * You must call this (well, one of the inits()) in your handle_init.
      * This version loads a default font.
      * @author Aleksander Demko
      */
     SCOPIRAGL_EXPORT void init(void);
     /**
-     * You must call this in your handle_init
+     * You must call this (well, one of the inits()) in your handle_init
      * This version loads the specific font.
      * @param fontname A pango like font name. For example, "Courier 12"
      * @author Aleksander Demko
@@ -114,12 +116,19 @@ class scopira::coregl::glfont
      * Render a string, with this font, to the given
      * Raster position. You normallay call
      * glRasterPos3d or something before calling this.
+     * Don't do this in a glBegin/glEnd pair, ofcourse!
      * @author Aleksander Demko
      */
-    void render_string(const std::string &v) {
-      glListBase(dm_list_base);
-      glCallLists(v.size(), GL_UNSIGNED_BYTE, v.c_str());
-    }
+    SCOPIRAGL_EXPORT void render_string(const std::string &v);
+
+    /**
+     * Render a string, with this font, to the given
+     * Raster position. You normallay call
+     * glRasterPos3d or something before calling this.
+     * Don't do this in a glBegin/glEnd pair, ofcourse!
+     * @author Aleksander Demko
+     */
+    SCOPIRAGL_EXPORT void render_string(const char *c);
 };
 
 /**

@@ -95,23 +95,37 @@ std::string netaddr::as_string(void) const
   return ret;
 }
 
+#ifdef PLATFORM_win32
+// disable depreacted warnings
+#pragma warning(push)
+#pragma warning(disable:4996)
+#endif
 SCOPIRA_EXPORT bool netaddr::parse_string(const std::string &s)
 {
-  uint16_t b[4];
+#ifdef PLATFORM_win32
+  int b[4];
+#else
+  // the two platforms cant even agree on scanf types, ugh
+  unsigned short int b[4];
+#endif
 
   if (4 != sscanf(s.c_str(),
     "%hd.%hd.%hd.%hd",
     &b[0], &b[1], &b[2], &b[3]))
     return false;
 
-  (*this)[0] = b[0];
-  (*this)[1] = b[1];
-  (*this)[2] = b[2];
-  (*this)[3] = b[3];
+  (*this)[0] = static_cast<unsigned char>(b[0]);
+  (*this)[1] = static_cast<unsigned char>(b[1]);
+  (*this)[2] = static_cast<unsigned char>(b[2]);
+  (*this)[3] = static_cast<unsigned char>(b[3]);
 
   return true;
 
 }
+#ifdef PLATFORM_win32
+// disable depreacted warnings
+#pragma warning(pop)
+#endif
 
 scopira::tool::oflow_i& operator <<(scopira::tool::oflow_i& o, const scopira::tool::netaddr &addr)
 {

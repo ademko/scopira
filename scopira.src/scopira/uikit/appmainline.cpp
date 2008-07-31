@@ -20,6 +20,7 @@
 #include <scopira/coreui/project.h>
 #include <scopira/coreui/aboutwindow.h>
 #include <scopira/coreui/viewcontainer.h>
+#include <scopira/agent/loop.h>
 
 using namespace scopira::tool;
 using namespace scopira::coreui;
@@ -113,6 +114,7 @@ int main(int argc, char **argv)
 {
   scopira::coreui::ui_loop looper(argc, argv);
   scopira::core::sidekick_thread thr;  //optional, ofcourse, but oh so powerful
+  scopira::agent::agent_loop cl(argc, argv);  //optional, ofcourse, but oh so power II
   
   main_window *mainwin = new main_window;
   

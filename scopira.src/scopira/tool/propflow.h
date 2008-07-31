@@ -15,6 +15,7 @@
 #define __INCLUDED_SCOPIRA_TOOL_PROPFLOW_H__
 
 #include <scopira/tool/flow.h>
+#include <scopira/tool/export.h>
 
 namespace scopira
 {
@@ -85,31 +86,33 @@ class scopira::tool::propiflow : public scopira::tool::iobjflow_i
     /**
      * constrcutor
      *
-     * @param is the input stream to use. this object will "own" it
+     * @param doref should this class reference count in
+     * @param in the input stream to use. this object will "own" it
      * @author Aleksander Demko
      */
-    propiflow(bool doref, iflow_i* in);
+    SCOPIRA_EXPORT propiflow(bool doref, iflow_i* in);
     /// destructor
-    virtual ~propiflow(void);
+    SCOPIRA_EXPORT virtual ~propiflow(void);
 
     /// are we in a failed state?
-    virtual bool failed(void) const;
+    SCOPIRA_EXPORT virtual bool failed(void) const;
 
     /// read raw block data, returns num read in
-    virtual size_t read(byte_t* _buf, size_t _maxsize);
+    SCOPIRA_EXPORT virtual size_t read(byte_t* _buf, size_t _maxsize);
 
-    virtual bool read_bool(bool&);
-    virtual bool read_char(char&);
-    virtual bool read_short(short&);
-    virtual bool read_int(int&);
-    virtual bool read_size_t(size_t&);
-    virtual bool read_long(long&);
-    virtual bool read_float(float&);
-    virtual bool read_double(double&);
-    virtual bool read_string(std::string&);
+    SCOPIRA_EXPORT virtual bool read_bool(bool&);
+    SCOPIRA_EXPORT virtual bool read_char(char&);
+    SCOPIRA_EXPORT virtual bool read_short(short&);
+    SCOPIRA_EXPORT virtual bool read_int(int&);
+    SCOPIRA_EXPORT virtual bool read_size_t(size_t&);
+    SCOPIRA_EXPORT virtual bool read_int64_t(int64_t&);
+    SCOPIRA_EXPORT virtual bool read_long(long&);
+    SCOPIRA_EXPORT virtual bool read_float(float&);
+    SCOPIRA_EXPORT virtual bool read_double(double&);
+    SCOPIRA_EXPORT virtual bool read_string(std::string&);
 
     /// object reader
-    virtual bool read_object(object* &out);
+    SCOPIRA_EXPORT virtual bool read_object(object* &out);
 
     /**
      * reads any string, both keyword-style and quoted
@@ -119,12 +122,12 @@ class scopira::tool::propiflow : public scopira::tool::iobjflow_i
      * @return success reading keyword
      * @author Aleksander Demko
      */
-    bool read_keyword(std::string& ret, bool& keyword);
+    SCOPIRA_EXPORT bool read_keyword(std::string& ret, bool& keyword);
 
     /// opens a new link
-    void open(iflow_i* in);
+    SCOPIRA_EXPORT void open(iflow_i* in);
     /// close the current link
-    void close(void);
+    SCOPIRA_EXPORT void close(void);
 
     /// reads a whole property tree of data and
     /// save it to the given property
@@ -147,44 +150,46 @@ class scopira::tool::propoflow : public scopira::tool::oobjflow_i
     /**
      * constrcutor
      *
-     * @param is the output stream to use. this object will "own" it
+     * @param doref should this class reference count in
+     * @param in the output stream to use. this object will "own" it
      * @author Aleksander Demko
      */
-    propoflow(bool doref, oflow_i* out);
+    SCOPIRA_EXPORT propoflow(bool doref, oflow_i* out);
     /// destructor
-    virtual ~propoflow(void);
+    SCOPIRA_EXPORT virtual ~propoflow(void);
       
     /// are we in a failed state?
-    virtual bool failed(void) const;
+    SCOPIRA_EXPORT virtual bool failed(void) const;
 
     /// write a raw block of data
-    virtual size_t write(const byte_t* _buf, size_t _size);
+    SCOPIRA_EXPORT virtual size_t write(const byte_t* _buf, size_t _size);
 
-    virtual void write_bool(bool val);
-    virtual void write_char(char val);
-    virtual void write_short(short val);
-    virtual void write_int(int val);
-    virtual void write_size_t(size_t val);
-    virtual void write_long(long val);
-    virtual void write_float(float val);
-    virtual void write_double(double val);
-    virtual void write_string(const std::string& val);
+    SCOPIRA_EXPORT virtual void write_bool(bool val);
+    SCOPIRA_EXPORT virtual void write_char(char val);
+    SCOPIRA_EXPORT virtual void write_short(short val);
+    SCOPIRA_EXPORT virtual void write_int(int val);
+    SCOPIRA_EXPORT virtual void write_size_t(size_t val);
+    SCOPIRA_EXPORT virtual void write_int64_t(int64_t val);
+    SCOPIRA_EXPORT virtual void write_long(long val);
+    SCOPIRA_EXPORT virtual void write_float(float val);
+    SCOPIRA_EXPORT virtual void write_double(double val);
+    SCOPIRA_EXPORT virtual void write_string(const std::string& val);
 
     /// object writer
-    virtual void write_object(const scopira::tool::object* o);
+    SCOPIRA_EXPORT virtual void write_object(const scopira::tool::object* o);
 
     /// writes an unescaped keyword
-    void write_keyword(const std::string& i);
+    SCOPIRA_EXPORT void write_keyword(const std::string& i);
     /// write n spaces
-    void write_indent(int n);
+    SCOPIRA_EXPORT void write_indent(int n);
 
     /// opens a new link
-    void open(oflow_i* out);
+    SCOPIRA_EXPORT void open(oflow_i* out);
     /// close the current link
-    void close(void);
+    SCOPIRA_EXPORT void close(void);
 
     /// writes a whole property tree
-    void write_property(property* rp, int indent = 0);
+    SCOPIRA_EXPORT void write_property(property* rp, int indent = 0);
 };
 
 #endif

@@ -28,7 +28,6 @@ namespace scopira
      * Adds val to every element in v. v can be any
      * class that uses iterators.
      *
-     * @param T the vector-like type
      * @param v the vector to operator one
      * @param val the value to add to each element in v
      * @author Aleksander Demko
@@ -39,7 +38,6 @@ namespace scopira
      * Subtracts val to every element in v. v can be any
      * class that uses iterators.
      *
-     * @param T the vector-like type
      * @param v the vector to operator one
      * @param val the value to add to each element in v
      * @author Aleksander Demko
@@ -50,7 +48,6 @@ namespace scopira
      * Multiples val to every element in v. v can be any
      * class that uses iterators.
      *
-     * @param T the vector-like type
      * @param v the vector to operator one
      * @param val the value to add to each element in v
      * @author Aleksander Demko
@@ -61,7 +58,6 @@ namespace scopira
      * Divides val to every element in v. v can be any
      * class that uses iterators.
      *
-     * @param T the vector-like type
      * @param v the vector to operator one
      * @param val the value to add to each element in v
      * @author Aleksander Demko

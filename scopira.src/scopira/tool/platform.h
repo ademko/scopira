@@ -30,10 +30,10 @@
 // PLATFORM_osx      Apple Macintosh OS X (not yet used)
 //
 
-#define SCOPIRA_VERSION "0.9.10"
+#define SCOPIRA_VERSION "0.9.11"
 #define SCOPIRA_VERSION_MAJOR 0
 #define SCOPIRA_VERSION_MINOR 9
-#define SCOPIRA_VERSION_SUBMINOR 10
+#define SCOPIRA_VERSION_SUBMINOR 11
 
 #if !defined(PLATFORM_win32) && defined(WIN32)
 #define PLATFORM_win32
@@ -49,12 +49,12 @@
 
 #ifdef BUILDBOSS_32
 #define PLATFORM_32
-#else
-#ifdef BUILDBOSS_64
+
+#elif defined(BUILDBOSS_64)
 #define PLATFORM_64
-#else
+
+#elif !defined(PLATFORM_32) && !defined(PLATFORM_64)
 #define PLATFORM_32
-#endif
 #endif
 
 #ifndef NDEBUG
@@ -115,21 +115,32 @@ typedef double float64_t;
 // http://msdn.microsoft.com/library/default.asp?url=/library/en-us/vccelng/htm/msmod_20.asp
 #define PLATFORM_INDLL __declspec(dllexport)
 #define PLATFORM_OUTDLL __declspec(dllimport)
-#else
-#ifdef PLATFORM_visibility
-// perhaps do -fvisibility=hidden and "__attribute__ ((visibility("default")))"
-// see: http://www.nedprod.com/programs/gccvisibility.html
+#elif defined(PLATFORM_visibility) && defined(GCC_HASCLASSVISIBILITY)
 //
-// dont use this yet (well, you can try but you'll see why its not a nice
-// drop in solution yet - ie. im missing typeinfos and vtables because I don't (since I
-// can't for win32) do full class marking)
+// This Visibility Experiment
+// This is too make the UNIX builds (under GCC 4) hide most of the symbols, like MS Windows
+// does by default. To use, add the following to your BBCPP:
+//
+//   BBCPP?=g++ -fvisibility=hidden -DPLATFORM_visibility
+//
+// GCC_HASCLASSVISIBILITY is defined if this facility is available under gcc/unix
+//
+// perhaps do -fvisibility=hidden and "__attribute__ ((visibility("default")))"
+// see:
+//   http://www.nedprod.com/programs/gccvisibility.html
+//   http://gcc.gnu.org/wiki/Visibility
+//
+// Dont use this yet (well, you can try but you'll see why its not a nice
+// drop in solution yet). In particular, the size gains for scopira seem to be
+// "only" 10% off, and also, a techniqie to explicity mark whoe classes
+// (to include their vtables and typeinfos) NEEDs to be implemented. This may be
+// too much of a PITA aswell as reduce are already meager size savings.
 //
 #define PLATFORM_INDLL __attribute__ ((visibility("default")))
 #define PLATFORM_OUTDLL __attribute__ ((visibility("default")))
 #else
 #define PLATFORM_INDLL
 #define PLATFORM_OUTDLL
-#endif
 #endif
 
 

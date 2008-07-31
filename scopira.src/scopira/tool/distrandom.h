@@ -35,6 +35,11 @@ namespace scopira
     typedef unireal_dist<lincon_core> lincon_real;
     typedef unismallint_dist<lincon_core> lincon_smallint;  // how small is small? who knows
     typedef uniint_dist<lincon_core> lincon_int;
+
+    typedef uni01_dist<scopira::tool::rand48> rand48_01;
+    typedef unireal_dist<scopira::tool::rand48> rand48_real;
+    typedef unismallint_dist<scopira::tool::rand48> rand48_smallint;  // how small is small? who knows
+    typedef uniint_dist<scopira::tool::rand48> rand48_int;
   }
 }
 

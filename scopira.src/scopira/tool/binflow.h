@@ -1,6 +1,6 @@
 
 /*
- *  Copyright (c) 2002    National Research Council
+ *  Copyright (c) 2002-2007    National Research Council
  *
  *  All rights reserved.
  *
@@ -42,9 +42,10 @@ class scopira::tool::biniflow : public scopira::tool::itflow_i
     
   public:
     /**
-     * constrcutor
+     * Constructor.
      *
-     * @param is the input stream to use. this object will "own" it
+     * @param doref should this class reference count the source stream
+     * @param in source stream to use
      * @author Aleksander Demko
      */
     SCOPIRA_EXPORT biniflow(bool doref, iflow_i* in);
@@ -62,6 +63,7 @@ class scopira::tool::biniflow : public scopira::tool::itflow_i
     SCOPIRA_EXPORT virtual bool read_short(short&);
     SCOPIRA_EXPORT virtual bool read_int(int&);
     SCOPIRA_EXPORT virtual bool read_size_t(size_t&);
+    SCOPIRA_EXPORT virtual bool read_int64_t(int64_t&);
     SCOPIRA_EXPORT virtual bool read_long(long&);
     SCOPIRA_EXPORT virtual bool read_float(float&);
     SCOPIRA_EXPORT virtual bool read_double(double&);
@@ -87,9 +89,10 @@ class scopira::tool::binoflow : public scopira::tool::otflow_i
 
   public:
     /**
-     * constructor
+     * Constructor.
      *
-     * @param is the output stream to use. this object will "own" it
+     * @param doref should this class reference count the source stream
+     * @param in source stream to use
      * @author Aleksander Demko
      */
     SCOPIRA_EXPORT binoflow(bool doref, oflow_i* in);
@@ -107,6 +110,7 @@ class scopira::tool::binoflow : public scopira::tool::otflow_i
     SCOPIRA_EXPORT virtual void write_short(short val);
     SCOPIRA_EXPORT virtual void write_int(int val);
     SCOPIRA_EXPORT virtual void write_size_t(size_t val);
+    SCOPIRA_EXPORT virtual void write_int64_t(int64_t val);
     SCOPIRA_EXPORT virtual void write_long(long val);
     SCOPIRA_EXPORT virtual void write_float(float val);
     SCOPIRA_EXPORT virtual void write_double(double val);
@@ -128,9 +132,10 @@ class scopira::tool::bin64iflow : public scopira::tool::biniflow
 {
   public:
     /**
-     * constrcutor
+     * Constructor.
      *
-     * @param is the input stream to use. this object will "own" it
+     * @param doref should this class reference count the source stream
+     * @param in source stream to use
      * @author Aleksander Demko
      */
     SCOPIRA_EXPORT bin64iflow(bool doref, iflow_i* in);
@@ -150,9 +155,10 @@ class scopira::tool::bin64oflow : public scopira::tool::binoflow
 {
   public:
     /**
-     * constructor
+     * Constructor.
      *
-     * @param is the output stream to use. this object will "own" it
+     * @param doref should this class reference count the source stream
+     * @param in source stream to use
      * @author Aleksander Demko
      */
     SCOPIRA_EXPORT bin64oflow(bool doref, oflow_i* in);

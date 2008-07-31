@@ -267,7 +267,7 @@ void canvas::draw_image(context c, int xsrc, int ysrc , rgb_image &src,
 }
 
 void canvas::draw_scaled_image(context c, rgb_image &src,
-  int xdest, int ydest, int w, int h)
+  int xdest, int ydest, int w, int h, bool interpolate)
 {
   GdkPixbuf	*scaled_img;
   
@@ -275,7 +275,7 @@ void canvas::draw_scaled_image(context c, rgb_image &src,
   assert(src.dm_buff);
   assert(dm_drawable);
   
-  scaled_img = gdk_pixbuf_scale_simple(src.dm_buff, w, h, GDK_INTERP_BILINEAR);
+  scaled_img = gdk_pixbuf_scale_simple(src.dm_buff, w, h, interpolate ? GDK_INTERP_BILINEAR : GDK_INTERP_NEAREST);
   assert(scaled_img);
   //gdk_pixbuf_ref(scaled_img);
   gdk_pixbuf_render_to_drawable(scaled_img, dm_drawable, c.dm_gc,
@@ -285,7 +285,7 @@ void canvas::draw_scaled_image(context c, rgb_image &src,
 }
                                              
 void canvas::draw_scaled_image(context c, int xsrc, int ysrc, int wsrc, int hsrc, rgb_image &src,
-    int xdest, int ydest, int wdest, int hdest)
+    int xdest, int ydest, int wdest, int hdest, bool interpolate)
 {
   GdkPixbuf	*subsrc, *scaled_img;
   
@@ -305,7 +305,7 @@ void canvas::draw_scaled_image(context c, int xsrc, int ysrc, int wsrc, int hsrc
   assert(subsrc);
   //gdk_pixbuf_ref(subsrc);
 
-  scaled_img = gdk_pixbuf_scale_simple(subsrc, wdest, hdest, GDK_INTERP_BILINEAR);
+  scaled_img = gdk_pixbuf_scale_simple(subsrc, wdest, hdest, interpolate ? GDK_INTERP_BILINEAR : GDK_INTERP_NEAREST);
   assert(scaled_img);
   //gdk_pixbuf_ref(scaled_img);
 

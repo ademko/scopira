@@ -43,9 +43,12 @@ class scopira::core::viewtype : public scopira::core::objecttype
     /// ctor
     SCOPIRA_EXPORT viewtype(const std::string &name, copyfunc_t cp, const std::string &menuname, int vgmask);
 
+    /// sets the model type
     SCOPIRA_EXPORT void set_modeltype(objecttype *mt);
+    /// gets the model type
     objecttype * get_modeltype(void) const { return dm_modeltype; }
 
+    /// gets the user-displayable menu name
     const std::string &get_menuname(void) const { return dm_menuname; }
 
     int get_vgmask(void) const { return dm_vgmask; }

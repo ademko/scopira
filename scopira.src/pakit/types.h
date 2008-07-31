@@ -19,6 +19,11 @@
 
 #include <pakit/export.h>
 
+/**
+ * The pakit provides basic tools for pattern analysis and data classification
+ *
+ * @author Aleksander Demko
+ */ 
 namespace pakit
 {
   class patterns_t;

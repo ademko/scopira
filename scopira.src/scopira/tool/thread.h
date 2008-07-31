@@ -163,7 +163,7 @@ class scopira::tool::thread : public virtual scopira::tool::job_i,
     /**
      * cause the current thread to sleep
      *
-     * @param the number of msec (1000=second) to wait
+     * @param msec the number of msec (1000=second) to wait
      * @return true if got a notification event, false if timed out
      */
     SCOPIRA_EXPORT static void sleep(int msec);
@@ -257,7 +257,7 @@ class scopira::tool::condition
      * on notification.
      *
      * @param mut the mutex that has been locked on entry
-     * @param the number of msec (1000=second) to wait
+     * @param msec the number of msec (1000=second) to wait
      * @return true if timed out, false if got a notification event
      * @author Aleksander Demko
      */

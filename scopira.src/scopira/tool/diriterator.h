@@ -1,6 +1,6 @@
 
 /*
- *  Copyright (c) 2003    National Research Council
+ *  Copyright (c) 2003-2008    National Research Council
  *
  *  All rights reserved.
  *
@@ -15,6 +15,7 @@
 #define __INCLUDED__SCOPIRA_TOOL_DIRITERATOR_HPP__
 
 #include <scopira/tool/platform.h>
+#include <scopira/tool/export.h>
 
 #ifdef PLATFORM_win32
 #include <windows.h>
@@ -23,6 +24,8 @@
 #endif
 
 #include <string>
+
+// THIS FILE HAS BEEN FULLY DOCUMENTED
 
 namespace scopira
 {
@@ -33,50 +36,80 @@ namespace scopira
 }
 
 /**
- * iterators over a directory of file names
+ * This class iterates of a collection of files in a directory, giving
+ * you a list of file names.
+ *
+ * Typical usage of this class:
+ *
+ * @code
+ *   dir_iterator dd;
+ *   std::string filename;
+ *
+ *   if (dd.open("somedir"))
+ *     while (dd.next(filename))
+ *       OUTPUT << "A filename: " << filename << '\n';
+ * @endcode
  *
  * @author Aleksander Demko
  */
 class scopira::tool::dir_iterator
 {
   private:
-    bool dm_failed;                  /// currently failed?
+    bool dm_failed;                  // currently failed?
 #ifdef PLATFORM_win32
     HANDLE dm_dir;
     WIN32_FIND_DATA dm_dirdata;
     bool dm_haveprime;
 #else
-    DIR *dm_dir;                     /// DIR handle
+    DIR *dm_dir;                     // DIR handle
 #endif
 
   public:
-    /// default ctor
-    dir_iterator(void);
-    /// dtor
-    ~dir_iterator();
+    /**
+     * Constructor.
+     * @author Aleksander Demko
+     */ 
+    SCOPIRA_EXPORT dir_iterator(void);
+    SCOPIRA_EXPORT ~dir_iterator();
 
-    /// are we in a failed state?
+    /**
+     * Is this iterator in a failed state?
+     *
+     * @author Aleksander Demko
+     */ 
     bool failed(void) const { return dm_failed; }
 
     /**
      * Opens a directory for iteration.
+     *
      * @param dirname the directory to open
      * @return true on success
      * @author Aleksander Demko
      */ 
-    bool open(const std::string& dirname);
-    /// closes the current iteration
-    void close(void);
+    SCOPIRA_EXPORT bool open(const std::string& dirname);
+    /**
+     * Closes the current iteration.
+     *
+     * You typically never need to call this as the iterator
+     * will close the stream upon its destruction or if you
+     * open another iteration.
+     *
+     * @author Aleksander Demko
+     */ 
+    SCOPIRA_EXPORT void close(void);
 
     /**
-     * Get the next filename. returns true if it was successfull
-     * -- put this in a while loop
+     * Get the next filename in the iteration.
+     * Only the filename will be returned, there will be no path
+     * element attached.
+     * You typically put this call in a while loop.
+     * The dir_iterator must have previously been succesfully opened.
      *
-     * @param out the output string
-     * @return true if successful
+     * @param out the output string (useful only if this call is succesful)
+     * @return true if successful, false on failure (for example, if there are no more files in the directory)
      * @author Aleksander Demko
      */
-    bool next(std::string& out);
+    SCOPIRA_EXPORT bool next(std::string& out);
 };
 
 #endif

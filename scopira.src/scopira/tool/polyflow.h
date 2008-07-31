@@ -1,6 +1,6 @@
 
 /*
- *  Copyright (c) 2002    National Research Council
+ *  Copyright (c) 2002-2007    National Research Council
  *
  *  All rights reserved.
  *
@@ -75,6 +75,7 @@ class scopira::tool::polyiflow : public scopira::tool::iobjflow_i
     SCOPIRA_EXPORT virtual bool read_short(short&);
     SCOPIRA_EXPORT virtual bool read_int(int&);
     SCOPIRA_EXPORT virtual bool read_size_t(size_t&);
+    SCOPIRA_EXPORT virtual bool read_int64_t(int64_t&);
     SCOPIRA_EXPORT virtual bool read_long(long&);
     SCOPIRA_EXPORT virtual bool read_float(float&);
     SCOPIRA_EXPORT virtual bool read_double(double&);
@@ -133,6 +134,7 @@ class scopira::tool::polyoflow : public scopira::tool::oobjflow_i
     SCOPIRA_EXPORT virtual void write_short(short val);
     SCOPIRA_EXPORT virtual void write_int(int val);
     SCOPIRA_EXPORT virtual void write_size_t(size_t val);
+    SCOPIRA_EXPORT virtual void write_int64_t(int64_t val);
     SCOPIRA_EXPORT virtual void write_long(long val);
     SCOPIRA_EXPORT virtual void write_float(float val);
     SCOPIRA_EXPORT virtual void write_double(double val);
@@ -154,6 +156,19 @@ class scopira::tool::polyoflow : public scopira::tool::oobjflow_i
     SCOPIRA_EXPORT void close(void);
 };
 
+/**
+ * This is an polyoflow implementation that implements full serialazation
+ * of objects, and has support for multi references. That is, if an object
+ * is refered to by multiple pointers, it will only be written to disk
+ * once.
+ *
+ * Reading the objects back from the stream also reproduces one instance.
+ * rather than many.
+ *
+ * This is stream is almost always prefeered over scopira::tool::polyiflow
+ *
+ * @author Aleksander Demko
+ */ 
 class scopira::tool::isoiflow : public scopira::tool::polyiflow
 {
   protected:
@@ -171,6 +186,19 @@ class scopira::tool::isoiflow : public scopira::tool::polyiflow
     SCOPIRA_EXPORT virtual bool read_object(object* &out);
 };
 
+/**
+ * This is an polyoflow implementation that implements full serialazation
+ * of objects, and has support for multi references. That is, if an object
+ * is refered to by multiple pointers, it will only be written to disk
+ * once.
+ *
+ * Reading the objects back from the stream also reproduces one instance.
+ * rather than many.
+ *
+ * This is stream is almost always prefeered over scopira::tool::polyoflow
+ *
+ * @author Aleksander Demko
+ */ 
 class scopira::tool::isooflow : public scopira::tool::polyoflow
 {
   protected:

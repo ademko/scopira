@@ -43,9 +43,15 @@ messagewindow::messagewindow(const std::string &title, const std::string &msg,
   hbox = gtk_hbox_new(FALSE, 4);
 
   switch (typ) {
-    case question_c: image = gtk_image_new_from_stock(GTK_STOCK_DIALOG_QUESTION, GTK_ICON_SIZE_DIALOG);
-    case error_c: image = gtk_image_new_from_stock(GTK_STOCK_DIALOG_ERROR, GTK_ICON_SIZE_DIALOG);
-    default: image = gtk_image_new_from_stock(GTK_STOCK_DIALOG_INFO, GTK_ICON_SIZE_DIALOG);
+    case question_c: 
+      image = gtk_image_new_from_stock(GTK_STOCK_DIALOG_QUESTION, GTK_ICON_SIZE_DIALOG);
+      init_cancel_button( "No" );
+      break;
+    case error_c: 
+      image = gtk_image_new_from_stock(GTK_STOCK_DIALOG_ERROR, GTK_ICON_SIZE_DIALOG);
+      break;
+    default: 
+      image = gtk_image_new_from_stock(GTK_STOCK_DIALOG_INFO, GTK_ICON_SIZE_DIALOG);
   }
 
   assert(image);

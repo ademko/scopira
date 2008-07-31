@@ -19,13 +19,6 @@
 
 #include <pakit/ui/models.h>
 
-/**
- * Class for storing classification statistics.
- * Ported from some reeeeealy old software.
- *
- * @author Brion Dolenko
- */
-
 namespace pakit
 {
   class classifierstats_d;
@@ -52,6 +45,13 @@ const long MODE_TEST = 1;
 const int HEADERLEN = 20;
 
 const double N_A = -1.0e30;
+
+/**
+ * Class for storing classification statistics.
+ * Ported from some reeeeealy old software.
+ *
+ * @author Brion Dolenko
+ */
 
 class pakit::classifierstats_d
 {

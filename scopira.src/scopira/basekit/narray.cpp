@@ -87,7 +87,7 @@ namespace scopira
     class normal_narray_delete_t : public scopira::basekit::narray_delete_i
     {
       public:
-        virtual void narray_delete(void *mem, size_t len) { }
+        virtual void narray_delete(void *mem, size_t len) { assert(false); } //doesn't actually need an implementation, because its never called
     };
 
     null_narray_delete_t null_narray_delete_t_instance;

@@ -432,7 +432,7 @@ void pattern_editor_v::init_menu(popup_menu &b)
   b.add_item("Select (coltrain)", ptr_to_int("Ycoltrain"));
   b.add_item("Select Training (coltrain and = 1)", ptr_to_int("Ycoltrain and = 1"));
   b.add_item("Select Test (coltrain and = 0)", ptr_to_int("Ycoltrain and = 0"));
-  b.add_item("Flip Traing/Test (fliptrain)", ptr_to_int("Yfliptrain"));
+  b.add_item("Flip Training/Test (fliptrain)", ptr_to_int("Yfliptrain"));
   b.pop_menu();
   b.push_menu("Class Column");
   b.add_item("Select (colclass)", ptr_to_int("Ycolclass"));

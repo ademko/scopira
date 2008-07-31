@@ -37,6 +37,7 @@ namespace scopira
 
     class view_i;   // fwd
 
+    /// the model iterator type
     typedef scopira::tool::iterator_g<model_i*> model_iterator;
   }
 }
@@ -49,6 +50,7 @@ namespace scopira
 class scopira::core::model_ptr_base
 {
   protected:
+    /// internal: the actual pointer
     model_i *dm_model;
   public:
     /// ctor
@@ -67,10 +69,13 @@ class scopira::core::model_ptr_base
 template <class T> class scopira::core::model_ptr : public scopira::core::model_ptr_base
 {
   public:
+    /// the type of the data this model_ptr points too
     typedef T data_type;
 
   protected:
+    /// the view
     view_i *dm_ins;
+    /// the actual pointer
     T *dm_ptr;
 
   public:
@@ -311,11 +316,10 @@ class scopira::core::model_i : public virtual scopira::tool::object
 
     /**
      * Gets the tagged model attached to this type.
-     * You should pass a count_ptr<yourtype> or model_ptr<yourtype>
-     * as the second type... that is, W=something_ptr<yourtype>.
      *
-     * Returns false on failure, true on success (and fillsin out).
-     *
+     * @param name the model name
+     * @param out where to place the model, this should be a count_ptr or model_ptr of your type
+     * @return true on success (and fillsin out).
      * @author Aleksander Demko
      */ 
     template <class W>

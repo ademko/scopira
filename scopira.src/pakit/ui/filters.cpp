@@ -258,6 +258,7 @@ pattern_rankorder_v::pattern_rankorder_v(void)
   dm_method = new radiobutton;
   dm_method->add_selection(0, "Within Patterns");
   dm_method->add_selection(1, "Between Patterns");
+  dm_method->add_selection(2, "Attribute Sort Within Patterns");
   g->add_widget(dm_method.get(), 1, 0);
 
   viewwidget::init_gui(g.get(), button_ok_c|button_cancel_c);
@@ -314,6 +315,34 @@ void pattern_rankorder_v::rankPointsWithin(patterns_t &pat) {
     nattrsTied = checkStop - checkStart;
     for ( outaidx = checkStart; outaidx < checkStop; outaidx++ ) {
       pat.pm_data->set( indexVec[outaidx], pidx, sumTiedAttrs / static_cast<double>(nattrsTied) );
+    }
+  }
+}
+
+// Similar to rankPointsWithin, but keep raw attributes.  Don't replace
+// with integer ranks.
+
+void pattern_rankorder_v::sortPointsWithin(patterns_t &pat) {
+  narray_o<double> rankVec;
+  narray_o<int>  indexVec;
+  typedef vecindex_sortable<narray_o<int> , narray_o<double> > sortable_t;
+  sortable_t sortable( indexVec, rankVec );
+  int npats, pidx;              // number of spectra
+  int nattrs, aidx;             // attributes per spectrum
+
+  nattrs = pat.pm_data->width();
+  npats = pat.pm_data->height();
+  rankVec.resize( nattrs );
+  indexVec.resize( nattrs );
+
+  for ( pidx = 0; pidx < npats; pidx++ ) {
+    for ( aidx = 0; aidx < nattrs; aidx++ ) {
+      rankVec[aidx] = pat.pm_data->get( aidx, pidx );
+      indexVec[aidx] = aidx;
+    }
+    scopira::tool::qsort(sortable, 0, nattrs-1);
+    for ( aidx = 0; aidx < nattrs; aidx++ ) {
+      pat.pm_data->set( aidx, pidx, rankVec[indexVec[aidx]] );
     }
   }
 }
@@ -473,7 +502,7 @@ void pattern_rankorder_v::react_button(scopira::coreui::button *source, int acti
 
   // make sure the method is valid
   assert((dm_method->get_selection() >= 0) &&
-         (dm_method->get_selection() <= 1));
+         (dm_method->get_selection() <= 2));
 
   patterns_t pat(false);
 
@@ -486,6 +515,10 @@ void pattern_rankorder_v::react_button(scopira::coreui::button *source, int acti
     case 1: // mean
       rankPointsBetween(pat);
       dm_model->set_title( dm_model->get_title() + " (between-pattern rank ordered)" );
+      break;
+    case 2: // sort within patterns
+      sortPointsWithin(pat);
+      dm_model->set_title( dm_model->get_title() + " (attributes sorted)" );
       break;
   }
   dm_model->copy_patterns(pat, false);

@@ -42,6 +42,7 @@ using namespace scopira::uikit;
 static scopira::core::register_view<scopira::uikit::vec_viewer_v> r1("scopira::uikit::vec_viewer_v", "scopira::uikit::narray_m<double,1>", "View numeric data");
 static scopira::core::register_view<scopira::uikit::int_vec_viewer_v> r2("scopira::uikit::int_vec_viewer_v", "scopira::uikit::narray_m<int,1>", "View numeric data");
 static scopira::core::register_view<scopira::uikit::matrix_viewer_v> r4("scopira::uikit::matrix_viewer_v", "scopira::uikit::narray_m<double,2>", "View numeric data");
+static scopira::core::register_view<scopira::uikit::float_matrix_viewer_v> r5aa("scopira::uikit::float_matrix_viewer_v", "scopira::uikit::narray_m<float,2>", "View numeric data");
 static scopira::core::register_view<scopira::uikit::char_matrix_viewer_v> r5a("scopira::uikit::char_matrix_viewer_v", "scopira::uikit::narray_m<char,2>", "View numeric data");
 static scopira::core::register_view<scopira::uikit::int_matrix_viewer_v> r5("scopira::uikit::int_matrix_viewer_v", "scopira::uikit::narray_m<int,2>", "View numeric data");
 static scopira::core::register_view<scopira::uikit::matrix_editor_v> r6("scopira::uikit::matrix_editor_v", "scopira::uikit::narray_m<double,2>", "Edit numeric data");
@@ -93,6 +94,11 @@ void matrix_viewer_base::get_data_header(int x, std::string &out) const
   int_to_string(x, out);
 }
 
+void matrix_viewer_base::get_data_side(int y, std::string &out) const
+{
+  int_to_string(y, out);
+}
+
 void matrix_viewer_base::paint_cell(scopira::coreui::widget_canvas &v, scopira::coreui::widget_context &pen,
     int cellx, int celly, int datax, int datay)
 {
@@ -117,8 +123,6 @@ void matrix_viewer_base::prep_display(void)
   dm_titleline.clear();
 
   get_data_stat(dm_titleline);
-
-  assert(!dm_titleline.empty());
 }
 
 void matrix_viewer_base::convert_mouse_to_xy(scopira::coreui::widget_canvas &v,
@@ -182,15 +186,16 @@ void matrix_viewer_base::paint(widget_canvas &v, coord &crd)
     v.draw_line(pen, basex_c, basey_c+y*cellh_c, basex_c+(xmax-xmin)*cellw_c, basey_c+y*cellh_c);
 
     //row headers
+    get_data_side(y+ymin, s);
     v.draw_text_right(pen, dm_font, basex_c-4,
       basey_c + y*cellh_c + (cellh_c/2) - 4,cellw_c-8,
-      tool::int_to_string(y+ymin));
+      s);
   }
   v.draw_line(pen, basex_c, basey_c+(ymax-ymin)*cellh_c, basex_c+(xmax-xmin)*cellw_c, basey_c+(ymax-ymin)*cellh_c);
 
   // draw top cell header
-  assert(!dm_titleline.empty());
-  v.draw_text(pen, dm_font, basex_c, titley_c, dm_titleline.c_str());
+  if (!dm_titleline.empty())
+    v.draw_text(pen, dm_font, basex_c, titley_c, dm_titleline.c_str());
   for (x=0; x<(xmax-xmin); ++x) {
     v.draw_line(pen, basex_c + x*cellw_c, basey_c,basex_c + x*cellw_c,basey_c+(ymax-ymin)*cellh_c);
     get_data_header(x+xmin, s);
@@ -198,6 +203,39 @@ void matrix_viewer_base::paint(widget_canvas &v, coord &crd)
   }
   v.draw_line(pen, basex_c + (xmax-xmin)*cellw_c, basey_c, basex_c + (xmax-xmin)*cellw_c,
     basey_c+(ymax-ymin)*cellh_c);
+}
+
+//
+//
+// basic_matrix_data_i
+//
+//
+
+basic_matrix_data_i::basic_matrix_data_i(void)
+{
+}
+
+void basic_matrix_data_i::get_data_header(int x, std::string &out) const
+{
+  int_to_string(x, out);
+}
+
+void basic_matrix_data_i::get_data_side(int y, std::string &out) const
+{
+  int_to_string(y, out);
+}
+
+//
+//
+// basic_matrix_viewer_v
+//
+//
+
+basic_matrix_viewer_v::basic_matrix_viewer_v(basic_matrix_data_i *data)
+  : dm_datamodel(data)
+{
+  init_gui();
+  set_view_title("Matrix View");
 }
 
 //
@@ -304,10 +342,13 @@ void vec_viewer_v::get_data_text(int x, int y, std::string &out) const
 
   assert(idx>=0);
   if (idx>=dm_data->size()) {
-    out = "N/A";
+    out.clear();
     return;
   }
-  double_to_string(dm_data->get(idx), out);
+  if (is_zero(dm_data->get(idx)))
+    out = "0";
+  else
+    double_to_string(dm_data->get(idx), out);
 }
 
 void vec_viewer_v::get_data_stat(std::string &out) const
@@ -472,7 +513,10 @@ int matrix_viewer_v::get_data_height(void) const
 
 void matrix_viewer_v::get_data_text(int x, int y, std::string &out) const
 {
-  double_to_string(dm_data->get(x, y), out);
+  if (is_zero(dm_data->get(x,y)))
+    out = "0";
+  else
+    double_to_string(dm_data->get(x,y), out);
 }
 
 void matrix_viewer_v::get_data_stat(std::string &out) const
@@ -527,6 +571,125 @@ void matrix_viewer_v::get_data_stat(std::string &out) const
   endii = dm_data->end();
   for (ii=dm_data->begin(); ii != endii; ++ii)
     if (is_zero(*ii))
+      c++;
+  out += "  NumZero=";
+  out += tool::int_to_string(c);
+}
+
+//
+//
+// float_matrix_viewer_v
+//
+//
+
+float_matrix_viewer_v::float_matrix_viewer_v(void)
+  : dm_model(this)
+{
+  init_gui();
+  set_view_title("Integer Vector");
+}
+
+void float_matrix_viewer_v::set_matrix(narray_o<float,2> *indata)
+{
+  dm_data = indata;
+
+  prep_display();
+
+  request_resize();
+  request_redraw();
+}
+
+void float_matrix_viewer_v::bind_model(scopira::core::model_i *sus)
+{
+  dm_model = dynamic_cast<narray_m<float,2> *>(sus);
+}
+
+void float_matrix_viewer_v::react_model_update(scopira::core::model_i *sus, scopira::core::view_i *src)
+{
+  if (dm_model.get()) {
+    dm_data = dm_model->pm_array;
+
+    prep_display();
+
+    request_resize();
+    request_redraw();
+  }
+}
+
+int float_matrix_viewer_v::get_data_width(void) const
+{
+  if (dm_data.is_null())
+    return 0;
+  return dm_data->width();
+}
+
+int float_matrix_viewer_v::get_data_height(void) const
+{
+  if (dm_data.is_null())
+    return 0;
+  return dm_data->height();
+}
+
+void float_matrix_viewer_v::get_data_text(int x, int y, std::string &out) const
+{
+  if (is_zero(dm_data->get(x,y)))
+    out = "0";
+  else
+    double_to_string(dm_data->get(x,y), out);
+}
+
+void float_matrix_viewer_v::get_data_stat(std::string &out) const
+{
+  size_t minx, miny, maxx, maxy, x, y;
+  float minval, maxval;
+  float d;
+  int c;
+  narray_o<float,2>::iterator ii, endii;
+
+  out = "Width=";
+  out += tool::int_to_string(dm_data->width());
+  out += "  Height=";
+  out += tool::int_to_string(dm_data->height());
+  out += "  NumVal=";
+  out += tool::int_to_string(dm_data->size());
+
+  if (dm_data->empty())
+    return;
+
+  minx = miny = maxx = maxy = 0;
+  maxval = minval = dm_data->get(0,0);
+  for (y=0; y<dm_data->height(); ++y)
+    for (x=0; x<dm_data->width(); ++x) {
+      if (dm_data->get(x,y) < minval) {
+        minval = dm_data->get(x,y);
+        minx = x;
+        miny = y;
+      }
+      if (dm_data->get(x,y) > minval) {
+        maxval = dm_data->get(x,y);
+        maxx = x;
+        maxy = y;
+      }
+    }
+
+  out += "  MinVal=";
+  out += tool::double_to_string(minval) + " @" + tool::int_to_string(minx)
+    + "," + tool::int_to_string(miny);
+  out += "  MaxVal=";
+  out += tool::double_to_string(maxval) + " @" + tool::int_to_string(maxx)
+    + "," + tool::int_to_string(maxy);
+
+  sum(*dm_data, d);
+  out += "  Sum=";
+  out += tool::double_to_string(d);
+  mean(*dm_data, d);
+  out += "  Mean=";
+  out += tool::double_to_string(d);
+
+  c = 0;
+  endii = dm_data->end();
+  for (ii=dm_data->begin(); ii != endii; ++ii)
+    if (*ii == 0)
       c++;
   out += "  NumZero=";
   out += tool::int_to_string(c);
@@ -1807,7 +1970,10 @@ int matrix_editor_v::get_data_height(void) const
 
 void matrix_editor_v::get_data_text(int x, int y, std::string &out) const
 {
-  double_to_string(dm_data(x, y), out);
+  if (is_zero(dm_data(x,y)))
+    out = "0";
+  else
+    double_to_string(dm_data(x,y), out);
 }
 
 void matrix_editor_v::get_data_stat(std::string &out) const

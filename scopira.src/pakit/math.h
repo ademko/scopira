@@ -617,9 +617,7 @@ template <class T>
   const scopira::basekit::narray<T,2>& src,
   const scopira::basekit::narray<int> *src_classes)
 {
-  // fails under latest gcc compile
-  assert(false);
-  //pakit::calc_sym_kl_divergence_covar(dest1,dest2,logterm,m_mean,src,0,src_classes,weight);
+  pakit::calc_sym_kl_divergence_covar(dest1,dest2,traceterm,m_mean,src,0,src_classes);
 }
 
 //calculate correlation matrix

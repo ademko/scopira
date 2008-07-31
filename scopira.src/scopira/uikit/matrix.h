@@ -1,6 +1,6 @@
 
 /*
- *  Copyright (c) 2005    National Research Council
+ *  Copyright (c) 2005-2007    National Research Council
  *
  *  All rights reserved.
  *
@@ -39,10 +39,14 @@ namespace scopira
   {
     class matrix_viewer_base;
 
+    class basic_matrix_data_i;
+    class basic_matrix_viewer_v;
+
     class stringvec_viewer_v;
     class vec_viewer_v;
     class int_vec_viewer_v;
     class matrix_viewer_v;
+    class float_matrix_viewer_v;
     class char_matrix_viewer_v;
     class int_matrix_viewer_v;
 
@@ -54,6 +58,10 @@ namespace scopira
     //class save_matrix_v;
   }
 }
+
+//
+// TODO this should all be converted to templates
+//
 
 /**
  * Base class for all proponents that display matrix-like data
@@ -99,10 +107,13 @@ class scopira::uikit::matrix_viewer_base : public scopira::coreui::scrolled_canv
     SCOPIRAUI_EXPORT virtual void get_data_stat(std::string &out) const;
     /// gets the header for the column. default implementation is numerical
     SCOPIRAUI_EXPORT virtual void get_data_header(int x, std::string &out) const;
+    /// gets the header for the row. default implementation is numerical
+    SCOPIRAUI_EXPORT virtual void get_data_side(int y, std::string &out) const;
 
   protected:
     /**
-     * protected ctor
+     * Protected ctor. Remember, decendants must call init_gui.
+     *
      * @author Aleksander Demko
      */
     SCOPIRAUI_EXPORT matrix_viewer_base(void);
@@ -123,6 +134,63 @@ class scopira::uikit::matrix_viewer_base : public scopira::coreui::scrolled_canv
 
   private:
     void paint(scopira::coreui::widget_canvas &v, coord &crd);
+};
+
+/**
+ * This is a pure data model class that is used by basic_matrix_viewer_v.
+ * Basically, basic_matrix_viewer_v is the view, and this is the model.
+ * Descendants must decent from this (which operates on its own data type,
+ * or on the model provided).
+ *
+ * @author Aleksander Demko
+ */ 
+class scopira::uikit::basic_matrix_data_i : public virtual scopira::tool::object
+{
+  public:
+    // scopira::core::view_i like functions
+
+    SCOPIRAUI_EXPORT virtual void bind_model(scopira::core::model_i *sus) { }
+    SCOPIRAUI_EXPORT virtual void react_model_update(scopira::core::model_i *sus, scopira::core::view_i *src) { }
+
+    // basic_matrix_viewer_v like funciotns
+
+    SCOPIRAUI_EXPORT virtual int get_data_width(void) const = 0;
+    SCOPIRAUI_EXPORT virtual int get_data_height(void) const = 0;
+    SCOPIRAUI_EXPORT virtual void get_data_text(int x, int y, std::string &out) const = 0;
+    SCOPIRAUI_EXPORT virtual void get_data_stat(std::string &out) const { out.clear(); }
+    // default just converts the x to out via int_to_string
+    SCOPIRAUI_EXPORT virtual void get_data_header(int x, std::string &out) const;
+    SCOPIRAUI_EXPORT virtual void get_data_side(int y, std::string &out) const;
+
+  protected:
+    SCOPIRAUI_EXPORT basic_matrix_data_i(void);
+
+};
+
+/**
+ * A generic matrix viewer that offloads the virtual functions to the "model" like
+ * basic_matrix_data_i class.
+ *
+ * @author Aleksander Demko
+ */ 
+class scopira::uikit::basic_matrix_viewer_v : public scopira::uikit::matrix_viewer_base
+{
+  public:
+    /// data cannot be null. will be ref counted
+    SCOPIRAUI_EXPORT basic_matrix_viewer_v(basic_matrix_data_i *data);
+
+    SCOPIRAUI_EXPORT virtual void bind_model(scopira::core::model_i *sus) { dm_datamodel->bind_model(sus); }
+    SCOPIRAUI_EXPORT virtual void react_model_update(scopira::core::model_i *sus, scopira::core::view_i *src) { dm_datamodel->react_model_update(sus, src); }
+
+    SCOPIRAUI_EXPORT virtual int get_data_width(void) const { return dm_datamodel->get_data_width(); }
+    SCOPIRAUI_EXPORT virtual int get_data_height(void) const { return dm_datamodel->get_data_height(); }
+    SCOPIRAUI_EXPORT virtual void get_data_text(int x, int y, std::string &out) const { dm_datamodel->get_data_text(x, y, out); }
+    SCOPIRAUI_EXPORT virtual void get_data_stat(std::string &out) const { dm_datamodel->get_data_stat(out); }
+    SCOPIRAUI_EXPORT virtual void get_data_header(int x, std::string &out) const { dm_datamodel->get_data_header(x, out); }
+    SCOPIRAUI_EXPORT virtual void get_data_side(int y, std::string &out) const { dm_datamodel->get_data_side(y, out); }
+
+  private:
+    scopira::tool::count_ptr<basic_matrix_data_i> dm_datamodel;
 };
 
 /**
@@ -221,6 +289,36 @@ class scopira::uikit::matrix_viewer_v : public scopira::uikit::matrix_viewer_bas
     SCOPIRAUI_EXPORT matrix_viewer_v(void);
 
     SCOPIRAUI_EXPORT virtual void set_matrix(scopira::basekit::narray_o<double,2> *indata);
+
+    SCOPIRAUI_EXPORT virtual void bind_model(scopira::core::model_i *sus);
+    SCOPIRAUI_EXPORT virtual void react_model_update(scopira::core::model_i *sus, scopira::core::view_i *src);
+
+    /// descedants provide this
+    SCOPIRAUI_EXPORT virtual int get_data_width(void) const;
+    /// descedants provide this
+    SCOPIRAUI_EXPORT virtual int get_data_height(void) const;
+    /// descedants provide this
+    SCOPIRAUI_EXPORT virtual void get_data_text(int x, int y, std::string &out) const;
+    /// descedants provide this
+    SCOPIRAUI_EXPORT virtual void get_data_stat(std::string &out) const;
+};
+
+/**
+ * Viewer of INT matrices.
+ * Perhaps this should be unified with the double one?
+ * @author Aleksander Demko
+ */
+class scopira::uikit::float_matrix_viewer_v : public scopira::uikit::matrix_viewer_base
+{
+  protected:
+    scopira::tool::count_ptr<scopira::basekit::narray_o<float,2> > dm_data;
+    scopira::core::model_ptr<scopira::uikit::narray_m<float,2> > dm_model;
+
+  public:
+    /// ctor
+    SCOPIRAUI_EXPORT float_matrix_viewer_v(void);
+
+    SCOPIRAUI_EXPORT virtual void set_matrix(scopira::basekit::narray_o<float,2> *indata);
 
     SCOPIRAUI_EXPORT virtual void bind_model(scopira::core::model_i *sus);
     SCOPIRAUI_EXPORT virtual void react_model_update(scopira::core::model_i *sus, scopira::core::view_i *src);

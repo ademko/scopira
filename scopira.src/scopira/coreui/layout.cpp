@@ -18,6 +18,7 @@
 #include <string>
 
 #include <scopira/coreui/button.h>
+#include <scopira/coreui/label.h>
 
 
 //BBlibs scopira
@@ -69,21 +70,53 @@ void box_layout::add_widget_end(widget *wid, bool expand, bool fill, int padding
 void box_layout::remove_widget(widget *wid)
 {
   assert(wid->is_alive_object());
-  
+
   bool found = false;
   scopira::tool::count_ptr<widget>  w;
-  
-  std::list< scopira::tool::count_ptr<widget> >::iterator ii=dm_children.begin(), ii_end=dm_children.end();  
+
+  std::list< scopira::tool::count_ptr<widget> >::iterator ii=dm_children.begin(), ii_end=dm_children.end();
   for ( ; ii != ii_end; ++ii )
     if ( ii->get() == wid ) {
       found = true;
       break;
     }
-  
+
   assert(found);
-  
+
   gtk_container_remove(GTK_CONTAINER(dm_widget), wid->get_widget());
   dm_children.erase(ii);
+}
+
+//
+//
+// alignment_layout
+//
+//
+
+alignment_layout::alignment_layout(void)
+{
+  dm_widget = gtk_alignment_new(0, 0, 0, 0);
+  widget::init_gui();
+}
+
+alignment_layout::alignment_layout(widget *wid, float xalign, float yalign, float xscale, float yscale)
+{
+  dm_child = wid;
+
+  dm_widget = gtk_alignment_new(xalign, yalign, xscale, yscale);
+  gtk_container_add(GTK_CONTAINER(dm_widget), wid->get_widget());
+
+  widget::init_gui();
+  gtk_widget_show_all( dm_widget );
+}
+
+void alignment_layout::add_widget(widget *wid, float xalign, float yalign, float xscale, float yscale)
+{
+  dm_child = wid;
+
+  gtk_container_add(GTK_CONTAINER(dm_widget), wid->get_widget());
+  gtk_alignment_set(GTK_ALIGNMENT(dm_widget), xalign, yalign, xscale, yscale);
+  gtk_widget_show_all( dm_widget );
 }
 
 //
@@ -141,10 +174,16 @@ tab_layout::tab_layout(void)
 
 int tab_layout::add_widget(widget *wid, const std::string &tablabel)
 {
+  return add_widget(wid, new label(tablabel));
+}
+
+int tab_layout::add_widget(widget *wid, widget *labelwidget)
+{
+  assert(labelwidget->is_alive_object());
   assert(wid->is_alive_object());
 
-  dm_children.push_back(wid);
-  gtk_notebook_append_page(GTK_NOTEBOOK(dm_widget), wid->get_widget(), gtk_label_new(tablabel.c_str()));
+  dm_children.push_back(widgetpair_t(labelwidget, wid));
+  gtk_notebook_append_page(GTK_NOTEBOOK(dm_widget), wid->get_widget(), labelwidget->get_widget());
 
   // not all gtk versions return int from gtk_notebook_append_page, so we have to do this here
   return find_tab(wid);
@@ -152,10 +191,16 @@ int tab_layout::add_widget(widget *wid, const std::string &tablabel)
 
 int tab_layout::add_widget_prepend(widget *wid, const std::string &tablabel)
 {
+  return add_widget_prepend(wid, new label(tablabel));
+}
+
+int tab_layout::add_widget_prepend(widget *wid, widget *labelwidget)
+{
+  assert(labelwidget->is_alive_object());
   assert(wid->is_alive_object());
 
-  dm_children.push_back(wid);
-  gtk_notebook_prepend_page(GTK_NOTEBOOK(dm_widget), wid->get_widget(), gtk_label_new(tablabel.c_str()));
+  dm_children.push_back(widgetpair_t(labelwidget, wid));
+  gtk_notebook_prepend_page(GTK_NOTEBOOK(dm_widget), wid->get_widget(), labelwidget->get_widget());
 
   // not all gtk versions return int from gtk_notebook_append_page, so we have to do this here
   return find_tab(wid);
@@ -163,13 +208,17 @@ int tab_layout::add_widget_prepend(widget *wid, const std::string &tablabel)
 
 void tab_layout::switch_tab(int id)
 {
+  assert(id<dm_children.size());
   gtk_notebook_set_current_page(GTK_NOTEBOOK(dm_widget), id);
 }
 
 void tab_layout::set_tab_label(int id, const std::string &tablabel)
 {
+  assert(id<dm_children.size());
+
+  dm_children[id].first = new label(tablabel);
   gtk_notebook_set_tab_label(GTK_NOTEBOOK(dm_widget), gtk_notebook_get_nth_page(GTK_NOTEBOOK(dm_widget), id),
-    gtk_label_new(tablabel.c_str()));
+      dm_children[id].first->get_widget());
 }
 
 int tab_layout::find_tab(widget *wid)
@@ -182,6 +231,8 @@ void tab_layout::remove_tab(int idx)
 {
   GtkWidget *w;
 
+  assert(idx<dm_children.size());
+
   w = gtk_notebook_get_nth_page(GTK_NOTEBOOK(dm_widget), idx);
   assert(w);
 
@@ -189,7 +240,7 @@ void tab_layout::remove_tab(int idx)
   gtk_notebook_remove_page(GTK_NOTEBOOK(dm_widget), idx);
   // kill the object
   for (children_t::iterator ii=dm_children.begin(); ii != dm_children.end(); ++ii)
-    if ((*ii)->get_widget() == w) {
+    if (ii->second->get_widget() == w) {
       dm_children.erase(ii);
       return;
     }
@@ -219,17 +270,47 @@ void grid_layout::add_widget(widget *wid, int x, int y, int w, int h, bool expan
   gtk_table_attach(GTK_TABLE(dm_widget), wid->get_widget(), x, x+w, y, y+h,
       static_cast<GtkAttachOptions>(expandH ? GTK_EXPAND|GTK_FILL : 0),
       static_cast<GtkAttachOptions>(expandV ? GTK_EXPAND|GTK_FILL : 0),
-      paddingH, paddingV); 
+      paddingH, paddingV);
 
    gtk_widget_show(wid->get_widget());
 }
 
+//
+//
+// frame
+//
+//
 
+frame::frame(void)
+{
+  dm_widget = gtk_frame_new(0);
+  init_gui();
+}
+
+frame::frame(const std::string &label)
+{
+  dm_widget = gtk_frame_new(label.c_str());
+  init_gui();
+}
+
+void frame::set_label(const std::string &label)
+{
+  gtk_frame_set_label(GTK_FRAME(dm_widget), label.c_str());
+}
+
+void frame::add_widget(scopira::coreui::widget *w)
+{
+  assert(w);
+
+  dm_child = w;
+  gtk_container_add(GTK_CONTAINER(dm_widget), w->get_widget());
+}
+
+//
 //
 // button_layout
 //
 //
-
 
 button_layout::button_layout(widget *mainwidget)
 {
@@ -261,6 +342,17 @@ void button_layout::add_button(widget *but)
   dm_butbox->add_widget(but, false, false, 10);
 }
 
+void button_layout::add_button_end(widget *but)
+{
+  if (dm_butbox.is_null()) {
+    dm_butbox = new buttonbox_layout(true);
+    dm_mainbox->add_widget(new widget(gtk_hseparator_new()), false, false, 6);
+    dm_mainbox->add_widget(dm_butbox.get(), false, false);
+  }
+
+  dm_butbox->add_widget_end(but, false, false, 10);
+}
+
 void button_layout::add_stock_buttons(int button_mask, button_reactor_i *reac)
 {
   struct spec {
@@ -290,7 +382,7 @@ void button_layout::add_stock_buttons(int button_mask, button_reactor_i *reac)
   for (cur = specs; cur->flag; ++cur)
     if (cur->flag & button_mask) {
       count_ptr<button> but;
-      
+
       if (cur->stock_icon)
         but = new button(button::stock_c, cur->stock_icon, cur->action, cur->action2);
       else

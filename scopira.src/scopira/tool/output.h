@@ -1,6 +1,6 @@
 
 /*
- *  Copyright (c) 2004    National Research Council
+ *  Copyright (c) 2004-2008    National Research Council
  *
  *  All rights reserved.
  *
@@ -120,6 +120,9 @@ class scopira::tool::output_stack
   In scopira/tool/output.h is defined OUTPUT, a basic stream
   that is almost always available. It is useful for debugging
   and other output.
+  
+  This stream is of type scopira::tool::oflow_i. You may also define
+  your own << operators for this type. For examples, please see tool/flow.h
 
   \code
   #include <scopria/tool/output.h>

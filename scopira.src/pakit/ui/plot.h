@@ -44,6 +44,10 @@ class pakit::plot_spectra_v : public scopira::uikit::plotter,
     scopira::tool::count_ptr<scopira::coreui::label> dm_class;  // for info purposes
 
     int dm_slice;
+
+    // min and max over all spectra
+    double dm_overall_ymin;
+    double dm_overall_ymax;
     
     scopira::tool::count_ptr<scopira::coreui::widget> dm_basewidget;
   public:

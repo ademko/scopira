@@ -41,7 +41,7 @@ namespace scopira
   }
 }
 
-/// internal handler interface
+// internal handler interface
 class scopira::core::view_action_reactor_i
 {
   public:

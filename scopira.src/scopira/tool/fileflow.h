@@ -31,12 +31,30 @@ namespace scopira
     class write_flocker;
 
     class filememory;
+
+    enum {
+      copy_c = 0,
+      copysoftlink_c = 1,
+      copyhardlink_c = 2,
+    };
+
+    /**
+     * Copies the given srcfile to the given destination (file or dir).
+     * Copytype can be linking instead (only used under UNIX)
+     *
+     * @author Aleksander Demko
+     */ 
+    bool copy_file(const std::string &srcfile, const std::string &destfile, short copytype = copy_c);
   }
 }
 
 /**
- * A file system flow. Unbuffered.
+ * The is a binary/raw flow stream object that reads and writes files to disk.
  *
+ * This class is often the base of many chains, and can also be used by itself for basic
+ * file reading and writing.
+ *
+ * @see @ref scopiratoolflowpage
  * @author Aleksander Demko
  */
 class scopira::tool::fileflow : public scopira::tool::iflow_i, public scopira::tool::oflow_i
@@ -53,15 +71,22 @@ class scopira::tool::fileflow : public scopira::tool::iflow_i, public scopira::t
 
     /// access levels
     enum {
-      append_c = 1024,      // append to any existing file
-      trunc_c = 2048,       // this is the default, for output files
-      linked_c = 4096,       // internal, you dont need to specifiy this
-      existing_c = 8192,    // open an existinf file. do not trunc. do not append.
+      /// append to any existing file
+      append_c = 1024,
+      /// this is the default, for output files
+      trunc_c = 2048,
+      /// internal, you dont need to specifiy this
+      linked_c = 4096,
+      /// open an existinf file. do not trunc. do not append.
+      existing_c = 8192,
     };
-    /// special fd, when passing these, mode is ignored.
+    /// special file descriptor (fd) numbers
     enum {
+      /// this file descriptor represents the standard input stream, stdin
       stdin_c = -1,
+      /// this file descriptor represents the standard output stream, stdout
       stdout_c = -2,
+      /// this file descriptor represents the standard error stream, stderr
       stderr_c = -3
     };
     enum seek_dir_t {
@@ -71,35 +96,110 @@ class scopira::tool::fileflow : public scopira::tool::iflow_i, public scopira::t
     };
     typedef ::off_t offset_t;
 
-    /// default constructor
+    /**
+     * The default constructor.
+     *
+     * You should then use open() to open a file.
+     *
+     * @author Aleksander Demko
+     */ 
     SCOPIRA_EXPORT fileflow(void);
-    /// opening constructor
+    /**
+     * A constructor that also opens a file.
+     * See the corresponding open() call for parameter information.
+     *
+     * @author Aleksander Demko
+     */ 
     SCOPIRA_EXPORT fileflow(const std::string& filename, mode_t mode);
     /**
-     * Constructor that uses an existing OS file descriptor.
-     * If you pass one of the standard streams (std*._c), mode is ignored)
+     * A constructor that also opens a file.
+     * See the corresponding open() call for parameter information.
+     *
+     * @param fd the file descriptor (OS specific)
+     * @param mode the file mode to use
      * @author Aleksander Demko
      */ 
     SCOPIRA_EXPORT fileflow(int fd, mode_t mode);
-    /// destructor
+
     SCOPIRA_EXPORT virtual ~fileflow();
 
-    /// are we in a failed state?
+    /**
+     * Check if the file stream is in a failed state.
+     *
+     * @return true if the stream is in a failed state.
+     * @author Aleksander Demko
+     */ 
     SCOPIRA_EXPORT virtual bool failed(void) const;
 
-    /// read raw block data, returns num read in
+    /**
+     * Reads a raw array of bytes from the file.
+     *
+     * @param _buf the buffer to read into.
+     * @param _maxsize the maximum number of bytes to read
+     * @return the actual number of bytes read
+     * @author Aleksander Demko
+     */ 
     SCOPIRA_EXPORT virtual size_t read(byte_t* _buf, size_t _maxsize);
-    /// write a raw block of data
+    /**
+     * Writes a raw array of bytes from the file.
+     *
+     * @param _buf the buffer to write from.
+     * @param _size the size of the buffer
+     * @return the actual number of bytes written
+     * @author Aleksander Demko
+     */ 
     SCOPIRA_EXPORT virtual size_t write(const byte_t* _buf, size_t _size);
 
-    /// opens a file
+    /**
+     * Opens the given on disk file.
+     *
+     * The mode is a bitmask (or-ed) of  file modes.
+     *
+     * It usually contains either (or both) of:
+     *  - input_c (for reading from a file)
+     *  - output_c (for writing to a file)
+     *
+     * And possible some of:
+     *  - append_c (append to any existing file)
+     *  - trunc_c (truncate - delete - any existing file)
+     *  - existing_c (open an existinf file, and fail if it doesn't exist)
+     *
+     * Use failed() to check if the open was successfull.
+     *
+     * @param filename is the filename
+     * @param mode is the file mode
+     * @author Aleksander Demko
+     */ 
     SCOPIRA_EXPORT void open(const std::string& filename, mode_t mode);
-    /// existing fs/link opener
+    /**
+     * Opens a file via an existing OS file descriptor.
+     * File descriptors are typically low level OS objects that you typically do not want to use.
+     * This method is provided for the few times users would want streams that reflect
+     * into standard OS file descriptors.
+     *
+     * You can either pass it a file descriptor (fd) or one of the standard (std*_c) file descriptors.
+     * If you pass one of the standard streams (std*._c), mode is ignored)
+     *
+     * Use failed() to check if the open was successfull.
+     *
+     * @param fd the file descriptor (OS specific)
+     * @param mode the file mode to use
+     * @author Aleksander Demko
+     */ 
     SCOPIRA_EXPORT void open(int fd,  mode_t mode);
-    /// close the file
+    /**
+     * Close the currently opened file.
+     *
+     * You normally do not need to call this as the file will be closed
+     * automatically if you:
+     *  - try to open() another file
+     *  - the fileflow object is destroyed
+     *
+     * @author Aleksander Demko
+     */ 
     SCOPIRA_EXPORT void close(void);
 
-    /// gets the raw OS object. use with care
+    // gets the raw OS object. use with care
     int get_os_handle(void) const { return dm_hand; }
 
     // additional fileflow specific stuff: seeking

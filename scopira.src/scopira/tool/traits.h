@@ -16,6 +16,7 @@
 
 #include <scopira/tool/flow.h>
 #include <scopira/tool/util.h>
+#include <scopira/tool/platform.h>
 
 namespace scopira
 {
@@ -32,7 +33,10 @@ namespace scopira
     template <> class flowtraits_g<char>;
     template <> class flowtraits_g<short>;
     template <> class flowtraits_g<int>;
-    template <> class flowtraits_g<long>;
+#ifdef PLATFORM_32
+    template <> class flowtraits_g<long>; // no longer needed?
+#endif
+    template <> class flowtraits_g<int64_t>;
     template <> class flowtraits_g<float>;
     template <> class flowtraits_g<double>;
   }
@@ -58,8 +62,8 @@ template <class T> class scopira::tool::flowtraits_base_g
 template <class T> class scopira::tool::flowtraits_g : public scopira::tool::flowtraits_base_g<T>
 {
   public:
-    static bool load(itflow_i &in, T & outv) { return outv.read(in); }
-    static void save(otflow_i &out, const T &v) { v.write(out); }
+    static bool load(itflow_i &in, T & outv) { return outv.load(in); }
+    static void save(otflow_i &out, const T &v) { v.save(out); }
     static void to_string(const T &v, std::string &out) { out = "binary"; }
     static bool from_string(std::string &s, T &out) { return false; }
 };
@@ -120,6 +124,8 @@ class scopira::tool::flowtraits_g<int> : public scopira::tool::flowtraits_base_g
 };
 
 /// specialization: long
+/// done need it anymore becuase int and int64 should be enough?
+#ifdef PLATFORM_32
 template <>
 class scopira::tool::flowtraits_g<long> : public scopira::tool::flowtraits_base_g<long>
 {
@@ -128,6 +134,18 @@ class scopira::tool::flowtraits_g<long> : public scopira::tool::flowtraits_base_
     static void save(otflow_i &out, const long &v) { out.write_long(v); }
     static void to_string(const long &v, std::string &out) { tool::long_to_string(v,out); }
     static bool from_string(std::string &s, long &out) { return tool::string_to_long(s,out); }
+};
+#endif
+
+/// specialization: long
+template <>
+class scopira::tool::flowtraits_g<int64_t> : public scopira::tool::flowtraits_base_g<int64_t>
+{
+  public:
+    static bool load(itflow_i &in, int64_t & outv) { return in.read_int64_t(outv); }
+    static void save(otflow_i &out, const int64_t &v) { out.write_int64_t(v); }
+    static void to_string(const int64_t &v, std::string &out) { tool::int64_t_to_string(v,out); }
+    static bool from_string(std::string &s, int64_t &out) { return tool::string_to_int64_t(s,out); }
 };
 
 /// specialization: float
