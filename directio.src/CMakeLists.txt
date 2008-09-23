@@ -1,20 +1,26 @@
 
-PROJECT(scopiradio)
+GET_TARGET_PROPERTY(HAS_SCOPIRA scopira TYPE)
+IF(NOT HAS_SCOPIRA)
+  MESSAGE(FATAL_ERROR "The directio library requires scopira to be included")
+ENDIF(NOT HAS_SCOPIRA)
 
 INCLUDE(FindwxWidgets)
 FIND_PACKAGE(wxWidgets REQUIRED base xml)
 
-#MESSAGE(${wxWidgets_INCLUDE_DIRS})
-#MESSAGE(${wxWidgets_DEFINITIONS})
+# this is useful is this file is ever INCLUDED by other files
+GET_FILENAME_COMPONENT(THIS_PATH ${CMAKE_CURRENT_LIST_FILE} PATH)
 
 ADD_LIBRARY(scopiradio STATIC
-    scopira/wx/directio.cpp)
-I_ADD_RELATIVE_INCLUDE(scopiradio ".")
-I_ADD_INCLUDE(scopiradio ${wxWidgets_INCLUDE_DIRS})
-I_TARGET_LINK_LIBRARY(scopiradio scopira)
-I_ADD_COMPILE_FLAGS(scopiradio ${wxWidgets_DEFINITIONS})
+    ${THIS_PATH}/scopira/wx/directio.cpp)
+
+INCLUDE_DIRECTORIES(${THIS_PATH})
+
+INCLUDE_DIRECTORIES(${wxWidgets_INCLUDE_DIRS})
+ADD_DEFINITIONS(${wxWidgets_DEFINITIONS})
+IF(WIN32)
+ADD_DEFINITIONS(/DwxUSE_UNICODE)      # why i need to explicitly set this, i dont know
+ENDIF(WIN32)
 TARGET_LINK_LIBRARIES(scopiradio ${wxWidgets_LIBRARIES})
 
-if(WIN32)
-I_ADD_COMPILE_FLAGS(scopiradio /DwxUSE_UNICODE)      # why i need to explicitly set this, i dont know
-endif(WIN32)
+TARGET_LINK_LIBRARIES(scopiradio scopira)
+
