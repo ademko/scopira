@@ -54,6 +54,14 @@ namespace scopira
     template <> class nindex<4>;
 
     /**
+     * Returns true if the given stride set is considered "flat".
+     * This allow for performance optimizations in nslice.
+     *
+     * @author Aleksander Demko
+     */ 
+    template <int DIM> bool is_flat_stride(const nindex<DIM> &stride, const nindex<DIM> &size);
+
+    /**
      * Deleter of externally managed memory.
      *
      * @author Aleksander Demko
@@ -650,6 +658,17 @@ class scopira::basekit::nindex<4> : public scopira::tool::fixed_array<size_t, 4>
     /// ref access
     size_t t(void) const { return dm_ary[3]; }
 };
+
+template <int DIM>
+bool scopira::basekit::is_flat_stride(const nindex<DIM> &stride, const nindex<DIM> &size)
+{
+  if (stride[0] != 1)
+    return false;
+  for (int x=1; x<stride.size(); ++x)
+    if (stride[x] != size[x-1])
+      return false;
+  return true;
+}
 
 //
 //
@@ -1608,7 +1627,7 @@ template <class T, int DIM> class scopira::basekit::nslice
      *
      * @author Aleksander Demko
      */ 
-    T * c_array(void) const { assert(dm_stride[0] == 1); return dm_var+dm_prime; }
+    T * c_array(void) const { assert(is_flat_stride()); return dm_var+dm_prime; }
 
     /**
      * Returns the start of the nslice, as an STL-style iterator
@@ -1871,6 +1890,14 @@ template <class T, int DIM> class scopira::basekit::nslice
       assert("[nslice element access out of bounds]" &&  (x<width()) && (y<height()) && (z<depth()));
       return dm_var[dm_prime+x*dm_stride[0]+y*dm_stride[1]+z*dm_stride[2]];
     }
+
+    /**
+     * Returns true if this slice has a "flat" stride.
+     * See scopira::basekit::is_flat_stride.
+     *
+     * @author Aleksander Demko
+     */ 
+    bool is_flat_stride(void) const { return scopira::basekit::is_flat_stride(dm_stride, dm_size); }
 };
 
 //
@@ -1930,6 +1957,14 @@ bool scopira::basekit::nslice<T,DIM>::load(scopira::tool::itflow_i &in)
     if (!in.read_size_t(left) || left != dm_size[i])
       return false;
 
+  // check for super fast case when stride == 1
+#ifndef PLATFORM_BYTESWAP
+  if (is_flat_stride()) {
+    size_t sz = size();
+    return in.read_array(c_array(), sz) == sz;
+  }
+#endif
+
   // read in the payload
   scopira::tool::fixed_array<T, 1024*8> buf;
   const_iterator ii=begin(), endii=end();
@@ -1970,6 +2005,14 @@ void scopira::basekit::nslice<T,DIM>::save(scopira::tool::otflow_i &out) const
     out.write_size_t(dm_size[j]);
   if (empty())
     return;
+
+  // check for super fast case when stride == 1
+#ifndef PLATFORM_BYTESWAP
+  if (is_flat_stride()) {
+    out.write_array(c_array(), size());
+    return;
+  }
+#endif
 
   // write out payload
   scopira::tool::fixed_array<T, 1024*8> buf;
@@ -2270,7 +2313,7 @@ template <class T, int DIM> class scopira::basekit::const_nslice
     void save(scopira::tool::otflow_i &out) const;
 
     /// gets the slice as a raw C array. only valid if the X stride is 1
-    const T * c_array(void) const { assert(dm_stride[0] == 1); return dm_var; }
+    const T * c_array(void) const { assert(is_flat_stride()); return dm_var+dm_prime; }
 
     /**
      * Returns the start of the const_nslice, as an STL-style iterator
@@ -2295,7 +2338,7 @@ template <class T, int DIM> class scopira::basekit::const_nslice
     /// empty?
     bool empty(void) const { return dm_prime == dm_end_prime; }
     /// gets the size (1D)
-    size_t size(void) const { assert(DIM==1); return dm_size[0]; }
+    size_t size(void) const { return dm_size.product(); }
     /// width
     size_t width(void) const { return dm_size[0]; }
     /// height
@@ -2490,6 +2533,14 @@ template <class T, int DIM> class scopira::basekit::const_nslice
       assert("[nslice element access out of bounds]" &&  (x<width()) && (y<height()) && (z<depth()));
       return dm_var[dm_prime+x*dm_stride[0]+y*dm_stride[1]+z*dm_stride[2]];
     }
+
+    /**
+     * Returns true if this slice has a "flat" stride.
+     * See scopira::basekit::is_flat_stride.
+     *
+     * @author Aleksander Demko
+     */ 
+    bool is_flat_stride(void) const { return scopira::basekit::is_flat_stride(dm_stride, dm_size); }
 };
 
 //
@@ -2558,6 +2609,14 @@ void scopira::basekit::const_nslice<T,DIM>::save(scopira::tool::otflow_i &out) c
     out.write_size_t(dm_size[j]);
   if (empty())
     return;
+
+  // check for super fast case when stride == 1
+#ifndef PLATFORM_BYTESWAP
+  if (is_flat_stride()) {
+    out.write_array(c_array(), size());
+    return;
+  }
+#endif
 
   // write out payload
   scopira::tool::fixed_array<T, 1024*8> buf;
