@@ -80,6 +80,10 @@ class scopira::tool::bufferflow : public scopira::tool::iflow_i, public scopira:
     /// return the size of the internal buffer
     size_t size(void) const { return dm_buffer.size(); }
 
+    /// returns the capacity of the internal buffer.
+    /// this is related to reserve, see std::vector for information
+    size_t capacity(void) const { return dm_buffer.capacity(); }
+
     /// resets the buffer index
     SCOPIRA_EXPORT void reset(void);
     /// reserve an internal buffer
