@@ -130,7 +130,7 @@ void object::auto_ref(void) const
 
 int object::current_ref(void) const
 {
-  // no lock, this might not be so smart
+  locker lk(dm_refcount_mutex);
   return dm_refcount;
 }
 
