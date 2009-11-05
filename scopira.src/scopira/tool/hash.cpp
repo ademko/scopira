@@ -21,12 +21,9 @@
 
 using namespace scopira::tool;
 
-std::string scopira::tool::close_and_hexhash(hashoflow &o)
+std::string scopira::tool::hexhash(const scopira::tool::basic_array<byte_t> &h)
 {
   std::string s;
-  basic_array<byte_t> h;
-
-  o.close(h);
 
   s.resize(h.size() * 2);
 
@@ -36,6 +33,15 @@ std::string scopira::tool::close_and_hexhash(hashoflow &o)
   }
 
   return s;
+}
+
+std::string scopira::tool::close_and_hexhash(hashoflow &o)
+{
+  basic_array<byte_t> h;
+
+  o.close(h);
+
+  return hexhash(h);
 }
 
 std::string scopira::tool::hexhash_string(const std::string &s, int type)

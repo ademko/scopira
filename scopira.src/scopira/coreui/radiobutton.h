@@ -15,6 +15,7 @@
 #define __INCLUDED__SCOPIRA_COREUI_RADIOBUTTONS_H__
 
 #include <map>
+#include <string>
 
 #include <gtk/gtk.h>
 

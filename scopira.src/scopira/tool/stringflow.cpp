@@ -14,6 +14,7 @@
 #include <scopira/tool/stringflow.h>
 
 #include <assert.h>
+#include <string.h>
 
 using namespace scopira::tool;
 using namespace std;

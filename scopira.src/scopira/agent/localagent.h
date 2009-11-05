@@ -131,6 +131,9 @@ class scopira::agent::local_agent : public scopira::agent::agent_i
     /// la calls this after a local task is terminated
     virtual void la_dead_task(scopira::tool::uuid taskid) { }
     /// the local_agent implementation simply does local deliverty
+    
+    /// called by cluster_agent::print_status
+    void la_print_status(void);
 
   private:
     static void* worker_func(void *data);

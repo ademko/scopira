@@ -19,6 +19,7 @@
 #endif
 
 #include <ctype.h>
+#include <stdlib.h>
 
 #include <scopira/tool/archiveflow.h>
 #include <scopira/tool/output.h>

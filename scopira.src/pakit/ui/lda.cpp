@@ -11,15 +11,20 @@
  *
  */
 
-#include <scopira/basekit/vectormath.h>
+#include <pakit/ui/lda.h>
+
+#include <stdlib.h>
+
+#include <sstream>
+
 #include <scopira/core/register.h>
+#include <scopira/basekit/vectormath.h>
 #include <scopira/coreui/label.h>
 #include <scopira/coreui/layout.h>
 #include <scopira/coreui/messagewindow.h>
+
 #include <pakit/lda.h>
-#include <pakit/ui/lda.h>
 #include <pakit/ui/models.h>
-#include <sstream>
 
 using namespace scopira::basekit;
 using namespace scopira::coreui;

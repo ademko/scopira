@@ -59,6 +59,11 @@ object::object(const object &o)
   assert(false && "[attempted to use the default object() copy ctor]");
 }
 
+void object::operator = (const object &rhs)
+{
+  assert(false && "[attempted to use object::operator=]");
+}
+
 object::~object()
 {
 #ifndef NDEBUG

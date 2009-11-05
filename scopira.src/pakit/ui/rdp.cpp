@@ -13,12 +13,15 @@
 
 #include <pakit/ui/rdp.h>
 
+#include <stdlib.h>
+
 #include <scopira/core/register.h>
 #include <scopira/basekit/vectormath.h>
 #include <scopira/basekit/color.h>
 #include <scopira/coreui/label.h>
 #include <scopira/coreui/viewmenu.h>
 #include <scopira/coreui/messagewindow.h>
+
 #include <pakit/rdp.h>
 #include <pakit/util.h>
 

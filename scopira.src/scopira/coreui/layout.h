@@ -18,6 +18,7 @@
 
 #include <list>
 #include <vector>
+#include <string>
 
 #include <scopira/tool/array.h>
 

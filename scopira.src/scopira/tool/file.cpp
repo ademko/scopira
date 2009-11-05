@@ -19,6 +19,7 @@
 #include <scopira/tool/platform.h>
 
 #include <ctype.h>
+#include <stdlib.h>
 
 #ifdef PLATFORM_win32
 // disable depreacted warnings

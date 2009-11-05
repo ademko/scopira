@@ -14,6 +14,7 @@
 #ifndef __INCLUDED__SCOPIRA_COREUI_ENTRY_H__
 #define __INCLUDED__SCOPIRA_COREUI_ENTRY_H__
 
+#include <string>
 #include <list>
 
 #include <gtk/gtk.h>

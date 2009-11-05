@@ -24,6 +24,13 @@ namespace scopira
     class hashoflow;
 
     /**
+     * Returns the string representation of the given hash.
+     *
+     * @author Aleksander Demko
+     */ 
+    std::string hexhash(const scopira::tool::basic_array<byte_t> &hash);
+
+    /**
      * Closes the given hashoflow and returns the hash, as a hex string
      * @author Aleksander Demko
      */

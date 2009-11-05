@@ -16,6 +16,7 @@
 #define __INCLUDED__SCOPIRA_COREUI_CANVASCOMMON_H__
 
 #include <vector>
+#include <string>
 
 #include <scopira/tool/array.h>
 #include <scopira/coreui/widget.h>

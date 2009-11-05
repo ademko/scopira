@@ -14,6 +14,7 @@
 #include <pakit/ui/funcs.h>
 
 #include <time.h>
+#include <stdlib.h>
 
 #include <scopira/core/register.h>
 #include <scopira/basekit/narray.h>

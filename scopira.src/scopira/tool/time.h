@@ -14,9 +14,15 @@
 #ifndef __INCLUDED__SCOPIRA_TOOL_TIME_H__
 #define __INCLUDED__SCOPIRA_TOOL_TIME_H__
 
+#include <scopira/tool/platform.h>
+
 #include <string>
 #include <time.h>
 #include <assert.h>
+
+#ifdef PLATFORM_UNIX
+#include <sys/time.h>
+#endif
 
 #include <scopira/tool/platform.h>
 #include <scopira/tool/export.h>

@@ -219,6 +219,16 @@ class scopira::tool::object
      * @author Aleksander Demko
      */
     object(const object &o);
+
+    /**
+     * Assignment operatror. Does nothing but thrown an assert, as assignment
+     * doesn't work for object.
+     * Descendants that want to imeplement operator = can do so, but they need
+     * no call anothing in object as none of its state is copyable.
+     *
+     * @author Aleksander Demko
+     */ 
+    void operator = (const object &rhs);
 };
 
 /**

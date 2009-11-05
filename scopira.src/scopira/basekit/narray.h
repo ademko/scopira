@@ -2138,9 +2138,9 @@ class scopira::basekit::niterator
     bool operator !=(const this_type &rhs) const { return !(dm_cur == rhs.dm_cur); }
 
     /// Increment
-    void operator++(void);
+    this_type operator++(void);
     /// Decrement
-    void operator--(void);
+    this_type operator--(void);
 
     // for random iterators
     /// Random iteration support method
@@ -2187,7 +2187,7 @@ scopira::basekit::niterator<T,DIM>::niterator(T *ptr, bool endptr, nindex<DIM> _
 }
 
 template <class T, int DIM>
-void scopira::basekit::niterator<T, DIM>::operator++(void)
+scopira::basekit::niterator<T,DIM> scopira::basekit::niterator<T, DIM>::operator++(void)
 {
   dm_ptr += dm_stride[0];
   ++dm_cur[0];
@@ -2197,10 +2197,11 @@ void scopira::basekit::niterator<T, DIM>::operator++(void)
     dm_cur[j] = 0;    // reset this digit
     ++dm_cur[j+1];    // carry over the next
   }
+  return *this;
 }
 
 template <class T, int DIM>
-void scopira::basekit::niterator<T, DIM>::operator--(void)
+scopira::basekit::niterator<T,DIM> scopira::basekit::niterator<T, DIM>::operator--(void)
 {
   for (size_t j=0; j<DIM; ++j) {
     // decrement the current digit
@@ -2208,13 +2209,14 @@ void scopira::basekit::niterator<T, DIM>::operator--(void)
       // done... no need to borrow futher
       --dm_cur[j];
       dm_ptr -= dm_stride[j];
-      return;
+      return *this;
     }
     // dm_cur[j] == 0, so well need to borrow
     // carry over the cur digits while doing some stride magic
     dm_cur[j] = dm_size[j]-1;    // reset this digit
     dm_ptr += dm_stride[j]*dm_cur[j];
   }
+  return *this;
 }
 
 
@@ -2789,9 +2791,8 @@ template <typename T> struct iterator_traits<scopira::basekit::niterator<T,1> >
     typedef std::random_access_iterator_tag iterator_category;
     typedef T value_type;
     typedef ptrdiff_t difference_type;
-    //make these when we need 'em :)
-    //typedef typename _Iterator::pointer           pointer;
-    //typedef typename _Iterator::reference         reference;
+    typedef T* pointer;
+    typedef T& reference;
 };
 }//namespace std
 

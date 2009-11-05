@@ -15,6 +15,7 @@
 #define __INCLUDED_SCOPIRA_TOOL_TREE_H__
 
 #include <map>
+#include <string>
 
 #include <scopira/tool/object.h>
 #include <scopira/tool/iterator.h>

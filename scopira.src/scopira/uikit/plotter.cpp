@@ -14,6 +14,7 @@
 #include <scopira/uikit/plotter.h>
 
 #include <math.h>
+#include <stdlib.h>
 
 #include <scopira/coreui/label.h>
 #include <scopira/basekit/vectormath.h>

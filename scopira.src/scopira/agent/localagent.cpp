@@ -782,6 +782,17 @@ void local_agent::la_update_slave_master(scopira::tool::uuid master,
   p->pm_peers = peers;
 }
 
+void local_agent::la_print_status(void)
+{
+  event_ptr<kernel_area> L(dm_kernel);
+  int x=0;
+
+  for (psmap_t::const_iterator ii=L->pm_ps.begin(); ii != L->pm_ps.end(); ++ii) {
+    OUTPUT << x << ": " << ii->first << '\n';
+    ++x;
+  }
+}
+
 void* local_agent::worker_func(void *data)
 {
   local_agent *here = reinterpret_cast<local_agent*>(data);

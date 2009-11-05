@@ -32,7 +32,9 @@ using namespace scopira::agent;
 using scopira::core::basic_loop;
 using scopira::basekit::narray;
 
+// if you want lots of verbose debug output...
 //#define CLUSTER_OUTPUT
+// if you want less output, often useful to leave on...
 #define CLUSTER_NEW_TASK
 
 #ifdef PLATFORM_win32
@@ -1381,13 +1383,16 @@ void* cluster_agent::admin_thread_func(void *herep)
   cluster_agent *here = reinterpret_cast<cluster_agent*>(herep);
   size_t queuesize = 0;
   bool doslow = false;
+  chrono since_last_status;
 
   assert(here->is_alive_object());
+
+  since_last_status.start();
 
   while (true) {
     scopira::tool::count_ptr<admin_msg> ev;
 
-    {
+    {//event_ptr<admin_area>
       event_ptr<admin_area> L(here->dm_adminarea);
 
       doslow = false;
@@ -1397,6 +1402,13 @@ void* cluster_agent::admin_thread_func(void *herep)
 #ifdef CLUSTER_OUTPUT
         OUTPUT << '.';
 #endif
+        if (since_last_status.get_running_time() > 30) {
+          since_last_status.stop();
+          since_last_status.start();
+#ifdef CLUSTER_NEW_TASK
+          here->print_status(L.get());
+#endif
+        }
       }
 
       if (!L->pm_alive)
@@ -1416,7 +1428,7 @@ void* cluster_agent::admin_thread_func(void *herep)
 
         queuesize = L->pm_main_queue.size();
       }
-    }
+    }//event_ptr<admin_area>
 
     // process the msg
 #ifdef CLUSTER_OUTPUT
@@ -1431,6 +1443,17 @@ void* cluster_agent::admin_thread_func(void *herep)
   }//while true
 
   return 0;
+}
+
+void cluster_agent::print_status(admin_area *area)
+{
+  //TODO
+  OUTPUT << "STATUS REPORT for: " << dm_nodespec.pm_uuid;
+  if (dm_nodespec.pm_ismaster)
+    OUTPUT << " (master)";
+  OUTPUT << "\n";
+  la_print_status();
+  OUTPUT << "END OF STATUS REPORT\n";
 }
 
 //
@@ -3044,13 +3067,14 @@ void cluster_agent::net_link::set_link(link *l)
   L.notify_all();
 }
 
-void cluster_agent::net_link::enqueue_msg(network_msg *msg)
+void cluster_agent::net_link::set_sendmsg(network_msg *msg)
 {
   event_ptr<queue_area> L(dm_queue);
 
   assert(msg->is_alive_object());
-  if (L->pm_sendmsg.get())
-    return;
+  //it's ok if we clobber the existing one
+  //if (L->pm_sendmsg.get())
+    //return;
 
   L->pm_sendmsg = msg;
 
@@ -3068,6 +3092,8 @@ void* cluster_agent::net_link::recv_thread_func(void *herep)
   size_t r;
 
   assert(here->is_alive_object());
+
+  inbuf.reserve(8*1024);
 
   while (true) {
  //OUTPUT << "Read block";
@@ -3178,12 +3204,15 @@ void* cluster_agent::net_link::send_thread_func(void *herep)
   uint32_t magic = magic_c;
   uint32_t sz;
 
+  outbuf.reserve(8*1024);
+
   assert(here->is_alive_object());
 
   here->dm_sock->write_array("ScopiraAgent/0.9", 16);   //must be a multiple of 8 (sizeof long @ 64bits) (magic)
 
   while (true) {
     scopira::tool::count_ptr<network_msg> ev;
+    count_ptr<link> dalink;
 
     {
       event_ptr<queue_area> L(here->dm_queue);
@@ -3195,8 +3224,12 @@ void* cluster_agent::net_link::send_thread_func(void *herep)
       if (!L->pm_alive)
         return 0;   // full exit
 
+      dalink = L->pm_link;
+      assert(dalink.get());     //this triggered on tryin to send msgs to tasks on agents that no longer exist //FIXME, this sometimes gets hit
+
       // grab the event we are sending
       ev = L->pm_sendmsg;
+      L->pm_sendmsg = 0;
     }
 
     // process this event... serialize and send it
@@ -3225,24 +3258,9 @@ void* cluster_agent::net_link::send_thread_func(void *herep)
 
     // this is tricky, as to avoid deadlock with the network
     outbuf.reset_resize(0); // nuke the buffer, back to its default size
-    count_ptr<link> dalink;
-    count_ptr<network_msg> newmsg;
-    {
-      event_ptr<queue_area> L(here->dm_queue);
 
-      dalink = L->pm_link;
-      assert(dalink.get());     //this triggered on tryin to send msgs to tasks on agents that no longer exist //FIXME, this sometimes gets hit
-      // do this outside of the lock
-    }
     //call this outside of the lock as to avoid dead lock
-    dalink->on_sent(ev.get(), newmsg);
-    {
-      event_ptr<queue_area> L(here->dm_queue);
-      //nuke the send msg and signal the master link (while IN this lock, yes)
-      assert(ev.get() == L->pm_sendmsg.get());
-      //finally, replace the working with the "new msg" (which might be null)
-      L->pm_sendmsg = newmsg;
-    }
+    dalink->on_sent(ev.get());
   }//while(true)
 
   return 0;
@@ -3333,8 +3351,9 @@ void cluster_agent::link::print_status(void)
     << '\n';
 }
 
-void cluster_agent::link::on_sent(network_msg *msg, count_ptr<network_msg> &newnetmsg)
+void cluster_agent::link::on_sent(network_msg *msg)
 {
+  assert(msg);
   assert(msg->is_alive_object());
 
   event_ptr<queue_area> L(dm_queue);
@@ -3348,10 +3367,11 @@ void cluster_agent::link::on_sent(network_msg *msg, count_ptr<network_msg> &newn
       foundit = true;
       break;
     }
-  assert(foundit);
+  //assert(foundit);    // found it may infact be false... this sometimes happens if the outbound queue was flushed
+  //after the event entered the send thread function, like during peer initialization
 
   // queue the next one, if any
-  unleash_a_msg(L, &newnetmsg);
+  unleash_a_msg(L, 0);
 }
 
 void cluster_agent::link::on_recv(network_msg *msg)
@@ -3386,13 +3406,15 @@ void cluster_agent::link::unleash_a_msg(scopira::tool::event_ptr<queue_area> &L,
         break;
       }
   } else
-    tosend = L->pm_sendq.front().get(); // just send any
+    tosend = L->pm_sendq.front().get(); // just send any message, ie the first one
 
   if (tosend.get()) {
     if (putnewmsghere)
       *putnewmsghere = tosend;
-    else
-      L->pm_link->enqueue_msg(tosend.get());
+    else {
+      assert(L->pm_link.get());
+      L->pm_link->set_sendmsg(tosend.get());
+    }
   }
 }
 

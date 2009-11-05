@@ -138,8 +138,8 @@ bool propiflow::read_bool(bool& ret)
     return false;
 
   char c;
-  bool success;
-  if (success = read_char(c))
+  bool success = read_char(c);
+  if (success)
     ret = (c == 'T');
 
   return success;

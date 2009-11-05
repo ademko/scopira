@@ -271,7 +271,8 @@ class scopira::agent::cluster_agent : public scopira::agent::local_agent
     static scopira::core::register_flow<cluster_agent::default_group_size_msg> r85553;
 
     /**
-     * The actually socket
+     * The actuall socket / network connection to a peer agent.
+     * It contains to threads for sending and receiving.
      * @author Aleksander Demko
      */
     class net_link : public virtual scopira::tool::object
@@ -288,7 +289,12 @@ class scopira::agent::cluster_agent : public scopira::agent::local_agent
         {
           link *pm_link;
 
-          scopira::tool::count_ptr<network_msg> pm_sendmsg;   // queue of 1
+          // The next message the sending thread should send.
+          // Upon sending the message, the sending thread will signal the host-link
+          // queue to remove the sent message from its queue, hense we dont
+          // need a full queue here
+          // This is like a queue of size 1
+          scopira::tool::count_ptr<network_msg> pm_sendmsg;
 
           bool pm_alive;            // should this link die asap?
 
@@ -331,7 +337,7 @@ class scopira::agent::cluster_agent : public scopira::agent::local_agent
          * Enqueue the given msg to this link's send queue.
          * @author Aleksander Demko
          */ 
-        void enqueue_msg(network_msg *msg);
+        void set_sendmsg(network_msg *msg);
 
       private:
         static void* recv_thread_func(void *herep);
@@ -339,7 +345,7 @@ class scopira::agent::cluster_agent : public scopira::agent::local_agent
     };
 
     /**
-     * a link (and possible the connection) to another agent
+     * A link (and possible the network connection (net_link)) to another agent peer.
      * @author Aleksander Demko
      */ 
     class link : public virtual scopira::tool::object
@@ -401,11 +407,13 @@ class scopira::agent::cluster_agent : public scopira::agent::local_agent
         //bool is_connected(void);
 
         // handlers from net_link
-        void on_sent(network_msg *msg, scopira::tool::count_ptr<network_msg> &newnetmsg);
+        void on_sent(network_msg *msg);
         void on_recv(network_msg *msg);
         // called only when the connection is *dropped* (ie. not on natural exits)
         void on_close_net_link(void);
       private:
+        // grab the next message from the queue. if putnewmsghere is non-null, it will be placed there, otherwise
+        // it will be enqueued to the actually link
         void unleash_a_msg(scopira::tool::event_ptr<queue_area> &L, scopira::tool::count_ptr<network_msg> *putnewmsghere);
     };
 
@@ -566,6 +574,7 @@ class scopira::agent::cluster_agent : public scopira::agent::local_agent
     scopira::tool::netflow dm_listensocket;
     /// udp socket (only used in servers) (0 if not used)
     scopira::tool::udpflow dm_udpsocket;
+
     /// listen thread
     scopira::tool::thread dm_listenthread;
     /// udp listening thread... only active if dm_udpsocket!=0
@@ -636,6 +645,10 @@ class scopira::agent::cluster_agent : public scopira::agent::local_agent
     static void* listen_thread_func(void *herep);
     static void* udp_thread_func(void *herep);
     static void* admin_thread_func(void *herep);
+
+    // this is called periodically by admin_thread_func
+    // for debug/output/status purposes
+    void print_status(admin_area *area);
 };
 
 #endif

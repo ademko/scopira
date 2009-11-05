@@ -18,6 +18,10 @@
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
+# a project lins is always required, it seems
+# under win32, atleast, weird errors are emmited if this is not used
+PROJECT(Project)
+
 #BUILD_SHARED_LIBS option
 SET(BUILD_SHARED_LIBS "YES" CACHE BOOL "Build shared libraries rather than static ones")
 
@@ -26,8 +30,10 @@ GET_FILENAME_COMPONENT(THIS_PATH ${CMAKE_CURRENT_LIST_FILE} PATH)
 
 #SCOPIRA_LIBXML2_BUILD option
 IF(EXISTS ${THIS_PATH}/scopira/tool/xml.h)
-  INCLUDE(FindLibXml2)
-  SET(SCOPIRA_LIBXML2_BUILD ${LIBXML2_FOUND} CACHE BOOL "Build the libxml2 based Scopira XML library")
+  SET(SCOPIRA_LIBXML2_BUILD "NO" CACHE BOOL "Build the libxml2 based Scopira XML library")
+IF(SCOPIRA_LIBXML2_BUILD)
+INCLUDE(FindLibXml2)
+ENDIF(SCOPIRA_LIBXML2_BUILD)
 ENDIF(EXISTS ${THIS_PATH}/scopira/tool/xml.h)
 
 #SCOPIRA_GTKUI_BUILD
@@ -35,12 +41,12 @@ IF(EXISTS ${THIS_PATH}/scopira/coreui/loop.h AND UNIX)
   INCLUDE(FindPkgConfig)
   pkg_search_module(GTK2 REQUIRED gtk+-2.0 gthread-2.0)
   pkg_search_module(GTHREAD REQUIRED gthread-2.0)
-  SET(SCOPIRA_GTKUI_BUILD ${GTK2_FOUND} CACHE BOOL "Build the (older) GTK+2 based Scopira User Interface library")
+  SET(SCOPIRA_GTKUI_BUILD "NO" CACHE BOOL "Build the (older) GTK+2 based Scopira User Interface library")
 ENDIF(EXISTS ${THIS_PATH}/scopira/coreui/loop.h AND UNIX)
 
 #PAKIT/PAUKIT (together)
 IF(EXISTS ${THIS_PATH}/pakit/types.h AND UNIX)
-  SET(SCOPIRA_PAKIT_BUILD "YES" CACHE BOOL "Build the PAKit (Pattern Analysis) kit")
+  SET(SCOPIRA_PAKIT_BUILD "NO" CACHE BOOL "Build the PAKit (Pattern Analysis) kit")
 ENDIF(EXISTS ${THIS_PATH}/pakit/types.h AND UNIX)
 
 set(SCOPIRA_SOURCES 
@@ -110,7 +116,7 @@ FIND_LIBRARY(UUID_LIBRARY uuid DOC "libuuid library location")
 ENDIF(NOT WIN32)
 
 # scopira library
-ADD_LIBRARY(scopira ${SCOPIRA_SOURCES} )
+ADD_LIBRARY(scopira ${SCOPIRA_SOURCES})
 
 IF(WIN32)
   ADD_DEFINITIONS(-DPLATFORM_win32)
@@ -127,9 +133,9 @@ else(WIN32)
 ENDIF(WIN32)
 
 INCLUDE_DIRECTORIES(${THIS_PATH} ${PTHREADS_INCLUDE_DIR})
-IF(${CMAKE_SIZEOF_VOID_P} GREATER 4)
+IF(CMAKE_SIZEOF_VOID_P GREATER 4)
   ADD_DEFINITIONS(-DPLATFORM_64)
-ENDIF(${CMAKE_SIZEOF_VOID_P} GREATER 4)
+ENDIF(CMAKE_SIZEOF_VOID_P GREATER 4)
 
 TARGET_LINK_LIBRARIES(scopira
   ${CMAKE_THREAD_LIBS_INIT}

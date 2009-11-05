@@ -14,6 +14,8 @@
 //BBlibs scopira
 //BBtargets scopiraagent.exe
 
+#include <stdlib.h>
+
 #include <scopira/tool/url.h>
 #include <scopira/tool/thread.h>
 #include <scopira/tool/util.h>
