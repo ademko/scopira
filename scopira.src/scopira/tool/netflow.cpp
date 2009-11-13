@@ -33,6 +33,7 @@
 #else
 #include <netdb.h>
 #include <sys/socket.h>
+#include <netinet/tcp.h>      // for TCP_NODELAY
 #include <netinet/in.h>
 #include <sys/un.h>
 #include <sys/poll.h>
@@ -296,10 +297,10 @@ netflow::netflow(void)
 }
 
 /// opening constructor
-netflow::netflow(const netaddr *_addr, int _port)
+netflow::netflow(const netaddr *_addr, int _port, int socket_options)
   : dm_open(false), dm_fail(true), dm_sfail(true)
 {
-  open(_addr, _port);
+  open(_addr, _port, socket_options);
 }
 
 /// destructor
@@ -420,7 +421,7 @@ size_t netflow::read_short(byte_t* _buf, size_t _maxsize)
   return lastread;
 }
 
-void netflow::open(const netaddr *_addr, int _port)
+void netflow::open(const netaddr *_addr, int _port, int socket_options)
 {
   sockaddr_in nam;
   int r;
@@ -449,6 +450,11 @@ void netflow::open(const netaddr *_addr, int _port)
   // connect the socket to remote host
   nam.sin_family = AF_INET;
   nam.sin_port = htons(_port);
+
+  if (socket_options & tcp_nodelay_c) {
+    int nodelay_flag = 1;
+    setsockopt(dm_sock, IPPROTO_TCP, TCP_NODELAY, &nodelay_flag, sizeof(nodelay_flag));
+  }
 
   // server mode
   if (dm_server) {

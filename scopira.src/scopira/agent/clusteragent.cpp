@@ -541,7 +541,8 @@ cluster_agent::cluster_agent(void)
 
     // start the port listener thread
     for (i=0; i<100; ++i) {
-      dm_listensocket.open(0, dm_listenport+i);
+      // listen socket also needs tcp_nodelay_c as i guess new sockets accepted() from this will also get the flag
+      dm_listensocket.open(0, dm_listenport+i, netflow::tcp_nodelay_c);
       if (!dm_listensocket.failed())
         break;    // success!
     }
@@ -3022,7 +3023,8 @@ bool cluster_agent::net_link::make_link(const scopira::tool::url &remote,
     return false;
 
   // connect
-  count_ptr<netflow> nt = new netflow(&recs.get_addr(), remote.get_port());
+  // need tcp_nodelay_c otherwise the latency kills performance
+  count_ptr<netflow> nt = new netflow(&recs.get_addr(), remote.get_port(), netflow::tcp_nodelay_c);
 
   if (nt->failed())
     return false;

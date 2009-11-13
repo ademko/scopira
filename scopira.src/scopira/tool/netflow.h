@@ -116,8 +116,11 @@ SCOPIRA_EXPORT scopira::tool::oflow_i& operator <<(scopira::tool::oflow_i& o, co
  */
 class scopira::tool::netflow : public scopira::tool::iflow_i, public scopira::tool::oflow_i
 {
+  public:
+    enum {
+      tcp_nodelay_c = 1,
+    };
   private:    // typedef socket handles to a common name
-
 #ifdef PLATFORM_win32
     typedef SOCKET handle_t;
 #else
@@ -155,7 +158,7 @@ class scopira::tool::netflow : public scopira::tool::iflow_i, public scopira::to
      *
      * @author Aleksander Demko
      */
-    SCOPIRA_EXPORT netflow(const netaddr * _addr, int _port);
+    SCOPIRA_EXPORT netflow(const netaddr * _addr, int _port, int socket_options = 0);
     /// destructor
     SCOPIRA_EXPORT virtual ~netflow();
 
@@ -178,7 +181,7 @@ class scopira::tool::netflow : public scopira::tool::iflow_i, public scopira::to
      * (ie. it can be a termporary).
      * @author Aleksander Demko
      */ 
-    SCOPIRA_EXPORT void open(const netaddr * _addr, int _port);
+    SCOPIRA_EXPORT void open(const netaddr * _addr, int _port, int socket_options = 0);
     /// close the file
     SCOPIRA_EXPORT void close(void);
 
