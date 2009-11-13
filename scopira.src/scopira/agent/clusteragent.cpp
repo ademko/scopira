@@ -299,6 +299,7 @@ class cluster_agent::send_data_msg : public cluster_agent::network_msg
     virtual bool load(scopira::tool::iobjflow_i& in);
     virtual void save(scopira::tool::oobjflow_i& out) const;
     virtual const char * get_debug_name(void) const { return "send_data_msg"; }
+    virtual short get_type(void) const { return type_instant_c; }
     virtual void execute_agent(cluster_agent &e, cluster_agent::link *lk);
 };
 
