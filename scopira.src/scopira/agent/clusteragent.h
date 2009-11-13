@@ -568,7 +568,7 @@ class scopira::agent::cluster_agent : public scopira::agent::local_agent
     /// the xtion synx area
     scopira::tool::event_area<xtion_area> dm_xtionarea;
     /// the resolve/dns cache area
-    scopira::tool::event_area<resolve_area> dm_resolvearea;
+    scopira::tool::rw_area<resolve_area> dm_resolvearea;
 
     /// listen socket
     scopira::tool::netflow dm_listensocket;

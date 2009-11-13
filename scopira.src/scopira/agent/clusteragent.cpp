@@ -1115,8 +1115,8 @@ void cluster_agent::do_resolve_xtion(scopira::tool::uuid id, bool dotaskresolve,
 {
   // lets first check the cache
   {
-    event_ptr<resolve_area> L(dm_resolvearea);
-    resolvemap_t::iterator ii;
+    read_locker_ptr<resolve_area> L(dm_resolvearea);
+    resolvemap_t::const_iterator ii;
 
     ii = L->pm_resolves.find(id);
 
@@ -1148,7 +1148,7 @@ void cluster_agent::do_resolve_xtion(scopira::tool::uuid id, bool dotaskresolve,
 
   // add it to the cache for next time
   {
-    event_ptr<resolve_area> L(dm_resolvearea);
+    write_locker_ptr<resolve_area> L(dm_resolvearea);
 
     L->pm_resolves[id] = out;
   }
@@ -1773,7 +1773,7 @@ void cluster_agent::remove_link_msg::execute_agent(cluster_agent &e)
 
   // second, flush my dns cache to to be sure (perhaps draconian, whatever)
   {
-    event_ptr<resolve_area> L(e.dm_resolvearea);
+    write_locker_ptr<resolve_area> L(e.dm_resolvearea);
 
     L->pm_resolves.clear();
   }
