@@ -223,7 +223,7 @@ void local_agent::reg_context(scopira::tool::uuid &ctxid, taskmsg_reactor_i *rea
   }
 
   {
-    event_ptr<kernel_area> L(dm_kernel);
+    write_locker_ptr<ps_area> L(dm_psarea);
 
     L->pm_ps[ctxid] = p;
   }
@@ -234,7 +234,7 @@ void local_agent::reg_context(scopira::tool::uuid &ctxid, taskmsg_reactor_i *rea
 void local_agent::unreg_context(scopira::tool::uuid ctxid)
 {
   assert(is_alive_object());
-  event_ptr<kernel_area> L(dm_kernel);
+  write_locker_ptr<ps_area> L(dm_psarea);
 
   assert(!ctxid.is_zero());
   assert(L->pm_ps.find(ctxid) != L->pm_ps.end());
@@ -250,9 +250,9 @@ int local_agent::find_services(scopira::tool::uuid &serviceid, scopira::basekit:
     // send back an agent list instead
     targetlist.push_back(where_this_c);
   } else {
-    event_ptr<kernel_area> L(dm_kernel);
+    read_locker_ptr<ps_area> L(dm_psarea);
 
-    for (psmap_t::iterator ii=L->pm_ps.begin(); ii != L->pm_ps.end(); ++ii)
+    for (psmap_t::const_iterator ii=L->pm_ps.begin(); ii != L->pm_ps.end(); ++ii)
       if ((*ii->second).pm_services.count(serviceid))
         targetlist.push_back(ii->first);
   }
@@ -303,7 +303,7 @@ scopira::tool::uuid local_agent::launch_task(const std::type_info &t, scopira::t
 
   // insert the process
   {
-    event_ptr<kernel_area> L(dm_kernel);
+    write_locker_ptr<ps_area> L(dm_psarea);
 
     L->pm_ps[psid] = p;
   }
@@ -352,7 +352,7 @@ scopira::tool::uuid local_agent::launch_group(int numps, const std::type_info &t
 
   // insert the processes
   {
-    event_ptr<kernel_area> L(dm_kernel);
+    write_locker_ptr<ps_area> L(dm_psarea);
 
     for (x=0; x<id.size(); ++x)
       L->pm_ps[id[x]] = p[x];
@@ -406,7 +406,7 @@ void local_agent::launch_slaves(scopira::tool::uuid masterid,
 
   // insert the processes
   {
-    event_ptr<kernel_area> L(dm_kernel);
+    write_locker_ptr<ps_area> L(dm_psarea);
 
     for (x=1; x<peers.size(); ++x)
       L->pm_ps[peers[x]] = p[x];
@@ -429,8 +429,8 @@ void local_agent::kill_task(scopira::tool::uuid ps)
 
   // find the process and set its kill flag
   {
-    event_ptr<kernel_area> L(dm_kernel);
-    psmap_t::iterator ii;
+    read_locker_ptr<ps_area> L(dm_psarea);
+    psmap_t::const_iterator ii;
 
     ii = L->pm_ps.find(ps);
 
@@ -460,8 +460,8 @@ bool local_agent::wait_task(scopira::tool::uuid ps, int msec)
 
   // find the process and set its kill flag
   {
-    event_ptr<kernel_area> L(dm_kernel);
-    psmap_t::iterator ii;
+    read_locker_ptr<ps_area> L(dm_psarea);
+    psmap_t::const_iterator ii;
 
     ii = L->pm_ps.find(ps);
 
@@ -499,8 +499,8 @@ bool local_agent::is_alive_task(scopira::tool::uuid ps)
 
   // find the process and set its kill flag
   {
-    event_ptr<kernel_area> L(dm_kernel);
-    psmap_t::iterator ii;
+    read_locker_ptr<ps_area> L(dm_psarea);
+    psmap_t::const_iterator ii;
 
     ii = L->pm_ps.find(ps);
 
@@ -522,8 +522,8 @@ bool local_agent::is_killed_task(scopira::tool::uuid ps)
 
   // find the process and set its kill flag
   {
-    event_ptr<kernel_area> L(dm_kernel);
-    psmap_t::iterator ii;
+    read_locker_ptr<ps_area> L(dm_psarea);
+    psmap_t::const_iterator ii;
 
     ii = L->pm_ps.find(ps);
 
@@ -631,9 +631,9 @@ void local_agent::send_msg_bcast(scopira::tool::uuid src, scopira::tool::uuid de
 
   // find all the local tasks that support this service
   {
-    event_ptr<kernel_area> L(dm_kernel);
+    read_locker_ptr<ps_area> L(dm_psarea);
 
-    for (psmap_t::iterator ii=L->pm_ps.begin(); ii != L->pm_ps.end(); ++ii)
+    for (psmap_t::const_iterator ii=L->pm_ps.begin(); ii != L->pm_ps.end(); ++ii)
       if ((*ii->second).pm_services.count(destserviceid))
         targetlist.push_back(ii->first);
   }
@@ -685,7 +685,7 @@ bool local_agent::la_launch_task(int myindex, const narray<uuid> &taskids, const
   if (phase == 2) {
     // ok, just do phase 2 (enable our already created event)
     {
-      event_ptr<kernel_area> L(dm_kernel);
+      write_locker_ptr<ps_area> L(dm_psarea);
 
       assert(L->pm_ps.find(taskids[myindex]) != L->pm_ps.end());
 
@@ -722,7 +722,7 @@ bool local_agent::la_launch_task(int myindex, const narray<uuid> &taskids, const
 
   // insert the processes
   {
-    event_ptr<kernel_area> L(dm_kernel);
+    write_locker_ptr<ps_area> L(dm_psarea);
 
     L->pm_ps[taskids[myindex]] = p;
   }
@@ -755,7 +755,7 @@ scopira::tool::uuid local_agent::la_launch_proxy(agent_task_i *at)
 
   // insert the processes
   {
-    event_ptr<kernel_area> L(dm_kernel);
+    write_locker_ptr<ps_area> L(dm_psarea);
 
     L->pm_ps[theid] = p;
   }
@@ -768,8 +768,8 @@ scopira::tool::uuid local_agent::la_launch_proxy(agent_task_i *at)
 void local_agent::la_update_slave_master(scopira::tool::uuid master,
     narray<uuid> &peers)
 {
-  event_ptr<kernel_area> L(dm_kernel);
-  process_t *p;
+  read_locker_ptr<ps_area> L(dm_psarea);
+  count_ptr<process_t> p;
 
   assert(L->pm_ps.find(master) != L->pm_ps.end());
 
@@ -784,7 +784,7 @@ void local_agent::la_update_slave_master(scopira::tool::uuid master,
 
 void local_agent::la_print_status(void)
 {
-  event_ptr<kernel_area> L(dm_kernel);
+  read_locker_ptr<ps_area> L(dm_psarea);
   int x=0;
 
   for (psmap_t::const_iterator ii=L->pm_ps.begin(); ii != L->pm_ps.end(); ++ii) {
@@ -810,7 +810,7 @@ void* local_agent::worker_func(void *data)
 
     {
       event_ptr<kernel_area> L(here->dm_kernel);
-      psmap_t::iterator nextii, curii;
+      psmap_t::const_iterator nextii, curii;
 
       while (alive && ps.is_null()) {
         if (!L->pm_alive) {
@@ -818,60 +818,64 @@ void* local_agent::worker_func(void *data)
           break;
         }
 
-        // grab the next job, if any
-        if (L->pm_nextps.is_zero())
-          nextii = L->pm_ps.begin();
-        else {
-          nextii = L->pm_ps.find(L->pm_nextps);
-          if (nextii == L->pm_ps.end())
-            nextii = L->pm_ps.begin();
-        }
+				{
+					read_locker_ptr<ps_area> PS(here->dm_psarea);
 
-        // ok, so nextii should be setup, lets find the next ps to process
-        if (nextii != L->pm_ps.end()) {
-          curii = nextii;
-          // find the next availabe process to run
-          while (true) {
-            count_ptr<process_t> subps;
+					// grab the next job, if any
+					if (L->pm_nextps.is_zero())
+						nextii = PS->pm_ps.begin();
+					else {
+						nextii = PS->pm_ps.find(L->pm_nextps);
+						if (nextii == PS->pm_ps.end())
+							nextii = PS->pm_ps.begin();
+					}
 
-            subps = curii->second;
-            assert(subps.get());
-            {
-              event_ptr<process_t::state_area> PL(subps->pm_state);
+					// ok, so nextii should be setup, lets find the next ps to process
+					if (nextii != PS->pm_ps.end()) {
+						curii = nextii;
+						// find the next availabe process to run
+						while (true) {
+							count_ptr<process_t> subps;
 
-              if (
-                  // ready to run
-                  PL->pm_mode == process_t::ps_ready_c ||
-                  // sleeping on a msg, and a msg comes
-                  (PL->pm_mode == process_t::ps_sleep_c && PL->pm_onmsg && !PL->pm_msgqueue.empty()) ||
-                  // sleeping on a timeout, and that time comes
-                  (PL->pm_mode == process_t::ps_sleep_c && PL->pm_ontime != 0 && here->dm_agentclock.get_running_time() >= PL->pm_ontime) ||
-                  // to be killed
-                  (PL->pm_mode == process_t::ps_sleep_c && PL->pm_killreq)
-                 ) {
-                // BINGO, we found a process we can run
-                PL->pm_mode = process_t::ps_running_c;
-                ps = subps;
-                // set the pm_nextps
-                ++curii;
-                if (curii == L->pm_ps.end())
-                  L->pm_nextps = uuid();
-                else
-                  L->pm_nextps = curii->first;
-                break;
-              }
-            }// state area lock
+							subps = curii->second;
+							assert(subps.get());
+							{
+								event_ptr<process_t::state_area> PL(subps->pm_state);
 
-            // not a runnable one? increment
-            ++curii;
-            if (curii == L->pm_ps.end())
-              curii = L->pm_ps.begin();
+								if (
+										// ready to run
+										PL->pm_mode == process_t::ps_ready_c ||
+										// sleeping on a msg, and a msg comes
+										(PL->pm_mode == process_t::ps_sleep_c && PL->pm_onmsg && !PL->pm_msgqueue.empty()) ||
+										// sleeping on a timeout, and that time comes
+										(PL->pm_mode == process_t::ps_sleep_c && PL->pm_ontime != 0 && here->dm_agentclock.get_running_time() >= PL->pm_ontime) ||
+										// to be killed
+										(PL->pm_mode == process_t::ps_sleep_c && PL->pm_killreq)
+									 ) {
+									// BINGO, we found a process we can run
+									PL->pm_mode = process_t::ps_running_c;
+									ps = subps;
+									// set the pm_nextps
+									++curii;
+									if (curii == PS->pm_ps.end())
+										L->pm_nextps = uuid();
+									else
+										L->pm_nextps = curii->first;
+									break;
+								}
+							}// state area lock
 
-            // have we looped back?
-            if (curii == nextii)
-              break;  // done, nothing found
-          }// while (true) (hunt for runnable)
-        }//if-hunt
+							// not a runnable one? increment
+							++curii;
+							if (curii == PS->pm_ps.end())
+								curii = PS->pm_ps.begin();
+
+							// have we looped back?
+							if (curii == nextii)
+								break;  // done, nothing found
+						}// while (true) (hunt for runnable)
+					}//if-hunt
+				}//read_locker_ptr<ps_area>
 
         if (ps.is_null())
           L.wait(1000);   // gotta wait for something to do (need the timeout to constantly check of time-sleep jobs)
@@ -929,7 +933,7 @@ void* local_agent::worker_func(void *data)
         // terminate the job
         // detach it from the map
         {
-          event_ptr<kernel_area> L(here->dm_kernel);
+          write_locker_ptr<ps_area> L(here->dm_psarea);
 
           assert(L->pm_ps.find(ps->pm_id) != L->pm_ps.end());
           L->pm_ps.erase(L->pm_ps.find(ps->pm_id));
@@ -955,8 +959,8 @@ void* local_agent::worker_func(void *data)
 
 void local_agent::get_ps(scopira::tool::uuid id, scopira::tool::count_ptr<process_t> &foundps) const
 {
-  event_ptr<kernel_area> L(dm_kernel);
-  psmap_t::iterator ii;
+  read_locker_ptr<ps_area> L(dm_psarea);
+  psmap_t::const_iterator ii;
 
   ii = L->pm_ps.find(id);
 
@@ -970,12 +974,17 @@ void local_agent::get_ps(scopira::tool::uuid id, scopira::tool::count_ptr<proces
 
 void local_agent::set_min_threads(void)
 {
-  event_ptr<kernel_area> L(dm_kernel);
   size_t newnumt = 0;
+
+	{
+		read_locker_ptr<ps_area> L(dm_psarea);
+  	newnumt = L->pm_ps.size();
+	}
+
+  event_ptr<kernel_area> L(dm_kernel);
 
   // just using pm_ps->size() is simplest.
   // trying to be tricky (and using numbers small with this) had unforseen issues.
-  newnumt = L->pm_ps.size();
 
   while (L->pm_threads.size() < newnumt) {
     thread *t;
@@ -998,8 +1007,8 @@ void local_agent::kill_all_local_tasks(void)
 
   // find the process and set its kill flag
   {
-    event_ptr<kernel_area> L(dm_kernel);
-    psmap_t::iterator ii;
+    read_locker_ptr<ps_area> L(dm_psarea);
+    psmap_t::const_iterator ii;
 
     pslist.resize(L->pm_ps.size());
     jj = pslist.begin();
@@ -1031,4 +1040,5 @@ void local_agent::process_t::load_services(const std::type_info &nfo)
   for (int x=0; x<serv.size(); ++x)
     pm_services.insert(serv[x]);
 }
+
 

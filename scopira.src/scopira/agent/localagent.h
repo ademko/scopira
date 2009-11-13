@@ -220,9 +220,8 @@ class scopira::agent::local_agent : public scopira::agent::agent_i
     typedef std::map<scopira::tool::uuid, scopira::tool::count_ptr<process_t> > psmap_t;
     typedef std::vector<scopira::tool::count_ptr<scopira::tool::thread> > threadlist_t;
 
+		// always lock this before locking the ps_area, if youre gonna lock both!
     struct kernel_area {
-      psmap_t pm_ps;    // the processes
-
       bool pm_alive;    // if this is false, Ive been sent the kill signal.
 
       threadlist_t pm_threads;
@@ -231,6 +230,9 @@ class scopira::agent::local_agent : public scopira::agent::agent_i
 
       kernel_area(void) : pm_alive(true) { } // ctor
     };
+		struct ps_area {
+      psmap_t pm_ps;    // the processes
+		};
 
     scopira::tool::uuid_generator dm_uugen;
 
@@ -240,6 +242,7 @@ class scopira::agent::local_agent : public scopira::agent::agent_i
 
     // never try to lock the kernel if youre holdin any process locks!
     scopira::tool::event_area<kernel_area> dm_kernel; // my "OS kernel"
+		scopira::tool::rw_area<ps_area> dm_psarea;
 
   private:
     void get_ps(scopira::tool::uuid id, scopira::tool::count_ptr<process_t> &foundps) const;
@@ -251,4 +254,5 @@ class scopira::agent::local_agent : public scopira::agent::agent_i
 };
 
 #endif
+
 
