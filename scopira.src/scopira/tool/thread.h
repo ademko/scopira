@@ -53,6 +53,7 @@ namespace scopira
     template <class T> class rw_area;
 
     template <class T> class area_ptr;
+    template <class T> class const_area_ptr;
     template <class T> class locker_ptr;
     template <class T> class event_ptr;
     template <class T> class read_locker_ptr;
@@ -419,6 +420,59 @@ template <class T> class scopira::tool::area_ptr
 };
 
 /**
+ * This is the basis for all locking pointer contructs.
+ * This version simply converts the volatile structure
+ * to a non volatile one.
+ *
+ * Descendants do an addition lock/unlock operation, useful
+ * for concurent programming.
+ *
+ * This version provices const access, useful for read_locker_ptr.
+ *
+ * @author Aleksander Demko
+ */ 
+template <class T> class scopira::tool::const_area_ptr
+{
+  protected:
+    const T* dm_ptr;
+
+  public:
+    /**
+     * Public ctor, for shared_area.
+     * @author Aleksander Demko
+     */ 
+    const_area_ptr(const shared_area<T>& ref) : dm_ptr(const_cast<const T*>(&ref.pm_data)) { }
+    /**
+     * Public ctor, for rw_area.
+     * @author Aleksander Demko
+     */ 
+    const_area_ptr(const rw_area<T>& ref) : dm_ptr(const_cast<const T*>(&ref.pm_data)) { }
+
+  protected:
+    /**
+     * Inheritance ctor.
+     * @author Aleksander Demko
+     */ 
+    const_area_ptr(const volatile T& ref) : dm_ptr(const_cast<T*>(&ref)) { }
+
+  public:
+    /// members
+    const T* get(void) { return dm_ptr; }
+    /// pointer behaviour
+    const T& operator*(void) { return *dm_ptr; }
+    /// pointer behaviour
+    const T* operator->(void) { return dm_ptr; }
+
+    /**
+     * reassigns the pointer. this should be called, perhaps, after
+     * getting a notifiction (ie. after a wait() call on the condition)
+     *
+     * @author Aleksander Demko
+     */ 
+    void reset(void) { dm_ptr = const_cast<const T*>(const_cast<volatile T*>(dm_ptr)); }  // this is whacky :)
+};
+
+/**
  * similar to locker, but this also a "ptr" like class wrapper
  * around the given object. it removes the volatile modifier from
  * the given class for the duration of it's existance
@@ -496,14 +550,14 @@ template <class T> class scopira::tool::event_ptr : public scopira::tool::locker
  *
  * @author Aleksander Demko
  */ 
-template <class T> class scopira::tool::read_locker_ptr : public scopira::tool::area_ptr<T>
+template <class T> class scopira::tool::read_locker_ptr : public scopira::tool::const_area_ptr<T>
 {
   protected:
     scopira::tool::rwlock & dm_rw;
 
   public:
     /// ctor
-    read_locker_ptr(const rw_area<T>& ref) : area_ptr<T>(ref.pm_data), dm_rw(ref.pm_rwlock) { dm_rw.read_lock(); }
+    read_locker_ptr(const rw_area<T>& ref) : const_area_ptr<T>(ref.pm_data), dm_rw(ref.pm_rwlock) { dm_rw.read_lock(); }
 
     /// dtor
     ~read_locker_ptr() { dm_rw.unlock(); }
@@ -528,4 +582,5 @@ template <class T> class scopira::tool::write_locker_ptr : public scopira::tool:
 };
 
 #endif
+
 
