@@ -29,6 +29,7 @@ using namespace std;
 stringflow::stringflow(void)
   : dm_mode(0)
 {
+  open();
 }
 
 stringflow::stringflow(size_t res)

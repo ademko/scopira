@@ -50,7 +50,7 @@ class scopira::tool::stringflow : public scopira::tool::iflow_i, public scopira:
       trunc_c = 2048
     };
 
-    /// default constructor
+    /// default, open for output with the given reserve
     SCOPIRA_EXPORT stringflow(void);
     /// default, open for output with the given reserve
     SCOPIRA_EXPORT explicit stringflow(size_t res);
