@@ -60,6 +60,7 @@ set(SCOPIRA_SOURCES
   ${THIS_PATH}/scopira/agent/register.cpp
   ${THIS_PATH}/scopira/agent/task.cpp
   ${THIS_PATH}/scopira/agent/uptimeservice.cpp
+  ${THIS_PATH}/scopira/agent/timeslice.cpp
   ${THIS_PATH}/scopira/basekit/color.cpp
   ${THIS_PATH}/scopira/basekit/math.cpp
   ${THIS_PATH}/scopira/basekit/matrixmath.cpp
