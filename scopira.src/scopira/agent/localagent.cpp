@@ -775,7 +775,7 @@ void local_agent::la_update_slave_master(scopira::tool::uuid master,
 
   p = L->pm_ps.find(master)->second.get();
 
-  assert(p);
+  assert(p.get());
   // update its info to reflect its new, master status
   assert(p->pm_index == 0);
   assert(p->pm_peers.size() == 1);
