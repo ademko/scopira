@@ -38,6 +38,7 @@
 #include <sys/un.h>
 #include <sys/poll.h>
 #include <unistd.h>
+#include <stdio.h>
 #include <errno.h>
 #endif
 

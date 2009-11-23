@@ -20,6 +20,7 @@
 // disable depreacted warnings
 #pragma warning(disable:4996)
 #else
+#include <stdio.h>
 #include <unistd.h>
 #endif
 
