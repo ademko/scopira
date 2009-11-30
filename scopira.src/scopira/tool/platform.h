@@ -24,16 +24,16 @@
 // PLATFORM_DEBUG    defined if building a debug set
 //
 // ONE of the following will always be defined
-// PLATFORM_linux    linux on x86 or x86_64 (AMD64)
+// PLATFORM_linux    linux on x86 or x86_64 (64-bit)
 // PLATFORM_irix     SGI IRIX on MIPS
-// PLATFORM_win32    Microsoft Windows on x86 (32-bit only, for now)
-// PLATFORM_osx      Apple Macintosh OS X (not yet used)
+// PLATFORM_win32    Microsoft Windows (32 and 64-bit)
+// PLATFORM_osx      Apple Macintosh OS X (Intel only)
 //
 
-#define SCOPIRA_VERSION "0.9.11"
+#define SCOPIRA_VERSION "0.9.12"
 #define SCOPIRA_VERSION_MAJOR 0
 #define SCOPIRA_VERSION_MINOR 9
-#define SCOPIRA_VERSION_SUBMINOR 11
+#define SCOPIRA_VERSION_SUBMINOR 12
 
 #if !defined(PLATFORM_win32) && defined(WIN32)
 #define PLATFORM_win32
