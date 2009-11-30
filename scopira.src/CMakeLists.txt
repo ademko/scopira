@@ -39,8 +39,8 @@ ENDIF(EXISTS ${THIS_PATH}/scopira/tool/xml.h)
 #SCOPIRA_GTKUI_BUILD
 IF(EXISTS ${THIS_PATH}/scopira/coreui/loop.h AND UNIX)
   INCLUDE(FindPkgConfig)
-  pkg_search_module(GTK2 REQUIRED gtk+-2.0 gthread-2.0)
-  pkg_search_module(GTHREAD REQUIRED gthread-2.0)
+  pkg_search_module(GTK2 gtk+-2.0 gthread-2.0)
+  pkg_search_module(GTHREAD gthread-2.0)
   SET(SCOPIRA_GTKUI_BUILD "NO" CACHE BOOL "Build the (older) GTK+2 based Scopira User Interface library")
 ENDIF(EXISTS ${THIS_PATH}/scopira/coreui/loop.h AND UNIX)
 
@@ -111,15 +111,15 @@ set(SCOPIRA_SOURCES
 #include(FindThreads)
 INCLUDE(${THIS_PATH}/FindPthreads.cmake)
 
-IF(NOT WIN32)
+IF(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 FIND_LIBRARY(UUID_LIBRARY uuid DOC "libuuid library location")
 #FIND_LIBRARY(DL_LIBRARY dl DOC "libdl library location")
-ENDIF(NOT WIN32)
+ENDIF(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 
 # scopira library
 ADD_LIBRARY(scopira ${SCOPIRA_SOURCES})
 
-IF(WIN32)
+IF(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
   ADD_DEFINITIONS(-DPLATFORM_win32)
   ADD_DEFINITIONS(/w44018)    #disable sign mismatch warning
   ADD_DEFINITIONS(-D_SECURE_SCL=0)    #disable check iterators
@@ -128,10 +128,16 @@ IF(WIN32)
     ADD_DEFINITIONS(-Dscopira_STATIC)
   ENDIF(NOT BUILD_SHARED_LIBS)
   TARGET_LINK_LIBRARIES(scopira Ws2_32)   #add socket library
-else(WIN32)
+ENDIF(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+
+IF(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+  ADD_DEFINITIONS(-DPLATFORM_osx)
+ENDIF(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+
+IF(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
   ADD_DEFINITIONS(-DPLATFORM_linux)
   ADD_DEFINITIONS(-Wall -Wno-sign-compare -Wwrite-strings)
-ENDIF(WIN32)
+ENDIF(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 
 INCLUDE_DIRECTORIES(${THIS_PATH} ${PTHREADS_INCLUDE_DIR})
 IF(CMAKE_SIZEOF_VOID_P GREATER 4)
