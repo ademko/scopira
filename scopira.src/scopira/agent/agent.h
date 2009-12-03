@@ -129,7 +129,7 @@ class scopira::agent::uuid_query
       op_not_c,
     };
     // the expression and its data
-    std::vector<short> dm_exp;    // if this is empty, then use the simple case uuid
+    std::vector<size_t> dm_exp;    // if this is empty, then use the simple case uuid
     std::vector<scopira::tool::uuid> dm_data;
 };
 

@@ -49,7 +49,7 @@ bool uuid_query::query(scopira::tool::uuid testid) const
 
   scopira::tool::fixed_array<bool, 32> tstack;    // things we do to avoid an alloc in this func :)
   int tnext;
-  int expi, datai, dataend;
+  size_t expi, datai, dataend;
 
   tnext = 0;
   for (expi=0; expi<dm_exp.size(); ++expi)

@@ -96,7 +96,7 @@ void project_base::save(scopira::tool::oobjflow_i& out) const
   // write out version number (for future expansion for properties)
   out.write_int(1);
 
-  out.write_int(dm_models.size());
+  out.write_int(static_cast<int>(dm_models.size()));
 
   endii = dm_models.end();
   for (ii=dm_models.begin(); ii != endii; ++ii) {

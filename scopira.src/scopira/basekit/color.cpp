@@ -150,8 +150,8 @@ void basekit::make_heat_palette(const nslice<int> &pal)
     return;
   }
 
-  int seglen = pal.size()/3;
-  int lastseg = seglen + pal.size()%seglen;
+  size_t seglen = pal.size()/3;
+  size_t lastseg = seglen + pal.size()%seglen;
 
   fill_color_gradient(pal.xslice(0, seglen), black_c, red_c);
   fill_color_gradient(pal.xslice(seglen, seglen), red_c, yellow_c);
@@ -166,8 +166,8 @@ void basekit::make_rainbow_palette(const nslice<int> &pal)
     return;
   }
 
-  int seglen = pal.size()/4;
-  int lastseg = seglen + pal.size()%seglen;
+  size_t seglen = pal.size()/4;
+  size_t lastseg = seglen + pal.size()%seglen;
 
   fill_color_gradient(pal.xslice(0, seglen), blue_c, cyan_c);
   fill_color_gradient(pal.xslice(seglen, seglen), cyan_c, green_c);
@@ -197,8 +197,8 @@ void basekit::make_spectra_palette(const nslice<int> &pal)
     make_red_palette(pal);
     return;
   }
-  int seglen = pal.size()/3;
-  int lastseg = seglen + pal.size()%seglen;
+  size_t seglen = pal.size()/3;
+  size_t lastseg = seglen + pal.size()%seglen;
 
   fill_color_gradient(pal.xslice(0, seglen), blue_c, green_c);
   fill_color_gradient(pal.xslice(seglen, seglen), green_c, yellow_c);
@@ -208,7 +208,7 @@ void basekit::make_spectra_palette(const nslice<int> &pal)
 
 void basekit::make_opus_palette(const nslice<int> &pal)
 {
-  int smallseg = pal.size()/8;
+  size_t smallseg = pal.size()/8;
 
   if (smallseg == 0) {
     // dunno what to do here

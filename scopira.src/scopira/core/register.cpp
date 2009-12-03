@@ -56,7 +56,7 @@ class scopira::core::object_note : public scopira::tool::object
     const std::string & get_name(void) const { return dm_name; }
 
     const std::string & get_parent(int idx) const { return dm_parents[idx]; }
-    int get_parent_size(void) const { return dm_parents.size(); }
+    size_t get_parent_size(void) const { return dm_parents.size(); }
 
     void set_copyfunc(copyfunc_t cf) { dm_copyfunc = cf; }
     copyfunc_t get_copyfunc(void) const { return dm_copyfunc; }

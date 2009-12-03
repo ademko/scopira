@@ -202,7 +202,7 @@ void tool::file::split_ext(const std::string &fullname, std::string &sansext, st
 
 void tool::file::split_path(const std::string &fullname, std::string &path, std::string &name)
 {
-  int slash;
+  size_t slash;
   slash = fullname.find_last_of(dir_seperator_c);
    
 #ifdef PLATFORM_win32
