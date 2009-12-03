@@ -442,7 +442,7 @@ class scopira::agent::task_context
      * Gets the size of my group. This will always be atleast 1.
      * @author Aleksander Demko
      */
-    int get_group_size(void) const { return dm_peers.size(); }
+    int get_group_size(void) const { return static_cast<int>(dm_peers.size()); }
     /**
      * Gets my UUID
      * @author Aleksander Demko

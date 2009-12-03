@@ -261,7 +261,7 @@ int local_agent::find_services(scopira::tool::uuid &serviceid, scopira::basekit:
   out.resize(targetlist.size());
   std::copy(targetlist.begin(), targetlist.end(), out.begin());
 
-  return targetlist.size();
+  return static_cast<int>(targetlist.size());
 }
 
 int local_agent::universe_size(void)

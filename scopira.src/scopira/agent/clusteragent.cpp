@@ -703,7 +703,7 @@ int cluster_agent::find_services(scopira::tool::uuid &serviceid, scopira::baseki
     // copy the results
     out.resize(frep->pm_results.size());
     std::copy(frep->pm_results.begin(), frep->pm_results.end(), out.begin());
-    return frep->pm_results.size();
+    return static_cast<int>(frep->pm_results.size());
   } else
     return 0;
 }
@@ -2252,7 +2252,7 @@ void cluster_agent::master_launch_task_msg::execute_agent(cluster_agent &e, clus
 
     for (nodemap_t::iterator ii=L->pm_nodes.begin(); ii != L->pm_nodes.end(); ++ii) {
       event_ptr<meta_node::load_area> LA(ii->second->pm_loadarea);
-      int freecpu = static_cast<int>(ii->second->pm_machinespec.pm_numcpu) - LA->pm_tasks.size();
+      int freecpu = ii->second->pm_machinespec.pm_numcpu - static_cast<int>(LA->pm_tasks.size());
 
       if (freecpu > 0)
         numps += freecpu;
@@ -2306,7 +2306,7 @@ OUTPUT << "  node=" << ii->first << " tasks=" << LA->pm_tasks.size() << '\n';
       // scan all the agents
       for (ii=L->pm_nodes.begin(); ii != L->pm_nodes.end(); ++ii) {
         event_ptr<meta_node::load_area> LA(ii->second->pm_loadarea);
-        int freecpu = static_cast<int>(ii->second->pm_machinespec.pm_numcpu) - LA->pm_tasks.size();
+        int freecpu = ii->second->pm_machinespec.pm_numcpu - static_cast<int>(LA->pm_tasks.size());
 //OUTPUT << "  trying_node=" << ii->first << " numcpu=" << ii->second->pm_machinespec.pm_numcpu << " tasks=" << LA->pm_tasks.size() << '\n';
 
         // remember the self, incase we need it later
@@ -2324,7 +2324,7 @@ OUTPUT << "  node=" << ii->first << " tasks=" << LA->pm_tasks.size() << '\n';
         if (freecpu > bestnumbfree) {
 //OUTPUT << " winner so far\n";
           bestsofar = ii;
-          bestnumbfree = static_cast<long>(ii->second->pm_machinespec.pm_numcpu) - LA->pm_tasks.size();
+          bestnumbfree = ii->second->pm_machinespec.pm_numcpu - static_cast<int>(LA->pm_tasks.size());
         }
       }
 
@@ -2865,7 +2865,7 @@ void cluster_agent::reply_find_services_msg::save(scopira::tool::oobjflow_i& out
 {
   reply_msg::save(out);
 
-  out.write_int(pm_results.size());
+  out.write_int(static_cast<int>(pm_results.size()));
   for (int x=0; x<pm_results.size(); ++x)
     pm_results[x].save(out);
 }
@@ -3254,7 +3254,7 @@ void* cluster_agent::net_link::send_thread_func(void *herep)
 #endif
 
     // transmit the size and then the payload
-    sz = outbuf.size();   // 64 bit oh oh
+    sz = static_cast<uint32_t>(outbuf.size());   // 64 bit oh oh
     here->dm_sock->write_void(&magic, sizeof(magic));
     here->dm_sock->write_void(&sz, sizeof(sz));
     here->dm_sock->write(outbuf.c_array(), sz);

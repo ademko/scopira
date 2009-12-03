@@ -56,7 +56,7 @@ class scopira::agent::uptime_service
     void update_uptime(void);
 
     /// returns the number of agents being monitored
-    int get_num_agents(void) { return dm_servers.size(); }
+    int get_num_agents(void) { return static_cast<int>(dm_servers.size()); }
 
     /**
      * Get the value for the given key from the given agentid.
