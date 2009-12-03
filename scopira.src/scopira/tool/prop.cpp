@@ -144,12 +144,12 @@ void property_node::save(oobjflow_i &out) const
   propmap_t::const_iterator ii, endii;
   sproplist_t::const_iterator jj, endjj;
 
-  out.write_int( dm_propmap.size() );
+  out.write_int( static_cast<int>(dm_propmap.size()) );   // rather than write_size_t... dont want to break any files
 
   endii = dm_propmap.end();
   for (ii=dm_propmap.begin(); ii != endii; ++ii) {
     out.write_string( (*ii).first );
-    out.write_int( (*ii).second.size() );
+    out.write_int( static_cast<int>((*ii).second.size()) );   // rather than write_size_t... dont want to break any files
     endjj = (*ii).second.end();
     for (jj=(*ii).second.begin(); jj!=endjj; ++jj)
       out.write_object_type(*jj);

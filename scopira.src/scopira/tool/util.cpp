@@ -301,7 +301,7 @@ std::string tool::pad_left(const std::string &s, int width, char padchar)
 {
   int diff, i;
 
-  diff = width - s.size();
+  diff = width - static_cast<int>(s.size());
   if (diff <= 0)
     return s;
   else {

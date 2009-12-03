@@ -85,7 +85,7 @@ class scopira::tool::distoflow : public scopira::tool::oflow_i
     void remove_flow(oflow_i* r);
     void clear_flow(void);
     bool contains_flow(const oflow_i* r) const;
-    int size_flow(void) const;
+    size_t size_flow(void) const;
 };
 
 #endif

@@ -118,7 +118,7 @@ bool distoflow::contains_flow(const oflow_i* r) const
   return false;
 }
 
-int distoflow::size_flow(void) const
+size_t distoflow::size_flow(void) const
 {
   return dm_flow.size();
 }

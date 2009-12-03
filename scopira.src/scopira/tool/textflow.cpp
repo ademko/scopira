@@ -250,7 +250,7 @@ size_t textoflow::write(const byte_t* _buf, size_t _size)
 
   dm_out->write_byte('\n');
 
-  write_int(_size);
+  write_size_t(_size);
 
   if (_size > 0) {
     dm_out->write(_buf, _size);
@@ -337,7 +337,7 @@ void textoflow::write_string(const std::string& val)
 
   dm_out->write_byte('\n');
 
-  write_int(val.size());
+  write_size_t(val.size());
 
   if (val.size() > 0) {
     dm_out->write(reinterpret_cast<const byte_t*>(val.c_str()), val.size());

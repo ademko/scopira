@@ -186,7 +186,7 @@ void tool::file::expand_envvar(std::string &path)
 
 void tool::file::split_ext(const std::string &fullname, std::string &sansext, std::string &ext)
 {
-  int dot;
+  size_t dot;
 
   dot = fullname.find_last_of('.');
 

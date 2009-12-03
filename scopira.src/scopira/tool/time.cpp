@@ -86,7 +86,7 @@ void timestamp::format(const std::string& format, std::string& out, bool gmt) co
   assert(dm_time != -1);
 
 #ifdef PLATFORM_win32
-  int size = strftime(&out[0], out.size(), format.c_str(), gmt ? gmtime(&dm_time) : localtime(&dm_time));
+  size_t size = strftime(&out[0], out.size(), format.c_str(), gmt ? gmtime(&dm_time) : localtime(&dm_time));
 #else
   struct tm timmy;
   if (gmt)
@@ -144,7 +144,7 @@ int timestamp::string_to_month(const std::string& month)
   static const char* months[] =
     {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
-  for (size_t i=0; i<sizeof(months); i++) {
+  for (int i=0; i<sizeof(months); i++) {
     if (month == months[i])
       return i;
   }

@@ -69,7 +69,7 @@ size_t hashoflow::write(const byte_t* _buf, size_t _size)
   if (!dm_impl)
     return 0;
 
-  SHA1_Update(reinterpret_cast<SHA_CTX*>(dm_impl), _buf, _size);
+  SHA1_Update(reinterpret_cast<SHA_CTX*>(dm_impl), _buf, static_cast<int>(_size));
 
   return _size;
 }
