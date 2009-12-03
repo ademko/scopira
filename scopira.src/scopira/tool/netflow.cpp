@@ -331,7 +331,7 @@ size_t netflow::read(byte_t* _buf, size_t _maxsize)
   size_t togo = _maxsize;
   // make my own MSG_WAITALL... come on already, windows
   do {
-    lastread = ::recv(dm_sock, reinterpret_cast<char*>(_buf), togo, 0);
+    lastread = ::recv(dm_sock, reinterpret_cast<char*>(_buf), static_cast<int>(togo), 0);
     _buf += lastread;
     togo -= lastread;
   } while (lastread > 0 && togo > 0);
@@ -370,7 +370,7 @@ size_t netflow::write(const byte_t* _buf, size_t _size)
   // simulate FULL blocking
   size_t togo = _size;
   do {
-    lastsent = ::send(dm_sock, reinterpret_cast<const char*>(_buf), togo, 0);
+    lastsent = ::send(dm_sock, reinterpret_cast<const char*>(_buf), static_cast<int>(togo), 0);
     _buf += lastsent;
     togo -= lastsent;
   } while (lastsent>0 && togo>0);
@@ -407,7 +407,7 @@ size_t netflow::read_short(byte_t* _buf, size_t _maxsize)
     return 0;
     
 #ifdef PLATFORM_win32
-  lastread = ::recv(dm_sock, reinterpret_cast<char*>(_buf), _maxsize, 0);
+  lastread = ::recv(dm_sock, reinterpret_cast<char*>(_buf), static_cast<int>(_maxsize), 0);
 #elif defined(PLATFORM_osx)
   lastread = ::recv(dm_sock, _buf, _maxsize, 0);
 #else
@@ -454,7 +454,11 @@ void netflow::open(const netaddr *_addr, int _port, int socket_options)
 
   if (socket_options & tcp_nodelay_c) {
     int nodelay_flag = 1;
+#ifdef PLATFORM_win32
+    setsockopt(dm_sock, IPPROTO_TCP, TCP_NODELAY, (char*)&nodelay_flag, sizeof(nodelay_flag));
+#else
     setsockopt(dm_sock, IPPROTO_TCP, TCP_NODELAY, &nodelay_flag, sizeof(nodelay_flag));
+#endif
   }
 
   // server mode
@@ -544,8 +548,8 @@ void netflow::close(void)
 bool netflow::accept(netflow& nconn)
 {
   bool stat;
-  int newsock;
   sockaddr_in nam;
+  socket_handle_t newsock;
 #ifdef PLATFORM_win32
   int len;
 #else
@@ -605,7 +609,7 @@ bool netflow::read_ready(int msec)
 #endif
 }
 
-void netflow::open_relay(int _fd, const flow_i::byte_t* _addr, int _addrlen, int _port)
+void netflow::open_relay(socket_handle_t _fd, const flow_i::byte_t* _addr, int _addrlen, int _port)
 {
   close();
 
@@ -661,7 +665,7 @@ size_t udpflow::read(netaddr &actualsrc, int &actualport, byte_t* _buf, size_t _
   sa.sin_family = AF_INET;
 
 #ifdef PLATFORM_win32
-  rd = ::recvfrom(dm_sock, reinterpret_cast<char*>(_buf), _maxsize, 0, reinterpret_cast<sockaddr*>(&sa), &sa_size);
+  rd = ::recvfrom(dm_sock, reinterpret_cast<char*>(_buf), static_cast<int>(_maxsize), 0, reinterpret_cast<sockaddr*>(&sa), &sa_size);
 #else
   rd = ::recvfrom(dm_sock, _buf, _maxsize, 0, reinterpret_cast<sockaddr*>(&sa), &sa_size);
 #endif
@@ -694,7 +698,7 @@ assert(destport != 0);
   memcpy(&sa.sin_addr, &dest, sizeof(sa.sin_addr));
 
 #ifdef PLATFORM_win32
-  sent = ::sendto(dm_sock, reinterpret_cast<const char*>(_buf), _size, 0, reinterpret_cast<sockaddr*>(&sa), sizeof(sa));
+  sent = ::sendto(dm_sock, reinterpret_cast<const char*>(_buf), static_cast<int>(_size), 0, reinterpret_cast<sockaddr*>(&sa), sizeof(sa));
 #else
   sent = ::sendto(dm_sock, _buf, _size, 0, reinterpret_cast<sockaddr*>(&sa), sizeof(sa));
 #endif

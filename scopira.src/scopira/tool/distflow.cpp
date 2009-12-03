@@ -31,7 +31,7 @@ bool teeoflow::failed(void) const
 
 size_t teeoflow::write(const byte_t* _buf, size_t _size)
 {
-  int ret, k;
+  size_t ret, k;
 
   if (!dm_a.is_null())
     ret = dm_a->write(_buf, _size);
@@ -72,7 +72,7 @@ bool distoflow::failed(void) const
 /// write a raw block of data
 size_t distoflow::write(const byte_t* _buf, size_t _size)
 {
-  int ret, k;
+  size_t ret, k;
   oflowvec_t::iterator ii;
 
   ret = 0;

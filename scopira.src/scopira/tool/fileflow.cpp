@@ -13,6 +13,7 @@
 
 #include <scopira/tool/fileflow.h>
 
+#include <scopira/tool/platform.h>
 #include <scopira/tool/file.h> //for copy_file
 
 #ifdef PLATFORM_win32
@@ -133,7 +134,11 @@ size_t fileflow::read(byte_t* _buf, size_t _maxsize)
   assert(dm_mode & input_c);
   if (_maxsize > 0) {
     assert(_buf);
+#ifdef PLATFORM_win32
+    _maxsize = ::read(dm_hand, _buf,  static_cast<int>(_maxsize));
+#else
     _maxsize = ::read(dm_hand, _buf,  _maxsize);
+#endif
     if (_maxsize <= 0) {
       dm_fail = true;
       return 0;
@@ -151,7 +156,11 @@ size_t fileflow::write(const byte_t* _buf, size_t _size)
   if (failed())
     return 0;
   if (_size > 0) {
+#ifdef PLATFORM_win32
+    _size = ::write(dm_hand, _buf, static_cast<int>(_size));
+#else
     _size = ::write(dm_hand, _buf, _size);
+#endif
     if (_size <= 0) {
       dm_fail = true;
       return 0;
@@ -472,7 +481,7 @@ bool filememory::open(fileflow &f, size_t len, int flags)
   assert((HANDLE)_get_osfhandle(f.get_os_handle()) != INVALID_HANDLE_VALUE);
 
   dm_len = len;
-  h = CreateFileMapping((HANDLE)_get_osfhandle(f.get_os_handle()), 0, prot, 0, len, 0);
+  h = CreateFileMapping((HANDLE)_get_osfhandle(f.get_os_handle()), 0, prot, 0, (DWORD)len, 0);
   if (h == INVALID_HANDLE_VALUE) {
     ::perror("CreateFileMapping() failed!");
     dm_ptr = 0;

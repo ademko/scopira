@@ -25,6 +25,12 @@ namespace scopira
 {
   namespace tool
   {
+#ifdef PLATFORM_win32
+    typedef SOCKET socket_handle_t;
+#else
+    typedef int socket_handle_t;
+#endif
+
     class netaddr;
     class nethostrec;
 
@@ -121,14 +127,8 @@ class scopira::tool::netflow : public scopira::tool::iflow_i, public scopira::to
       tcp_nodelay_c = 1,
     };
   private:    // typedef socket handles to a common name
-#ifdef PLATFORM_win32
-    typedef SOCKET handle_t;
-#else
-    typedef int handle_t;
-#endif
-
     /// the file handle
-    handle_t dm_sock;
+    socket_handle_t dm_sock;
 
     /// currently open?
     bool dm_open;
@@ -208,7 +208,7 @@ class scopira::tool::netflow : public scopira::tool::iflow_i, public scopira::to
 
   protected:
     /// internal, used by server ::accept
-    SCOPIRA_EXPORT void open_relay(int _fd, const flow_i::byte_t* _addr, int _addrlen, int _port);
+    SCOPIRA_EXPORT void open_relay(socket_handle_t _fd, const flow_i::byte_t* _addr, int _addrlen, int _port);
 
 };
 
@@ -283,14 +283,8 @@ class scopira::tool::udpflow : public virtual scopira::tool::object
     int get_port(void) const { return dm_port; }
 
   private:
-#ifdef PLATFORM_win32
-    typedef SOCKET handle_t;
-#else
-    typedef int handle_t;
-#endif
-
     int dm_port;    /// my port, 0 for none
-    handle_t dm_sock; /// the file handle
+    socket_handle_t dm_sock; /// the file handle
     bool dm_fail;
     bool dm_open;   /// is currently open?
 };

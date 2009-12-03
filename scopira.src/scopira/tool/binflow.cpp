@@ -310,7 +310,7 @@ void binoflow::write_double(double val)
 void binoflow::write_string(const std::string& val)
 {
   assert(dm_out.get());
-  write_int(val.size());
+  write_int(static_cast<int>(val.size()));    // not _size_t so we dont break anything
   if (val.size() > 0)
     dm_out->write(reinterpret_cast<const byte_t*>(val.c_str()), val.size());
 }
