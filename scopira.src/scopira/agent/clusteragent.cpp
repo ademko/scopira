@@ -3386,7 +3386,10 @@ void cluster_agent::link::on_recv(network_msg *msg)
 
 void cluster_agent::link::on_close_net_link(void)
 {
-  accept_net_link(0);
+  //don't do the following, otherwise the receive thread tries to delete itself
+  //rather, the let the admin thread nuke this object (and thus wait/nuke the sub
+  //threads) via an admin message
+  //accept_net_link(0);
 
   if (event_ptr<queue_area>(dm_queue)->pm_remotemaster)
     dm_agent->enqueue_msg(new quit_msg(true));
