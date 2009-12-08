@@ -17,7 +17,6 @@
 
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
-CMAKE_POLICY(SET CMP0011 NEW)
 
 # a project lins is always required, it seems
 # under win32, atleast, weird errors are emmited if this is not used
