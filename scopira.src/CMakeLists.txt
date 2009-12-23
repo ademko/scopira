@@ -141,7 +141,8 @@ ADD_LIBRARY(scopira ${SCOPIRA_SOURCES})
 IF(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
   ADD_DEFINITIONS(-DPLATFORM_win32)
   ADD_DEFINITIONS(/w44018)    #disable sign mismatch warning
-  ADD_DEFINITIONS(-D_SECURE_SCL=0)    #disable check iterators
+  #this seems to crash ITK in Release* builds
+  #ADD_DEFINITIONS(-D_SECURE_SCL=0)    #disable check iterators
   IF(NOT BUILD_SHARED_LIBS)
     #this should be a flag (like scopira_EXPORTS provided by cmake, IMHO)
     ADD_DEFINITIONS(-Dscopira_STATIC)
