@@ -798,6 +798,14 @@ template <class T, int DIM> class scopira::basekit::narray
     /// the const_interator type
     typedef const T* const_iterator;
 
+    // extra defines for STL-likeness
+    typedef T value_type;
+    typedef T* pointer;
+    typedef T& reference;
+    typedef const T& const_reference;
+    typedef size_t size_type;
+    typedef ptrdiff_t difference_type;
+
   private:
     T* dm_ary;              /// the actual array, newed or direct
     size_t dm_len;          /// the length of the above
@@ -1584,6 +1592,14 @@ template <class T, int DIM> class scopira::basekit::nslice
     typedef nindex<DIM> index_type;
     typedef niterator<T, DIM> iterator;
     typedef niterator<T, DIM> const_iterator;
+
+    // extra defines for STL-likeness
+    typedef T value_type;
+    typedef T* pointer;
+    typedef T& reference;
+    typedef const T& const_reference;
+    typedef size_t size_type;
+    typedef ptrdiff_t difference_type;
   private:
     T* dm_var;
     size_t dm_prime, dm_end_prime;
@@ -2283,6 +2299,14 @@ template <class T, int DIM> class scopira::basekit::const_nslice
     typedef nindex<DIM> index_type;
     typedef const_niterator<T, DIM> iterator;
     typedef const_niterator<T, DIM> const_iterator;
+
+    // extra defines for STL-likeness
+    typedef T value_type;
+    typedef T* pointer;
+    typedef T& reference;
+    typedef const T& const_reference;
+    typedef size_t size_type;
+    typedef ptrdiff_t difference_type;
   private:
     const T * dm_var;
     size_t dm_prime, dm_end_prime;
