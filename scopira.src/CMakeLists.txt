@@ -55,6 +55,17 @@ IF(EXISTS ${THIS_PATH}/pakit/types.h AND UNIX)
   SET(SCOPIRA_PAKIT_BUILD "NO" CACHE BOOL "Build the PAKit (Pattern Analysis) kit")
 ENDIF(EXISTS ${THIS_PATH}/pakit/types.h AND UNIX)
 
+#SCOPIRA_QTKIT build
+IF(QT4_FOUND)
+  SET(SCOPIRA_QTKIT_BUILD "YES" CACHE BOOL "Build Scopira QtKit")
+ELSE(QT4_FOUND)
+  SET(SCOPIRA_QTKIT_BUILD "NO" CACHE BOOL "Build Scopira QtKit")
+ENDIF(QT4_FOUND)
+IF(SCOPIRA_QTKIT_BUILD AND NOT QT4_FOUND)
+  FIND_PACKAGE(Qt4)
+  INCLUDE(${QT_USE_FILE)
+ENDIF(SCOPIRA_QTKIT_BUILD AND NOT QT4_FOUND)
+
 set(SCOPIRA_SOURCES 
   ${THIS_PATH}/scopira/agent/agent.cpp
   ${THIS_PATH}/scopira/agent/clusteragent.cpp
@@ -119,7 +130,7 @@ IF(SCOPIRA_USE_QTTHREADS)
   IF(NOT QT4_FOUND)
     # if the parent hasnt included Qt, then lets try
     FIND_PACKAGE(Qt4)
-    INCLUDE(${QT_USE_FILE})
+    INCLUDE(${QT_USE_FILE)
   ENDIF(NOT QT4_FOUND)
   ADD_DEFINITIONS(-DPLATFORM_QTTHREADS)
   SET(SCOPIRA_THREADING_LIBRARY ${QT_LIBRARIES})
@@ -278,3 +289,19 @@ IF(SCOPIRA_PAKIT_BUILD)
   TARGET_LINK_LIBRARIES(pauikit scopiraui)
 ENDIF(SCOPIRA_PAKIT_BUILD)
 
+#scopiraqtkit
+IF(QT4_FOUND)
+  QT4_WRAP_CPP(SCOPIR_QTKIT_MOC
+    ${THIS_PATH}/scopira/qtkit/ImagePlot.h
+    ${THIS_PATH}/scopira/qtkit/Plot2D.h)
+  ADD_LIBRARY(scopiraqtkit
+      ${THIS_PATH}/scopira/qtkit/FileHeader.cpp
+      ${THIS_PATH}/scopira/qtkit/ImagePlot.cpp
+      ${THIS_PATH}/scopira/qtkit/NodePath.cpp
+      ${THIS_PATH}/scopira/qtkit/Plot2D.cpp
+      ${THIS_PATH}/scopira/qtkit/Util.cpp
+      ${THIS_PATH}/scopira/qtkit/ColorFunc.cpp
+      ${SCOPIR_QTKIT_MOC}
+    )
+  TARGET_LINK_LIBRARIES(scopiraqtkit ${QT_LIBRARIES})
+ENDIF(QT4_FOUND)
