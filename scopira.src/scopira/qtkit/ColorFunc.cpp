@@ -90,9 +90,9 @@ void ColorFunc::fillColourGradient(QColor *base, size_t len, QColor startcol, QC
       case QColor::Hsv:
         // add this mode in the future
         assert(false);
-      case QColor::Hsl:
+      //case QColor::Hsl:   //Hsl is not in qt4.5
         // add this mode in the future
-        assert(false);
+        //assert(false);
       default: assert(false);   // unsupported colour space
     }
   }
