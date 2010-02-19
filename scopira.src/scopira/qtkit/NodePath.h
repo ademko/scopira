@@ -14,6 +14,8 @@
 #ifndef __INCLUDED_SCOPIRA_QTKIT_NODEPATH_H__
 #define __INCLUDED_SCOPIRA_QTKIT_NODEPATH_H__
 
+#include <exception>
+
 #include <QDomDocument>
 
 namespace scopira
@@ -32,7 +34,10 @@ namespace scopira
 class scopira::qtkit::NodePath
 {
   public:
-    class error {};
+    class error : public std::exception {
+      virtual const char* what() const throw ()
+      { return "NodePath::error"; }
+    };
     class xml_error : public error {};
     class numeric_error : public error {};
     class verify_error : public error {};

@@ -16,6 +16,21 @@
 
 #include <QTextStream>
 #include <QPoint>
+#include <QDebug>
+
+//polute the top namespace deliberatly (and with a Q-prefix)
+class QDebugIndent
+{
+  public:
+    QDebugIndent(int indent) : dm_indent(indent) { }
+
+    int indent(void) const { return dm_indent; }
+
+  private:
+    int dm_indent;
+};
+
+QDebug operator <<(QDebug out, const QDebugIndent i);
 
 QTextStream & operator << (QTextStream &o, const QPoint &p);
 
