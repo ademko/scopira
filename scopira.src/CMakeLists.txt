@@ -292,9 +292,11 @@ ENDIF(SCOPIRA_PAKIT_BUILD)
 #scopiraqtkit
 IF(QT4_FOUND)
   QT4_WRAP_CPP(SCOPIR_QTKIT_MOC
+    ${THIS_PATH}/scopira/qtkit/DynamicSlot.h
     ${THIS_PATH}/scopira/qtkit/ImagePlot.h
     ${THIS_PATH}/scopira/qtkit/Plot2D.h)
   ADD_LIBRARY(scopiraqtkit
+      ${THIS_PATH}/scopira/qtkit/DynamicSlot.cpp
       ${THIS_PATH}/scopira/qtkit/FileHeader.cpp
       ${THIS_PATH}/scopira/qtkit/ImagePlot.cpp
       ${THIS_PATH}/scopira/qtkit/NodePath.cpp

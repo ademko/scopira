@@ -14,22 +14,31 @@
 #ifndef __INCLUDED_SCOPIRA_TOOL_TR1_H__
 #define __INCLUDED_SCOPIRA_TOOL_TR1_H__
 
-// should this be in scopira::tool?
+/*
 
-// older stuff
-//#include <functional>
+   This header imports some usefil stuff from TR1
+   and puts them in the std namespace.
 
-//using namespace std::tr1;
-//using namespace std::tr1::placeholders;
+   This is done to iron out some inconsistancies
+   on TR1 handling between VC++ and GNU C++
 
-// linux: import the tr1 namespace to just std (for shared_ptr)
+*/
 
+#include <scopira/tool/platform.h>
+
+#ifdef PLATFORM_win32
+#include <memory>
+#include <functional>
+#else
 #include <tr1/memory>
+#include <tr1/functional>
+#endif
 
 // fold the tr1 namespace into std
 namespace std
 {
   using namespace std::tr1;
+  using namespace std::tr1::placeholders;
 }
 
 #endif
