@@ -291,11 +291,13 @@ ENDIF(SCOPIRA_PAKIT_BUILD)
 
 #scopiraqtkit
 IF(QT4_FOUND)
-  QT4_WRAP_CPP(SCOPIR_QTKIT_MOC
+  QT4_WRAP_CPP(SCOPIRA_QTKIT_MOC
     ${THIS_PATH}/scopira/qtkit/DynamicSlot.h
     ${THIS_PATH}/scopira/qtkit/ImagePlot.h
     ${THIS_PATH}/scopira/qtkit/Plot2D.h)
+  QT4_ADD_RESOURCES(SCOPIRA_QTKIT_RES ${THIS_PATH}/scopira/qtkit/qtkit.qrc)
   ADD_LIBRARY(scopiraqtkit
+      ${THIS_PATH}/scopira/qtkit/AboutDialog.cpp
       ${THIS_PATH}/scopira/qtkit/DynamicSlot.cpp
       ${THIS_PATH}/scopira/qtkit/FileHeader.cpp
       ${THIS_PATH}/scopira/qtkit/ImagePlot.cpp
@@ -303,7 +305,8 @@ IF(QT4_FOUND)
       ${THIS_PATH}/scopira/qtkit/Plot2D.cpp
       ${THIS_PATH}/scopira/qtkit/Util.cpp
       ${THIS_PATH}/scopira/qtkit/ColorFunc.cpp
-      ${SCOPIR_QTKIT_MOC}
+      ${SCOPIRA_QTKIT_MOC}
+      ${SCOPIRA_QTKIT_RES}
     )
   TARGET_LINK_LIBRARIES(scopiraqtkit ${QT_LIBRARIES})
 ENDIF(QT4_FOUND)
