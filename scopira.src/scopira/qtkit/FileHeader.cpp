@@ -285,13 +285,15 @@ bool FileHeader::loadSliceImp(const QString &fieldname, size_t slicez, short num
         size_t elemsize, const char *id, void *data)
 {
   try {
-    size_t slice_size = 1;
+    size_t disk_slice_size = 1;
+    size_t mem_slice_size = 1;
     size_t maxz = 0;
 
     // in the future, cache this information in some local structs?
     QString filename = NodePath(*this)(NodePath::sanitizeField(fieldname)).asString();
     NodePath::verify(NodePath(*this)(NodePath::sanitizeField(fieldname)).getPropAsString("elem_type") == id);
 
+    // numdimen is the dimen of the slice, the data is ofcourse a set of those (dimen+1)
     for (short d=0; d<=numdimen; ++d) {
       QString field;
       size_t val;
@@ -301,15 +303,26 @@ bool FileHeader::loadSliceImp(const QString &fieldname, size_t slicez, short num
       val = NodePath(*this)(NodePath::sanitizeField(fieldname)).getPropAsLong(field);
 
       if (d<numdimen) {
-        slice_size *= val;
-        if (val != dimen[d])
-          return false;
-      } else
+        disk_slice_size *= val;
+        mem_slice_size *= dimen[d];
+        if (d+1 < numdimen) {
+          if (val != dimen[d])    // the memory size has to match for all but the last dimen
+            return false;
+        } else {
+          // but the last dimen in the slice only has to be less than disk size
+          if (val < dimen[d])
+            return false;
+        }
+      } else {
+        // this is d == numdimen, the z or slice index
         maxz = val;
+      }
     }
 
     if (slicez>=maxz)
       return false;   // out of bounds
+
+    assert(mem_slice_size <= disk_slice_size);
 
     // load this slice
     QString fullfilename = filename;
@@ -321,9 +334,9 @@ bool FileHeader::loadSliceImp(const QString &fieldname, size_t slicez, short num
 
     infile.open(QIODevice::ReadOnly);
 
-    infile.seek(static_cast<int64_t>(slice_size) * slicez * elemsize);
+    infile.seek(static_cast<int64_t>(disk_slice_size) * slicez * elemsize);
 
-    return infile.read(static_cast<char*>(data), elemsize*slice_size) == elemsize*slice_size;
+    return infile.read(static_cast<char*>(data), elemsize*mem_slice_size) == elemsize*mem_slice_size;
   }
   catch (const NodePath::error&) { }
   return false;
