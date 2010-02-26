@@ -22,6 +22,20 @@ namespace scopira
 {
   namespace qtkit
   {
+    /**
+     * Auto calculate some nice tick marks.
+     * This handy function can be used in other plotter like things too.
+     *
+     * @param min the start of the range in question
+     * @param max the end of the range
+     * @param axis_min (output) the first tick mark
+     * @param axis_max (output) the last tick mark
+     * @param tick_spacing (output) the spacing between the tick marks
+     * @return number of tick marks
+     * @author Aleksander Demko
+     */ 
+    int calcTickMarks(double min, double max, double &axis_min, double &axis_max, double &tick_spacing);
+
     class Plot2D;
   }
 }
@@ -211,14 +225,6 @@ class scopira::qtkit::Plot2D : public QWidget
      * @author Aleksander Demko
      */
     int calcNumLabels(bool xaxis);
-
-    /**
-     * Auto calculate some nice tick marks.
-     *
-     * @return thr number of tick marks
-     * @author Aleksander Demko
-     */ 
-    static int calcTickMarks(double min, double max, double &axis_min, double &axis_max, double &tick_spacing);
 
   private:
     const static int border = 40;

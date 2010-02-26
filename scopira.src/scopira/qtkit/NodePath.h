@@ -112,5 +112,7 @@ class scopira::qtkit::NodePath
     QDomElement dm_node;
 };
 
+#define IGNORE_NODEPATH_EXCEPTIONS(x) try { (x); } catch (const NodePath::error &) { }
+
 #endif
 

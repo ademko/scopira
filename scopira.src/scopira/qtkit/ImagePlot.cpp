@@ -271,9 +271,10 @@ void ImagePlot::handleMidButton(QMouseEvent *event, bool isdrag, bool isdown)
     //SetScrollPos(wxHORIZONTAL, dm_panpt.x() + dm_scrolloffset.x);
     //SetScrollPos(wxVSCROLL, dm_panpt.y() + dm_scrolloffset.y);
 
-    updateCroppedBitmap();
+    //updateCroppedBitmap();
     updateScrollBars();
-    dm_drawing->update();
+    //dm_drawing->update();
+    setDirty();
 
     return;
   }

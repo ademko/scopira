@@ -32,6 +32,78 @@ Plot2D::Plot2D(QWidget *parent)
   dm_yrange_auto = true;
 }
 
+int scopira::qtkit::calcTickMarks(double min, double max, double &axis_min, double &axis_max, double &tick_spacing)
+{
+  double s_dist;  //scaled distance between tick marks
+  double scale; //actual tick mark distance is scale*sDist
+
+  int i;
+  int tot_ticks = 1;
+  int des_num_ticks = 11; //kludge: seems to work reasonably well!
+  int num_sp_factor = 4; //kludge: seems to work reasonably well!
+
+  scopira::tool::fixed_array<double, 4> spacing_factor;
+
+  spacing_factor[0]=1.0;
+  spacing_factor[1]=2.0;
+  spacing_factor[2]=5.0;
+  spacing_factor[3]=10.0;
+
+  axis_min = min;
+  axis_max = max;
+  tick_spacing = 0.0;
+
+  //compute scale and scaled distance
+  s_dist = (max - min) / des_num_ticks;
+  scale = pow(10.0, floor(log(s_dist) / log(10.0)));
+  s_dist /= scale;
+
+  if (s_dist < 1.0){
+    s_dist *= 10.0;
+    scale /= 10.0;
+  }
+
+  if (s_dist >= 10.0){
+    s_dist /= 10.0;
+    scale *= 10.0;
+  }
+
+  //determine which spacing factor to use
+  for (i = 0; spacing_factor[i] < s_dist && i < num_sp_factor; i++)
+    ;//empty body
+
+  //compute "sensible" distance
+  tick_spacing = spacing_factor[i] * scale;
+
+  //compute "sensible" tick mark positions
+  axis_min = ceil(min / tick_spacing) * tick_spacing;
+
+  for (axis_max = axis_min; axis_max < max; tot_ticks++) {
+    axis_max = floor(axis_max / tick_spacing + 0.5) * tick_spacing;
+    axis_max += tick_spacing;
+  }
+
+  //adjust sensible min to avoid clipping min_val.
+  if (axis_min > min) {
+    axis_min -= tick_spacing;
+    tot_ticks++;
+  }
+
+  return tot_ticks;
+}
+
+/*int Plot2D::calcTickMarks2(double min, double max, double &axis_min, double &axis_max, double &tick_spacing)
+{
+  assert(max > min);
+
+  double dist = max - min;
+  int recommended_ticks = 8
+
+  qDebug() << "dist" << dist;
+
+  
+}*/
+
 void Plot2D::setXLabel(const QString &l)
 {
   dm_xlabel = l;
@@ -385,66 +457,5 @@ int Plot2D::calcNumLabels(bool xaxis)
     len = dm_area.height();
 
   return len / 30;
-}
-
-int Plot2D::calcTickMarks(double min, double max, double &axis_min, double &axis_max, double &tick_spacing)
-{
-  double s_dist;  //scaled distance between tick marks
-  double scale; //actual tick mark distance is scale*sDist
-
-  int i;
-  int tot_ticks = 1;
-  int des_num_ticks = 11; //kludge: seems to work reasonably well!
-  int num_sp_factor = 4; //kludge: seems to work reasonably well!
-
-  scopira::tool::basic_array<double> spacing_factor;
-
-  spacing_factor.resize(4);
-  spacing_factor[0]=1.0;
-  spacing_factor[1]=2.0;
-  spacing_factor[2]=5.0;
-  spacing_factor[3]=10.0;
-
-  axis_min = min;
-  axis_max = max;
-  tick_spacing = 0.0;
-
-  //compute scale and scaled distance
-  s_dist = (max - min) / des_num_ticks;
-  scale = pow(10.0, floor(log(s_dist) / log(10.0)));
-  s_dist /= scale;
-
-  if (s_dist < 1.0){
-    s_dist *= 10.0;
-    scale /= 10.0;
-  }
-
-  if (s_dist >= 10.0){
-    s_dist /= 10.0;
-    scale *= 10.0;
-  }
-
-  //determine which spacing factor to use
-  for (i = 0; spacing_factor[i] < s_dist && i < num_sp_factor; i++)
-    ;//empty body
-
-  //compute "sensible" distance
-  tick_spacing = spacing_factor[i] * scale;
-
-  //compute "sensible" tick mark positions
-  axis_min = ceil(min / tick_spacing) * tick_spacing;
-
-  for (axis_max = axis_min; axis_max < max; tot_ticks++) {
-    axis_max = floor(axis_max / tick_spacing + 0.5) * tick_spacing;
-    axis_max += tick_spacing;
-  }
-
-  //adjust sensible min to avoid clipping min_val.
-  if (axis_min > min) {
-    axis_min -= tick_spacing;
-    tot_ticks++;
-  }
-
-  return tot_ticks;
 }
 
