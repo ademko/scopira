@@ -262,6 +262,13 @@ class scopira::tool::itflow_i : public virtual scopira::tool::iflow_i
      * @author Aleksander Demko
      */ 
     SCOPIRA_EXPORT virtual bool read_string(std::string&) = 0;
+    /**
+     * Reads any type, aslong as it has a flowtraits_g
+     * @author Aleksander Demko
+     */ 
+    template <class TT>
+      inline bool read_generic(TT &v);
+      // implementation in traits.h to avoid circular refs
 };
 
 /**
@@ -324,6 +331,13 @@ class scopira::tool::otflow_i : public virtual scopira::tool::oflow_i
      * @author Aleksander Demko
      */ 
     SCOPIRA_EXPORT virtual void write_string(const std::string&) = 0;
+    /**
+     * Writes any type, aslong as it has a flowtraits_g
+     * @author Aleksander Demko
+     */ 
+    template <class TT>
+      inline void write_generic(const TT &v);
+      // implementation in traits.h to avoid circular refs
 };
 
 

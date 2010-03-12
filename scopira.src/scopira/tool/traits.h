@@ -1,6 +1,6 @@
 
 /*
- *  Copyright (c) 2002    National Research Council
+ *  Copyright (c) 2002-2010    National Research Council
  *
  *  All rights reserved.
  *
@@ -14,6 +14,8 @@
 #ifndef __INCLUDED__SCOPIRA_TOOL_TRAITS_H__
 #define __INCLUDED__SCOPIRA_TOOL_TRAITS_H__
 
+#include <vector>
+
 #include <scopira/tool/flow.h>
 #include <scopira/tool/util.h>
 #include <scopira/tool/platform.h>
@@ -22,10 +24,10 @@ namespace scopira
 {
   namespace tool
   {
-    // serialization via traits (default)
-    template <class T> class flowtraits_g;
     // base for traits
     template <class T> class flowtraits_base_g;
+    // serialization via traits (default)
+    template <class T> class flowtraits_g;
     
     // specializtions
     template <> class flowtraits_g<bool>;
@@ -39,6 +41,10 @@ namespace scopira
     template <> class flowtraits_g<int64_t>;
     template <> class flowtraits_g<float>;
     template <> class flowtraits_g<double>;
+
+    template <> class flowtraits_g<std::string>;
+
+    template <class EE> class scopira::tool::flowtraits_g<std::vector<EE> >;
   }
 }
 
@@ -52,10 +58,42 @@ template <class T> class scopira::tool::flowtraits_base_g
 {
   public:
     typedef T data_type;
+
+  public:
+    template <class COL>
+      static bool load_collection(itflow_i &in, COL &v) {
+        typename COL::iterator ii, endii;
+        int64_t sz;
+
+        if (!in.read_int64_t(sz))
+          return false;
+        // or should this be changed to a clear/push_back like system to support lists, etc?
+        v.resize(static_cast<size_t>(sz));
+        endii = v.end();
+        for (ii=v.begin(); ii != endii; ++ii)
+          if (!in.read_generic(*ii))
+            return false;
+
+        return true;
+      }
+
+    template <class COL>
+      static void save_collection(otflow_i &out, const COL &v) {
+        typename COL::const_iterator ii, endii;
+        int64_t sz;
+
+        sz = v.size();
+
+        out.write_int64_t(sz);
+
+        endii = v.end();
+        for (ii=v.begin(); ii !=endii; ++ii)
+          out.write_generic(*ii);
+      }
 };
 
 /**
- * generic version
+ * Generic version, assumes object has its own save/load methods.
  *
  * @author Aleksander Demko
  */ 
@@ -170,6 +208,45 @@ class scopira::tool::flowtraits_g<double> : public scopira::tool::flowtraits_bas
     static bool from_string(std::string &s, double &out) { return tool::string_to_double(s,out); }
 };
 
+
+// basic object specializations
+template <>
+class scopira::tool::flowtraits_g<std::string> : public scopira::tool::flowtraits_base_g<std::string>
+{
+  public:
+    static bool load(itflow_i &in, std::string & outv) { return in.read_string(outv); }
+    static void save(otflow_i &out, const std::string &v) { out.write_string(v); }
+    static void to_string(const std::string &v, std::string &out) { out = v; }
+    static bool from_string(std::string &s, std::string &out) { out = s; return true; }
+};
+
+
+// some specializations of STL containers
+template <class EE>
+class scopira::tool::flowtraits_g<std::vector<EE> > : public scopira::tool::flowtraits_base_g<std::vector<EE> >
+{
+  public:
+    static bool load(itflow_i &in, std::vector<EE> & outv) { return load_collection(in, outv); }
+    static void save(otflow_i &out, const std::vector<EE> &v) { save_collection(out, v); }
+    static void to_string(const std::vector<EE> &v, std::string &out) { out = "std::vector<EE>"; }
+    static bool from_string(std::string &s, std::vector<EE> &out) { return false; }
+};
+
+//
+// implementation of some stuff in flow.h to avoid circular refs
+//
+
+template <class TT>
+inline bool scopira::tool::itflow_i::read_generic(TT &v)
+{
+  return scopira::tool::flowtraits_g<TT>::load(*this, v);
+}
+
+template <class TT>
+inline void scopira::tool::otflow_i::write_generic(const TT &v)
+{
+  scopira::tool::flowtraits_g<TT>::save(*this, v);
+}
 
 #endif
 
