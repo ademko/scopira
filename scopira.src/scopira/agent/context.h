@@ -300,11 +300,14 @@ class scopira::agent::task_context
       //{ return agent_i::instance()->launch_group(numps, t); }
 
     /**
-     * Spawns a group of slave processes making the calling task/process the "master".
+     * Launch additional slave processes. The calling task/process will
+     * be the "master" (id 0) of this new group.
+     *
      * This is especially useful for master threads/ui threads/userland threads.
      *
      * numps must be greater than 0. Use universe_size() to get a good idea of a size
-     * of group to launch.
+     * of group to launch. numps will include the already running caller/master,
+     * so the number of new slave tasks actually launched will be numps-1.
      *
      * This cannot be called for processes that are already in process groups.
      *
