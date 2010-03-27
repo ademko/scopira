@@ -1,6 +1,6 @@
 
 /*
- *  Copyright (c) 2007    National Research Council
+ *  Copyright (c) 2007-2010    National Research Council
  *
  *  All rights reserved.
  *
@@ -33,7 +33,8 @@ namespace scopira
  * return many statistics and other information about that agent,
  * it's host machine and it's tasks.
  *
- * You may create this object as needed, it is lightweight.
+ * These uptime server tasks are created one-per-agent when this
+ * class is created and destroyed. Therefore, this is not a light operation.
  *
  * A "service pack" is a C++ API object that easies access to a service task.
  * It handles all the protocol communication with that service.
@@ -45,6 +46,8 @@ class scopira::agent::uptime_service
   public:
     /// constructor
     uptime_service(scopira::agent::task_context &ctx);
+    /// destructor
+    ~uptime_service();
 
     /**
      * All the values for get_value are cached internally.
@@ -72,7 +75,7 @@ class scopira::agent::uptime_service
      *  load
      *  numcpu
      *  tasks
-     *
+     *  ostype
      *
      * @author Aleksander Demko
      */ 

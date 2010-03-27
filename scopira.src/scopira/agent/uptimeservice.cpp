@@ -1,6 +1,6 @@
 
 /*
- *  Copyright (c) 2007    National Research Council
+ *  Copyright (c) 2007-2010    National Research Council
  *
  *  All rights reserved.
  *
@@ -31,28 +31,27 @@ static scopira::tool::uuid service_type_id("ea50cfcb-24d0-47b9-8d02-98b4556058c9
 uptime_service::uptime_service(scopira::agent::task_context &ctx)
   : dm_ctx(ctx)
 {
-  ctx.find_services(service_type_id, dm_servers);
+  scopira::basekit::narray<scopira::tool::uuid> agents;
 
-  if (dm_servers.empty()) {
-    scopira::basekit::narray<scopira::tool::uuid> agents;
+  ctx.find_services(worker_agent_service_c, agents);
 
-    ctx.find_services(worker_agent_service_c, agents);
-    assert(agents.size()>=1);
+OUTPUT << "Launching: " << agents.size() << '\n';
+  dm_servers.resize(agents.size());
+  for (int x=0; x<agents.size(); ++x)
+    dm_servers[x] = ctx.launch_task("scopira::agent::uptime_task", agents[x]);
 
-OUTPUT << "No uptime servers found, launching: " << agents.size() << '\n';
-
-    // launch a uptime server on each agent
-    // TODO make sure there is a uptime server on each agent in partial-installs
-    dm_servers.resize(agents.size());
-    for (int x=0; x<agents.size(); ++x)
-      dm_servers[x] = ctx.launch_task("scopira::agent::uptime_task", agents[x]);
-  }
+  // and grab their agent locations
+  update_uptime();
 
   assert(!dm_servers.empty());
 
 OUTPUT << "SERVERS: " << dm_servers << '\n';
+}
 
-  update_uptime();
+uptime_service::~uptime_service()
+{
+  for (int x=0; x<dm_servers.size(); ++x)
+    dm_ctx.kill_task(dm_servers[x]);
 }
 
 void uptime_service::update_uptime(void)
