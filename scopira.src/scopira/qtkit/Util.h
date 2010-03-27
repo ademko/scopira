@@ -14,6 +14,8 @@
 #ifndef __INCLUDED_SCOPIRA_QTKIT_UTIL_H__
 #define __INCLUDED_SCOPIRA_QTKIT_UTIL_H__
 
+#include <string>
+
 #include <QTextStream>
 #include <QPoint>
 #include <QDebug>
@@ -33,6 +35,7 @@ class QDebugIndent
 QDebug operator <<(QDebug out, const QDebugIndent i);
 
 QTextStream & operator << (QTextStream &o, const QPoint &p);
+QTextStream & operator << (QTextStream &o, const std::string &s);
 
 #endif
 

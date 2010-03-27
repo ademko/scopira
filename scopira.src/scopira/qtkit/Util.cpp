@@ -25,3 +25,8 @@ QTextStream & operator << (QTextStream &o, const QPoint &p)
   return o << "QPoint(" << p.x() << ',' << p.y() << ')';
 }
 
+QTextStream & operator << (QTextStream &o, const std::string &s)
+{
+  return o << s.c_str();
+}
+
