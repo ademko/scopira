@@ -175,7 +175,9 @@ OUTPUT << "uptime_task::have msg!\n";
       M.write_string(dm_ca->dm_nodespec.pm_url.get_hostname());
     } else {
       M.write_string("keylist");
-      M.write_string("numcpu agentuuid");
+      M.write_string("hostname numcpu agentuuid");
+      M.write_string("hostname");
+      M.write_string("localhost");
     }
     // common to both local and cluster
     M.write_string("numcpu");
