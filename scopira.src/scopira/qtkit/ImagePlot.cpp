@@ -170,26 +170,26 @@ void ImagePlot::setPlotSize(QSize sz)
 
 bool ImagePlot::xToPlot(int screenx, int &datax)
 {
-  datax = floor((screenx-dm_offset.x())/dm_pixper) + dm_panpt.x();
+  datax = static_cast<int>(floor((screenx-dm_offset.x())/dm_pixper)) + dm_panpt.x();
 
   return datax >= 0 && datax < dm_datasize.width();
 }
 
 bool ImagePlot::yToPlot(int screeny, int &datay)
 {
-  datay = floor((screeny-dm_offset.y())/dm_pixper) + dm_panpt.y();
+  datay = static_cast<int>(floor((screeny-dm_offset.y())/dm_pixper)) + dm_panpt.y();
 
   return datay >= 0 && datay < dm_datasize.height();
 }
 
 int ImagePlot::xToPixel(int datax)
 {
-  return dm_offset.x() + (datax-dm_panpt.x())*dm_pixper;
+  return static_cast<int>(dm_offset.x() + (datax-dm_panpt.x())*dm_pixper);
 }
 
 int ImagePlot::yToPixel(int datay)
 {
-  return dm_offset.y() + (datay-dm_panpt.y())*dm_pixper;
+  return static_cast<int>(dm_offset.y() + (datay-dm_panpt.y())*dm_pixper);
 }
 
 bool ImagePlot::buildZoomMenu(QMenu &menu)
@@ -265,8 +265,8 @@ void ImagePlot::handleMidButton(QMouseEvent *event, bool isdrag, bool isdown)
   if (isdrag) {
     assert(dm_is_panning);  // or perhaps just return;
     // calc new panpt
-    dm_panpt.rx() = dm_panning_anchor_data.x() + (dm_panning_anchor_screen.x()-event->x())/dm_pixper;
-    dm_panpt.ry() = dm_panning_anchor_data.y() + (dm_panning_anchor_screen.y()-event->y())/dm_pixper;
+    dm_panpt.rx() = static_cast<int>(dm_panning_anchor_data.x() + (dm_panning_anchor_screen.x()-event->x())/dm_pixper);
+    dm_panpt.ry() = static_cast<int>(dm_panning_anchor_data.y() + (dm_panning_anchor_screen.y()-event->y())/dm_pixper);
 
     //SetScrollPos(wxHORIZONTAL, dm_panpt.x() + dm_scrolloffset.x);
     //SetScrollPos(wxVSCROLL, dm_panpt.y() + dm_scrolloffset.y);
@@ -383,8 +383,8 @@ bool ImagePlot::updateBitmap(QPainter &dc)
     assert(dm_pixper > 0);
 
     // now, reset the panpoint so that the image is centered
-    dm_panpt.rx() = -(dm_area.width()-cols)/2 / dm_pixper;
-    dm_panpt.ry() = -(dm_area.height()-rows)/2 / dm_pixper;
+    dm_panpt.rx() = static_cast<int>(-(dm_area.width()-cols)/2 / dm_pixper);
+    dm_panpt.ry() = static_cast<int>(-(dm_area.height()-rows)/2 / dm_pixper);
     //dm_panpt.x() = 0;
     //dm_panpt.y() = 0;
   }
@@ -438,10 +438,10 @@ void ImagePlot::updateCroppedBitmap(void)
   h = dm_backbuffer.height();
 
   for (y=0; y<h; ++y) {
-    clipped_y = floor(y/dm_pixper) + dm_panpt.y() - packed_topleft.y();
+    clipped_y = static_cast<int>(floor(y/dm_pixper)) + dm_panpt.y() - packed_topleft.y();
     for (x=0; x<w; ++x) {
       // replace with better scaling? or atleast faster? maybe NN is more accurate?
-      clipped_x = floor(x/dm_pixper) + dm_panpt.x() - packed_topleft.x();
+      clipped_x = static_cast<int>(floor(x/dm_pixper)) + dm_panpt.x() - packed_topleft.x();
 
       if (clipped_x<0 || clipped_x>=packed_size.width() || clipped_y<0
           || clipped_y>=packed_size.height()) {
@@ -466,8 +466,8 @@ void ImagePlot::drawSelection(QPainter &dc)
     dc.setPen(Qt::white);
     dc.setClipRect(dm_offset.x(), dm_offset.y(), dm_area.width(), dm_area.height());
 
-    int x = xToPixel(dm_startpoint.x()) + dm_pixper/2;
-    int y = yToPixel(dm_startpoint.y()) + dm_pixper/2;
+    int x = xToPixel(dm_startpoint.x()) + static_cast<int>(dm_pixper/2);
+    int y = yToPixel(dm_startpoint.y()) + static_cast<int>(dm_pixper/2);
 
     dc.drawLine(x-5, y, x+5, y);
     dc.drawLine(x, y-5, x, y+5);
@@ -488,8 +488,8 @@ void ImagePlot::drawSelection(QPainter &dc)
     int actual_x = xToPixel(topleft.x());
     int actual_y = yToPixel(topleft.y());
 
-    dc.drawRect(actual_x, actual_y, xToPixel(botright.x())+dm_pixper+1-actual_x,
-        yToPixel(botright.y())+dm_pixper+1-actual_y);
+    dc.drawRect(actual_x, actual_y, xToPixel(botright.x())+static_cast<int>(dm_pixper+1)-actual_x,
+        yToPixel(botright.y())+static_cast<int>(dm_pixper+1)-actual_y);
   }
 }
 
@@ -539,8 +539,8 @@ void ImagePlot::onZoomIn(void)
   dm_zoom_fit = false;
   dm_pixper *= 2;
 
-  dm_panpt.rx() += (dm_area.width()/old_pixper - dm_area.width()/dm_pixper)/2;
-  dm_panpt.ry() += (dm_area.height()/old_pixper - dm_area.height()/dm_pixper)/2;
+  dm_panpt.rx() += static_cast<int>(dm_area.width()/old_pixper - dm_area.width()/dm_pixper)/2;
+  dm_panpt.ry() += static_cast<int>(dm_area.height()/old_pixper - dm_area.height()/dm_pixper)/2;
 
   setDirty();
 }
@@ -552,8 +552,8 @@ void ImagePlot::onZoomOut(void)
   dm_zoom_fit = false;
   dm_pixper /= 2;
 
-  dm_panpt.rx() -= (dm_area.width()/dm_pixper - dm_area.width()/old_pixper)/2;
-  dm_panpt.ry() -= (dm_area.height()/dm_pixper - dm_area.height()/old_pixper)/2;
+  dm_panpt.rx() -= static_cast<int>(dm_area.width()/dm_pixper - dm_area.width()/old_pixper)/2;
+  dm_panpt.ry() -= static_cast<int>(dm_area.height()/dm_pixper - dm_area.height()/old_pixper)/2;
 
   setDirty();
 }
@@ -591,9 +591,9 @@ void ImagePlot::onZoomSelected(void)
   dm_panpt = topleft;
   // center the new view
   if ( dm_area.width()/dm_pixper > new_w)
-    dm_panpt.rx() -= (dm_area.width()/dm_pixper - new_w)/2;
+    dm_panpt.rx() -= static_cast<int>(dm_area.width()/dm_pixper - new_w)/2;
   if ( dm_area.height()/dm_pixper > new_h)
-    dm_panpt.ry() -= (dm_area.height()/dm_pixper - new_h)/2;
+    dm_panpt.ry() -= static_cast<int>(dm_area.height()/dm_pixper - new_h)/2;
 
   setDirty();
 }
@@ -629,15 +629,15 @@ void ImagePlot::resetScrollBars(void)
     return;
   }
 
-  dm_hscroll->setMinimum(-dm_area.width()/dm_pixper);
+  dm_hscroll->setMinimum(static_cast<int>(-dm_area.width()/dm_pixper));
   dm_hscroll->setMaximum(dm_datasize.width());
-  dm_hscroll->setPageStep(dm_area.width()/dm_pixper);
+  dm_hscroll->setPageStep(static_cast<int>(dm_area.width()/dm_pixper));
   dm_hscroll->setValue(dm_panpt.x());
   dm_hscroll->setEnabled(true);
 
-  dm_vscroll->setMinimum(-dm_area.height()/dm_pixper);
+  dm_vscroll->setMinimum(static_cast<int>(-dm_area.height()/dm_pixper));
   dm_vscroll->setMaximum(dm_datasize.height());
-  dm_vscroll->setPageStep(dm_area.height()/dm_pixper);
+  dm_vscroll->setPageStep(static_cast<int>(dm_area.height()/dm_pixper));
   dm_vscroll->setValue(dm_panpt.y());
   dm_vscroll->setEnabled(true);
 }
