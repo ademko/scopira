@@ -1330,7 +1330,10 @@ static bool find_udp_server(scopira::tool::url &autourl)
     // ok, we have the msg
     url goturl;
     if (goturl.set_url(msg.pm_payload.type2.serverurl)) {
-      autourl = url(autourl.get_proto(), goturl.get_hostname(), goturl.get_port(), autourl.get_filename());
+      //autourl = url(autourl.get_proto(), goturl.get_hostname(), goturl.get_port(), autourl.get_filename());
+      // rather than take the master's url's hostname for his word, use the actual IP address instead
+      // this is helpful when the master doesn't really send out a full hostname+domain as its address
+      autourl = url(autourl.get_proto(), srcaddr.as_string(), goturl.get_port(), autourl.get_filename());
       return true;
     }
   }
@@ -2645,7 +2648,10 @@ bool cluster_agent::send_data_msg::load(scopira::tool::iobjflow_i& in)
   dm_buf = new bufferflow;
   dm_buf->reset_resize(sz);
 
-  return in.read(dm_buf->c_array(), sz) == sz;
+  if (sz > 0)
+    return in.read(dm_buf->c_array(), sz) == sz;
+  else
+    return true;
 }
 
 void cluster_agent::send_data_msg::save(scopira::tool::oobjflow_i& out) const
@@ -2656,7 +2662,8 @@ void cluster_agent::send_data_msg::save(scopira::tool::oobjflow_i& out) const
 
   assert(dm_buf.get());
   out.write_size_t(dm_buf->size());
-  out.write(dm_buf->c_array(), dm_buf->size());
+  if (dm_buf->size() > 0)
+    out.write(dm_buf->c_array(), dm_buf->size());
 }
 
 void cluster_agent::send_data_msg::execute_agent(cluster_agent &e, cluster_agent::link *lk)
