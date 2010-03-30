@@ -21,6 +21,12 @@
 #include <sys/time.h>
 #endif
 
+#ifdef PLATFORM_osx
+// for num_system_cpus for mac
+#include <sys/types.h>
+#include <sys/sysctl.h>
+#endif
+
 #include <stdio.h>
 #include <assert.h>
 
@@ -284,7 +290,11 @@ int scopira::tool::num_system_cpus(void)
 #elif defined(PLATFORM_osx)
 int scopira::tool::num_system_cpus(void)
 {
-  return 2;
+  int np;
+  size_t length = sizeof( np );
+  if( sysctlbyname("hw.ncpu", &np, &length, NULL, 0) )
+    np = 1;
+  return np;
 }
 #else
 int scopira::tool::num_system_cpus(void)
