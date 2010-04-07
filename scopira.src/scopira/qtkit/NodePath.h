@@ -81,13 +81,12 @@ class scopira::qtkit::NodePath
     /// sets the property value
     void setPropVal(const QString &key, double val);
 
-    // gets a prop as a string, throws if not found
-
-    QString getPropAsString(const QString &key);
-    // gets a prop as a long, throws if not found
-    long getPropAsLong(const QString &key);
-    // gets a prop as a double, throws if not found
-    double getPropAsDouble(const QString &key);
+    // gets a property/attribute as a string, throws if not found
+    QString getPropAsString(const QString &key) const;
+    // gets a property/attribute as a long, throws if not found
+    long getPropAsLong(const QString &key) const;
+    // gets a property/attribute as a double, throws if not found
+    double getPropAsDouble(const QString &key) const;
 
     // in the future, add defaults that never throw/error
 

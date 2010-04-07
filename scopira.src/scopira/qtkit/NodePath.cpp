@@ -98,7 +98,7 @@ void NodePath::setPropVal(const QString &key, double val)
   setPropVal(key, QString().setNum(val));
 }
 
-QString NodePath::getPropAsString(const QString &key)
+QString NodePath::getPropAsString(const QString &key) const
 {
   assert(!dm_node.isNull());
 
@@ -108,7 +108,7 @@ QString NodePath::getPropAsString(const QString &key)
     throw prop_error();
 }
 
-long NodePath::getPropAsLong(const QString &key)
+long NodePath::getPropAsLong(const QString &key) const
 {
   long ret;
   bool ok;
@@ -119,7 +119,7 @@ long NodePath::getPropAsLong(const QString &key)
   throw numeric_error();
 }
 
-double NodePath::getPropAsDouble(const QString &key)
+double NodePath::getPropAsDouble(const QString &key) const
 {
   double ret;
   bool ok;
