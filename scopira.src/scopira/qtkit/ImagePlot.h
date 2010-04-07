@@ -83,6 +83,21 @@ class scopira::qtkit::ImagePlot : public QWidget
     const QPoint & pixelMenuClick(void) const { return dm_menu_click; }
 
     /**
+     * Sets the selection color.
+     * Caller must call setDirty or something after.
+     * Should this be public?
+     *
+     * @author Aleksander Demko
+     */ 
+    void setSelectionColor(const QColor &col);
+    void setPointColor(const QColor &col);
+    void setBackgroundColor(const QColor &col);
+
+    QColor selectionColor(void) const { return dm_color_selection; }
+    QColor pointColor(void) const { return dm_color_point; }
+    QColor backgroundColor(void) const { return dm_color_bg; }
+
+    /**
      * Is there a selection point currently active/selected?
      *
      * @author Aleksander Demko
@@ -286,6 +301,8 @@ class scopira::qtkit::ImagePlot : public QWidget
     // widgets
     Drawing *dm_drawing;
     QScrollBar *dm_hscroll, *dm_vscroll;
+
+    QColor dm_color_selection, dm_color_point, dm_color_bg;
 
     bool dm_dirty;
     

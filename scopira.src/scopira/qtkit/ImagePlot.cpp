@@ -92,6 +92,7 @@ ImagePlot::ImagePlot(QWidget *parent)
   dm_is_drawingrect = false;
   dm_has_endpoint = false;
 
+  dm_color_selection = dm_color_point = dm_color_bg = Qt::white;
   QGridLayout *lay = new QGridLayout;
   QBoxLayout *vbox, *hbox;
 
@@ -124,6 +125,21 @@ ImagePlot::ImagePlot(QWidget *parent)
 QWidget * ImagePlot::drawingArea(void) const
 {
   return dm_drawing;
+}
+
+void ImagePlot::setSelectionColor(const QColor &col)
+{
+  dm_color_selection = col;
+}
+
+void ImagePlot::setPointColor(const QColor &col)
+{
+  dm_color_point = col;
+}
+
+void ImagePlot::setBackgroundColor(const QColor &col)
+{
+  dm_color_bg = col;
 }
 
 bool ImagePlot::hasPlotSelectionPoint(void) const
@@ -320,7 +336,7 @@ void ImagePlot::drawingPaintEvent(QPaintEvent *event)
 {
   QPainter dc(dm_drawing);
 
-  dc.setBackground(Qt::white);
+  dc.setBackground(dm_color_bg);
 
   if (dataSizeEmpty()) {
     dc.fillRect(0, 0, dc.device()->width(), dc.device()->height(), QColor(0xFFFFFF));
@@ -463,7 +479,7 @@ void ImagePlot::drawSelection(QPainter &dc)
   if (dm_has_select && !dm_is_drawingrect && !dm_has_endpoint) {
     LocalPainter p(dc);
 
-    dc.setPen(Qt::white);
+    dc.setPen(dm_color_point);
     dc.setClipRect(dm_offset.x(), dm_offset.y(), dm_area.width(), dm_area.height());
 
     int x = xToPixel(dm_startpoint.x()) + static_cast<int>(dm_pixper/2);
@@ -476,7 +492,7 @@ void ImagePlot::drawSelection(QPainter &dc)
     LocalPainter p(dc);
     QPoint topleft, botright;
 
-    dc.setPen(Qt::white);
+    dc.setPen(dm_color_selection);
     dc.setBrush(Qt::NoBrush);
     dc.setClipRect(dm_offset.x(), dm_offset.y(), dm_area.width(), dm_area.height());
 
