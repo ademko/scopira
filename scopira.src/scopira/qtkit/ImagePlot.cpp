@@ -180,6 +180,9 @@ void ImagePlot::setDirty(void)
 void ImagePlot::setPlotSize(QSize sz)
 {
   //std::cerr << "SetDataSize(" << sz << ")\n";
+  if (dm_datasize == sz)
+    return; //optmization
+
   dm_datasize = sz;
   setDirty();
 }
