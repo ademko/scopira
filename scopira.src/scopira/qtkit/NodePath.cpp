@@ -158,6 +158,17 @@ long NodePath::asLong(void) const
   throw numeric_error();
 }
 
+double NodePath::asDouble(void) const
+{
+  double ret;
+  bool ok;
+
+  ret = asString().toDouble(&ok);
+  if (ok)
+    return ret;
+  throw numeric_error();
+}
+
 QString NodePath::sanitizeField(const QString &fieldname)
 {
   QString ret(fieldname);

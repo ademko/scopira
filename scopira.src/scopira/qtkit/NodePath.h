@@ -100,6 +100,7 @@ class scopira::qtkit::NodePath
 
     QString asString(void) const { return dm_node.text(); }
     long asLong(void) const;
+    double asDouble(void) const;
 
     /// its like an assert, but throws an exception on failure
     static void verify(bool b) { if (!b) throw verify_error(); }
