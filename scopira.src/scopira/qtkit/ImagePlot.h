@@ -274,6 +274,7 @@ class scopira::qtkit::ImagePlot : public QWidget
     virtual void drawingMouseMoveEvent(QMouseEvent *event);
     virtual void drawingMousePressEvent(QMouseEvent *event);
     virtual void drawingMouseReleaseEvent(QMouseEvent *event);
+    virtual void drawingWheelEvent(QWheelEvent *event);
 
   private slots:
     void onZoomIn(void);

@@ -60,6 +60,7 @@ class ImagePlot::Drawing : public QWidget
     virtual void mouseMoveEvent(QMouseEvent *event) { dm_parent->drawingMouseMoveEvent(event); }
     virtual void mousePressEvent(QMouseEvent *event) { dm_parent->drawingMousePressEvent(event); }
     virtual void mouseReleaseEvent(QMouseEvent *event) { dm_parent->drawingMouseReleaseEvent(event); }
+    virtual void wheelEvent(QWheelEvent *event) { dm_parent->drawingWheelEvent(event); }
 
   private:
     ImagePlot *dm_parent;
@@ -549,6 +550,14 @@ void ImagePlot::drawingMouseReleaseEvent(QMouseEvent *event)
     handleRightButton(event, false, false);
   else if (event->button() == Qt::MidButton)
     handleMidButton(event, false, false);
+}
+
+void ImagePlot::drawingWheelEvent(QWheelEvent *event)
+{
+  if (event->delta() < 0)
+    onZoomOut();
+  else if (event->delta() > 0)
+    onZoomIn();
 }
 
 void ImagePlot::onZoomIn(void)
