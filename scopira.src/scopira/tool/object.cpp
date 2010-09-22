@@ -39,6 +39,7 @@ object::object(void)
   dm_object_magic = -236944;
 #endif
   dm_refcount = 0;
+//fprintf(stderr, "object::CTOR dm_use_debug_ref_counter=%d\n addr=%d name=%s\n", dm_use_debug_ref_counter, reinterpret_cast<int>(this), typeid(*this).name());
 }
 
 object::object(bool neverusecounter)
@@ -52,6 +53,7 @@ object::object(bool neverusecounter)
   dm_object_magic = -236944;
 #endif
   dm_refcount = 0;
+//fprintf(stderr, "object::CTOR-alt dm_use_debug_ref_counter=%d\n", dm_use_debug_ref_counter);
 }
 
 object::object(const object &o)
@@ -77,6 +79,7 @@ object::~object()
   dm_object_magic = 5529022;
 #endif
   // does nothing
+//fprintf(stderr, "object::~dtor\n");
 }
 
 int object::add_ref(void) const
@@ -203,7 +206,7 @@ objrefcounter::objrefcounter(void)
   dm_real = 0;
   assert(!objrefcounter_mutex);
   objrefcounter_mutex = new mutex;
-  //fprintf(stderr, "OBJREFCOUNTER: START\n");
+//fprintf(stderr, "OBJREFCOUNTER: START\n");
 }
 
 objrefcounter::~objrefcounter()

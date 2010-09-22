@@ -73,9 +73,9 @@ class scopira::tool::bufferflow : public scopira::tool::iflow_i, public scopira:
     /// is this legal? -ademko
 
     /// returns the buffer as a raw c array
-    byte_t* c_array(void) { return &dm_buffer[0]; }
+    byte_t* c_array(void) { assert(size()>0); return &dm_buffer[0]; }
     /// returns the buffer as a raw c array
-    const byte_t* c_array(void) const { return &dm_buffer[0]; }
+    const byte_t* c_array(void) const { assert(size()>0); return &dm_buffer[0]; }
 
     /// return the size of the internal buffer
     size_t size(void) const { return dm_buffer.size(); }

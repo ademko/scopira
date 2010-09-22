@@ -116,7 +116,11 @@ recv_msg::recv_msg(scopira::agent::task_context &ctx, int src)
 
   assert(dm_realbuf.get());
 
-  dm_buf = new scopira::tool::bufferiflow(dm_realbuf->c_array(), dm_realbuf->size());
+  // c_array() crashes if size is 0, so we need a check 
+  if (dm_realbuf->size() > 0)
+    dm_buf = new scopira::tool::bufferiflow(dm_realbuf->c_array(), dm_realbuf->size());
+  else
+    dm_buf = new scopira::tool::bufferiflow(0, 0);
 
   open(dm_buf.get());
 }

@@ -83,6 +83,7 @@ class objflowloader::impl_t : public scopira::tool::object
 };
 
 objflowloader::impl_t::impl_t(void)
+  : object(true)
 {
 }
 
