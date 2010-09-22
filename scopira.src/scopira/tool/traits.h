@@ -44,7 +44,7 @@ namespace scopira
 
     template <> class flowtraits_g<std::string>;
 
-    template <class EE> class scopira::tool::flowtraits_g<std::vector<EE> >;
+    template <class EE> class flowtraits_g<std::vector<EE> >;
   }
 }
 

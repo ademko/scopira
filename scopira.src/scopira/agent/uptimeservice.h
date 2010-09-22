@@ -18,6 +18,7 @@
 
 #include <scopira/tool/uuid.h>
 #include <scopira/agent/context.h>
+#include <scopira/tool/export.h>
 
 namespace scopira
 {
@@ -45,9 +46,9 @@ class scopira::agent::uptime_service
 {
   public:
     /// constructor
-    uptime_service(scopira::agent::task_context &ctx);
+    SCOPIRA_EXPORT uptime_service(scopira::agent::task_context &ctx);
     /// destructor
-    ~uptime_service();
+    SCOPIRA_EXPORT ~uptime_service();
 
     /**
      * All the values for get_value are cached internally.
@@ -56,10 +57,10 @@ class scopira::agent::uptime_service
      *
      * @author Aleksander Demko
      */ 
-    void update_uptime(void);
+    SCOPIRA_EXPORT void update_uptime(void);
 
     /// returns the number of agents being monitored
-    int get_num_agents(void) { return static_cast<int>(dm_servers.size()); }
+    inline int get_num_agents(void) { return static_cast<int>(dm_servers.size()); }
 
     /**
      * Get the value for the given key from the given agentid.
@@ -79,7 +80,8 @@ class scopira::agent::uptime_service
      *
      * @author Aleksander Demko
      */ 
-    const std::string & get_value(int agentnum, const std::string &key);
+    SCOPIRA_EXPORT 
+      const std::string & get_value(int agentnum, const std::string &key);
 
   private:
     scopira::agent::task_context &dm_ctx;

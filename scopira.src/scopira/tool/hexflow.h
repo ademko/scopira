@@ -24,9 +24,9 @@ namespace scopira
     class hexoflow;
 
     /// array of the 16 digits of hex
-    extern const char* hexchars; // "0123...EF"
+    SCOPIRA_EXPORT extern const char* hexchars; // "0123...EF"
     /// array of the 16 digits of hex (lowercase, which you should probably prefer)
-    extern const char* lowerhexchars; // "0123...ef"
+    SCOPIRA_EXPORT extern const char* lowerhexchars; // "0123...ef"
 
     /// converts a '0'..'F' (or '0'..'f') to 0-15
     inline byte_t char_to_hex(char c) {
@@ -61,20 +61,20 @@ class scopira::tool::hexiflow : public scopira::tool::iflow_i
      * @param in source stream to use
      * @author Aleksander Demko
      */
-    hexiflow(bool doref, iflow_i* in);
+    SCOPIRA_EXPORT hexiflow(bool doref, iflow_i* in);
 
     /// are we in a failed state?
-    virtual bool failed(void) const;
+    SCOPIRA_EXPORT virtual bool failed(void) const;
 
     /// read raw block data, returns num read in
-    virtual size_t read(byte_t* _buf, size_t _maxsize);
+    SCOPIRA_EXPORT virtual size_t read(byte_t* _buf, size_t _maxsize);
     /// read one byte
-    virtual size_t read_byte(byte_t &out);
+    SCOPIRA_EXPORT virtual size_t read_byte(byte_t &out);
 
     /// opens a new link
-    void open(iflow_i* in);
+    SCOPIRA_EXPORT void open(iflow_i* in);
     /// close the current link
-    void close(void);
+    SCOPIRA_EXPORT void close(void);
 };
 
 /**
@@ -94,20 +94,20 @@ class scopira::tool::hexoflow : public scopira::tool::oflow_i
      * @param is the input stream to use. this object will "own" it
      * @author Aleksander Demko
      */
-    hexoflow(bool doref, oflow_i* out);
+    SCOPIRA_EXPORT hexoflow(bool doref, oflow_i* out);
 
     /// are we in a failed state?
-    virtual bool failed(void) const;
+    SCOPIRA_EXPORT virtual bool failed(void) const;
 
     /// write a raw block of data
-    virtual size_t write(const byte_t* _buf, size_t _size);
+    SCOPIRA_EXPORT virtual size_t write(const byte_t* _buf, size_t _size);
     /// writes a byte
-    virtual size_t write_byte(byte_t b);
+    SCOPIRA_EXPORT virtual size_t write_byte(byte_t b);
 
     /// opens a new link
-    void open(oflow_i* in);
+    SCOPIRA_EXPORT void open(oflow_i* in);
     /// close the current link
-    void close(void);
+    SCOPIRA_EXPORT void close(void);
 };
 
 #endif

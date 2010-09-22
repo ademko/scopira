@@ -16,6 +16,7 @@
 
 #include <scopira/tool/array.h>
 #include <scopira/tool/flow.h>
+#include <scopira/tool/export.h>
 
 namespace scopira
 {
@@ -28,13 +29,13 @@ namespace scopira
      *
      * @author Aleksander Demko
      */ 
-    std::string hexhash(const scopira::tool::basic_array<byte_t> &hash);
+    SCOPIRA_EXPORT std::string hexhash(const scopira::tool::basic_array<byte_t> &hash);
 
     /**
      * Closes the given hashoflow and returns the hash, as a hex string
      * @author Aleksander Demko
      */
-    std::string close_and_hexhash(hashoflow &o);
+    SCOPIRA_EXPORT std::string close_and_hexhash(hashoflow &o);
 
     //this is declared at the bottom of this .h file
     //std::string hexhash_string(const std::string &s, int type = scopira::tool::hashoflow::sha1_c);
@@ -55,22 +56,22 @@ class scopira::tool::hashoflow : public scopira::tool::oflow_i
 
   public:
     /// ctor, does an implicit open
-    hashoflow(int alg = sha1_c);
+    SCOPIRA_EXPORT hashoflow(int alg = sha1_c);
     /// dtor
-    virtual ~hashoflow();
+    SCOPIRA_EXPORT virtual ~hashoflow();
 
     /// in failed state?
-    virtual bool failed(void) const { return dm_impl != 0; }
+    SCOPIRA_EXPORT virtual bool failed(void) const { return dm_impl != 0; }
 
     /// writes a few bytes
-    virtual size_t write(const byte_t* _buf, size_t _size);
+    SCOPIRA_EXPORT virtual size_t write(const byte_t* _buf, size_t _size);
 
     /// opens a new hashing session, closing any previous one, if any
-    void open(int alg = sha1_c);
+    SCOPIRA_EXPORT void open(int alg = sha1_c);
     /// close the current link, throwing away the hash
-    void close(void);
+    SCOPIRA_EXPORT void close(void);
     /// close the current link, storing the final hash into the given buffer
-    void close(scopira::tool::basic_array<byte_t> &hash);
+    SCOPIRA_EXPORT void close(scopira::tool::basic_array<byte_t> &hash);
 
   private:
     void *dm_impl;
@@ -84,7 +85,7 @@ namespace scopira
      * Returns a hex hash of the given string
      * @author Aleksander Demko
      */ 
-    std::string hexhash_string(const std::string &s, int type = scopira::tool::hashoflow::sha1_c);
+    SCOPIRA_EXPORT  std::string hexhash_string(const std::string &s, int type = scopira::tool::hashoflow::sha1_c);
   }
 }
 
