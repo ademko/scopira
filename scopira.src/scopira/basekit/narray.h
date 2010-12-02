@@ -2854,6 +2854,9 @@ template <class T, int DIM> class scopira::basekit::narray_o : public scopira::b
 
     virtual bool load(scopira::tool::iobjflow_i &in) { return narray_parent_type::load(in); }
     virtual void save(scopira::tool::oobjflow_i &out) const { narray_parent_type::save(out); }
+
+    /// this turns out to be very handy
+    void operator=(const this_type &at) { copy(at); }
 };
 
 //

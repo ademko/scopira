@@ -478,7 +478,8 @@ void printclassnstats_v::update_view(void)
               messagewindow::popup_error("Weird... Couldn't open null stream for output!");
                 return;
             }
-            patoutfile = tableoutfile;
+            assert(false);//fix this, what was this supposed to do?
+            //patoutfile = tableoutfile;
             break;
         case PRINT_ODD_PAT:
             tableoutfile.open(&nully);
@@ -508,7 +509,8 @@ void printclassnstats_v::update_view(void)
                     return;
                 }
             }                
-            patoutfile = tableoutfile;
+            assert(false);//fix this, what was this supposed to do?
+            //patoutfile = tableoutfile;
             break;
         case PRINT_TABLES:
             patoutfile.open(&nully);
