@@ -263,9 +263,9 @@ ENDIF(SCOPIRA_GTKUI_BUILD)
 
 #pakit 
 IF(SCOPIRA_PAKIT_BUILD)
-  IF(NOT SCOPIRA_LIBXML2_BUILD OR NOT SCOPIRA_GTKUI_BUILD)
-    MESSAGE(FATAL_ERROR "SCOPIRA_PAKIT_BUILD requires both SCOPIRA_LIBXML2_BUILD and SCOPIRA_GTKUI_BUILD to be ON")
-  ENDIF(NOT SCOPIRA_LIBXML2_BUILD OR NOT SCOPIRA_GTKUI_BUILD)
+  IF(NOT SCOPIRA_LIBXML2_BUILD)
+    MESSAGE(FATAL_ERROR "SCOPIRA_PAKIT_BUILD requires both SCOPIRA_LIBXML2_BUILD to be ON")
+  ENDIF(NOT SCOPIRA_LIBXML2_BUILD)
   ADD_LIBRARY(pakit
       ${THIS_PATH}/pakit/distances.cpp
       ${THIS_PATH}/pakit/rdp.cpp
@@ -273,21 +273,24 @@ IF(SCOPIRA_PAKIT_BUILD)
       ${THIS_PATH}/pakit/util.cpp
       )
   TARGET_LINK_LIBRARIES(pakit scopiraxml)
-  ADD_LIBRARY(pauikit
-      ${THIS_PATH}/pakit/ui/classifierstats.cpp
-      ${THIS_PATH}/pakit/ui/distances.cpp
-      ${THIS_PATH}/pakit/ui/filters.cpp
-      ${THIS_PATH}/pakit/ui/funcs.cpp
-      ${THIS_PATH}/pakit/ui/lda.cpp
-      ${THIS_PATH}/pakit/ui/models.cpp
-      ${THIS_PATH}/pakit/ui/patterneditor.cpp
-      ${THIS_PATH}/pakit/ui/patternsort.cpp
-      ${THIS_PATH}/pakit/ui/plot.cpp
-      ${THIS_PATH}/pakit/ui/printclassnstats.cpp
-      ${THIS_PATH}/pakit/ui/rdp.cpp
-      )
-  TARGET_LINK_LIBRARIES(pauikit pakit)
-  TARGET_LINK_LIBRARIES(pauikit scopiraui)
+
+  IF (SCOPIRA_GTKUI_BUILD)
+    ADD_LIBRARY(pauikit
+        ${THIS_PATH}/pakit/ui/classifierstats.cpp
+        ${THIS_PATH}/pakit/ui/distances.cpp
+        ${THIS_PATH}/pakit/ui/filters.cpp
+        ${THIS_PATH}/pakit/ui/funcs.cpp
+        ${THIS_PATH}/pakit/ui/lda.cpp
+        ${THIS_PATH}/pakit/ui/models.cpp
+        ${THIS_PATH}/pakit/ui/patterneditor.cpp
+        ${THIS_PATH}/pakit/ui/patternsort.cpp
+        ${THIS_PATH}/pakit/ui/plot.cpp
+        ${THIS_PATH}/pakit/ui/printclassnstats.cpp
+        ${THIS_PATH}/pakit/ui/rdp.cpp
+        )
+    TARGET_LINK_LIBRARIES(pauikit pakit)
+    TARGET_LINK_LIBRARIES(pauikit scopiraui)
+  ENDIF(SCOPIRA_GTKUI_BUILD)
 ENDIF(SCOPIRA_PAKIT_BUILD)
 
 #scopiraqtkit

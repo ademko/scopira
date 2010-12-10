@@ -58,7 +58,10 @@ class pakit::patterns_t
     PAKIT_EXPORT patterns_t(const patterns_t &rhs, bool deepcopy);
 
     /**
-     * Copy function
+     * Copy function.
+     * If deepcopy is false, then this will point to the same internal arrays
+     * as in rhs.
+     *
      * @author Aleksander Demko
      */
     PAKIT_EXPORT void copy_patterns(const patterns_t &rhs, bool deepcopy);
@@ -67,6 +70,16 @@ class pakit::patterns_t
 
     PAKIT_EXPORT bool load(scopira::tool::iobjflow_i& in);
     PAKIT_EXPORT void save(scopira::tool::oobjflow_i& out) const;
+
+    /**
+     * Alias for copy_patterns(rhs, true)
+     *
+     * @author Aleksander Demko
+     */ 
+    PAKIT_EXPORT patterns_t operator = (const patterns_t &rhs) {
+      copy_patterns(rhs, true);
+      return *this;
+    }
 };
 
 #endif
