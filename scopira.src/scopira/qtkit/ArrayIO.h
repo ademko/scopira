@@ -14,6 +14,8 @@
 #ifndef __INCLUDED_SCOPIRA_QTKIT_ARRAYIO_H__
 #define __INCLUDED_SCOPIRA_QTKIT_ARRAYIO_H__
 
+#include <QFile>
+
 namespace scopira
 {
   namespace qtkit
