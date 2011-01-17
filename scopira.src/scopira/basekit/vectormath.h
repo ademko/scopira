@@ -1,6 +1,6 @@
 
 /*
- *  Copyright (c) 2002-2003    National Research Council
+ *  Copyright (c) 2002-2011    National Research Council
  *
  *  All rights reserved.
  *
@@ -64,6 +64,17 @@ namespace scopira
      */ 
     template <class T>
       void div_scalar(T &v, typename T::data_type val);
+    /**
+     * Inverse divides val to every element in v. v can be any
+     * class that uses iterators. To summarize, each element
+     * in v will be replaced by val/v
+     *
+     * @param v the vector to operator one
+     * @param val the value to add to each element in v
+     * @author Aleksander Demko
+     */ 
+    template <class T>
+      void invdiv_scalar(T &v, typename T::data_type val);
  
 
     // not counst parms for muffinization
@@ -128,7 +139,7 @@ namespace scopira
       void stddev(const V &v, T& out)
         { variance<V,T>(v, out); out = static_cast<T>(::sqrt(out)); }
     /**
-     * Adds each element in delta to each element in target
+     * Adds each element in target to each element in delta
      *
      * @param target target iterator-supporting container
      * @param delta iterator-supporting delta vector
@@ -137,7 +148,7 @@ namespace scopira
     template <class LH, class RH>
       void add_vector(LH &target, const RH& delta);
     /**
-     * Subtracts each element in delta to each element in target
+     * Subtracts each element in target to each element in delta
      *
      * @param target target iterator-supporting container
      * @param delta iterator-supporting delta vector
@@ -146,7 +157,7 @@ namespace scopira
     template <class LH, class RH>
       void sub_vector(LH &target, const RH& delta);
     /**
-     * Multiplies each element in delta to each element in target
+     * Multiplies each element in target to each element in delta
      *
      * @param target target iterator-supporting container
      * @param delta iterator-supporting delta vector
@@ -154,6 +165,15 @@ namespace scopira
      */ 
     template <class LH, class RH>
       void mul_vector(LH &target, const RH& delta);
+    /**
+     * Divides each element in target to each element in delta
+     *
+     * @param target target iterator-supporting container
+     * @param delta iterator-supporting delta vector
+     * @author Aleksander Demko
+     */ 
+    template <class LH, class RH>
+      void div_vector(LH &target, const RH& delta);
     /**
      * Calculates the absolute value of each element in source,
      * and writes it to target.
@@ -239,6 +259,16 @@ template <class T>
 
   for (; ii != endii; ++ii)
     (*ii) /= val;
+}
+
+template <class T>
+  void scopira::basekit::invdiv_scalar(T &v, typename T::data_type val)
+{
+  typedef typename T::iterator iter;
+  iter ii=v.begin(), endii = v.end();
+
+  for (; ii != endii; ++ii)
+    (*ii) = val / (*ii);
 }
 
 template <class V, class T>
@@ -336,6 +366,7 @@ template <class V, class T>
 
   out = sum / (mx - 1);
 }
+
 template <class LH, class RH>
   void scopira::basekit::add_vector(LH &target, const RH& delta)
 {
@@ -385,6 +416,24 @@ template <class LH, class RH>
   while (tar != endtar) {
     assert(src != endsrc);
     *tar *= *src;
+    ++tar;
+    ++src;
+  }
+}
+
+template <class LH, class RH>
+  void scopira::basekit::div_vector(LH &target, const RH& delta)
+{
+  typename LH::iterator tar, endtar;
+  typename RH::const_iterator src, endsrc;
+
+  tar = target.begin();
+  endtar = target.end();
+  src = delta.begin();
+  endsrc = delta.end();
+  while (tar != endtar) {
+    assert(src != endsrc);
+    *tar /= *src;
     ++tar;
     ++src;
   }
