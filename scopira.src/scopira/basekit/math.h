@@ -26,6 +26,10 @@
 #include <assert.h>
 #include <math.h>
 
+#ifdef PLATFORM_osx
+#include <cmath>
+#endif
+
 #include <scopira/tool/platform.h>
 
 // should these be in this file?
@@ -129,6 +133,12 @@ namespace scopira
 #ifdef PLATFORM_win32
     inline bool is_nan(double v) { return _isnan(v) != 0; }
     inline bool is_nan(float v) { return _isnan(v) != 0; }//incase is*() is a macro, which it often is
+#elif defined(PLATFORM_osx)
+    // mac lacks (utleast under certain builds) isnan... supposed v != v -> true for nan-v is standard
+    //inline bool is_nan(double v) { return v != v; }
+    //inline bool is_nan(float v) { return v != v; }
+    inline bool is_nan(double v) { return std::isnan(v); }
+    inline bool is_nan(float v) { return std::isnan(v); }//incase is*() is a macro, which it often is
 #else
     /**
      * Is v NaN (not a number)
@@ -152,6 +162,9 @@ namespace scopira
     // surely irix has an implmentation of these?
     inline int is_inf(double v) { assert(false); return 0; }
     inline int is_inf(float v) { assert(false); return 0; }
+#elif defined(PLATFORM_osx)
+    inline int is_inf(double v) { return std::isinf(v); }
+    inline int is_inf(float v) { return std::isinf(v); }
 #else
     /**
      * Is v infinity.

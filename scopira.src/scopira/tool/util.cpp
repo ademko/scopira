@@ -145,13 +145,17 @@ std::string tool::int64_t_to_string(int64_t i)
 
   buf[0] = 0;
 #ifdef PLATFORM_win32
-  _snprintf(buf, 90, "%Iu", i);
+  snprintf(buf, 90, "%Iu", i);
+#elif defined(PLATFORM_osx)
+  snprintf(buf, 90, "%lld", i);
 #else
+
 #ifdef PLATFORM_64
   snprintf(buf, 90, "%ld", i);
 #else
   snprintf(buf, 90, "%lld", i);
 #endif
+
 #endif
 
   return buf;
