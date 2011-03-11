@@ -323,7 +323,7 @@ void fileflow::read_lock(void)
 #endif
   fcntl(dm_hand, F_SETLKW, &f);
 
-  assert(ret == 0);
+  assert(ret == 0 && "[fcntl lock call failed. are you sure your OS or filesystem supports locks?]");
 #endif
 }
 
@@ -345,7 +345,7 @@ bool fileflow::try_read_lock(void)
 #endif
   fcntl(dm_hand, F_SETLKW, &f);
 
-  assert(ret == 0);
+  assert(ret == 0 && "[fcntl lock call failed. are you sure your OS or filesystem supports locks?]");
 
   return f.l_type == F_UNLCK;
 #else
@@ -372,7 +372,7 @@ void fileflow::write_lock(void)
 #endif
   fcntl(dm_hand, F_SETLKW, &f);
 
-  assert(ret == 0);
+  assert(ret == 0 && "[fcntl lock call failed. are you sure your OS or filesystem supports locks?]");
 #endif
 }
 
@@ -394,7 +394,7 @@ bool fileflow::try_write_lock(void)
 #endif
   fcntl(dm_hand, F_SETLKW, &f);
 
-  assert(ret == 0);
+  assert(ret == 0 && "[fcntl lock call failed. are you sure your OS or filesystem supports locks?]");
 
   return f.l_type == F_UNLCK;
 #else
@@ -421,7 +421,7 @@ void fileflow::unlock(void)
 #endif
   fcntl(dm_hand, F_SETLKW, &f);
 
-  assert(ret == 0);
+  assert(ret == 0 && "[fcntl lock call failed. are you sure your OS or filesystem supports locks?]");
 #endif
 }
 
