@@ -16,6 +16,10 @@
 #ENDIF(NOT HAS_SCOPIRA)
 
 
+#since im often included in other files, this is to
+#suppress the warning about CMP0011
+CMAKE_POLICY(PUSH)
+
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 
 # a project lins is always required, it seems
@@ -318,3 +322,5 @@ IF(QT4_FOUND)
     )
   TARGET_LINK_LIBRARIES(scopiraqtkit ${QT_LIBRARIES})
 ENDIF(QT4_FOUND)
+
+CMAKE_POLICY(POP)
