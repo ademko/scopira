@@ -13,6 +13,9 @@
 
 #include <scopira/tool/uuid.h>
 
+#include <scopira/tool/hexflow.h> // for hex stuff in non-lib implementation
+#include <scopira/tool/output.h>
+
 #ifdef PLATFORM_win32
 // disable depreacted warnings
 #pragma warning(disable:4996)
@@ -128,8 +131,8 @@ bool uuid::parse_string(const std::string &s)
 
 #if !defined(PLATFORM_E2UUID) && !defined(PLATFORM_win32)
 uuid_generator::uuid_generator(void)
+  : dm_core(time_seed())
 {
-  dm_next = time_seed();    // "random". hah!
 }
 #endif
 
@@ -143,7 +146,14 @@ void uuid_generator::next(uuid &out)
 #else
   locker L(dm_mut);
 
-  out.dm_id = dm_next++;
+  int *ids = reinterpret_cast<int*>(out.dm_id);
+
+  assert(sizeof(int)*4 == sizeof(out.dm_id));
+
+  ids[0] = dm_core();
+  ids[1] = dm_core();
+  ids[2] = dm_core();
+  ids[3] = dm_core();
 #endif
 }
 
@@ -153,15 +163,118 @@ void uuid_generator::next(uuid &out)
 
 scopira::tool::oflow_i& operator << (scopira::tool::oflow_i& o, const scopira::tool::uuid &id)
 {
-#ifdef PLATFORM_E2UUID
-  char buf[64]; // string is actually only 36 bytes
-  uuid_unparse(id.dm_id, buf);
-  o << buf;
-#elif defined(PLATFORM_win32)
   o << id.as_string();
-#else
-  o << id.dm_id;
-#endif
+
   return o;
 }
+
+#if !defined(PLATFORM_E2UUID) && !defined(PLATFORM_win32)
+
+uuid::uuid(void)
+{
+  set_zero();
+}
+
+void uuid::set_zero(void)
+{
+  dm_id[0] = 0;
+  dm_id[1] = 0;
+}
+
+uuid::uuid(const char *s)
+{
+#ifndef NDEBUG
+  bool b =
+#endif
+  parse_string(s);
+  assert(b);
+}
+
+bool uuid::is_zero(void) const
+{
+  return dm_id[0] == 0 && dm_id[1] == 0;
+}
+
+bool uuid::operator == (const uuid &rhs) const
+{
+  return dm_id[0] == rhs.dm_id[0] && dm_id[1] == rhs.dm_id[1];
+}
+
+bool uuid::operator != (const uuid &rhs) const
+{
+  return dm_id[0] != rhs.dm_id[0] || dm_id[1] != rhs.dm_id[1];
+}
+
+bool uuid::operator < (const uuid &rhs) const
+{
+  return
+    (dm_id[0] < rhs.dm_id[0]) ||
+    (dm_id[0] == rhs.dm_id[0] && dm_id[1] < rhs.dm_id[1]);
+}
+
+bool uuid::load(scopira::tool::itflow_i& in)
+{
+  return
+    in.read_int64_t(dm_id[0]) && in.read_int64_t(dm_id[1]);
+}
+
+void uuid::save(scopira::tool::otflow_i& out) const
+{
+  out.write_int64_t(dm_id[0]);
+  out.write_int64_t(dm_id[1]);
+}
+
+std::string uuid::as_string(void) const
+{
+  std::string ret;
+  const byte_t *data = reinterpret_cast<const byte_t *>(dm_id);
+
+  ret.reserve(128/8+6);
+  //ret.push_back('{');
+  for (int i=0; i<(128/8); ++i) {
+    ret.push_back(hexchars[data[i] >> 4]);
+    ret.push_back(hexchars[data[i] & 0x0F]);
+    if (i == 3 || i == 5 || i == 7 || i == 9)
+      ret.push_back('-');
+  }
+  //ret.push_back('}');
+
+  return ret;
+}
+
+bool uuid::parse_string(const std::string &s)
+{
+  byte_t *data = reinterpret_cast<byte_t *>(dm_id);
+  int i = 0;
+  int c = 0;
+  bool inhex = false;
+  byte_t b = 0;
+
+  while (i < (128/8)) {
+    if (c>=s.size())
+      return false;
+
+    // process the next char
+    if (inhex) {
+      inhex = false;
+      if (is_hex(s[c])) {
+        b |= char_to_hex(s[c]);
+        // append it
+        data[i] = b;
+        i++;
+      }
+    } else {
+      if (is_hex(s[c])) {
+        b = char_to_hex(s[c]) << 4;
+        inhex = true;
+      }
+      // else, do nothing
+    }
+    c++;
+  }
+
+  return true;
+}
+
+#endif
 

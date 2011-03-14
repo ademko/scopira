@@ -28,6 +28,14 @@ namespace scopira
     /// array of the 16 digits of hex (lowercase, which you should probably prefer)
     SCOPIRA_EXPORT extern const char* lowerhexchars; // "0123...ef"
 
+    /// returns true if this is a hex char
+    inline bool is_hex(char c) {
+      return
+        (c >= '0' && c <= '9') ||
+        (c >= 'a' && c <= 'f') ||
+        (c >= 'A' && c <= 'F');
+    }
+
     /// converts a '0'..'F' (or '0'..'f') to 0-15
     inline byte_t char_to_hex(char c) {
       // a == 97, A == 65, '0' == 48

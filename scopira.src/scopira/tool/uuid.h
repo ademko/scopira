@@ -19,8 +19,10 @@
 #include <scopira/tool/export.h>
 #include <scopira/tool/mutex.h>
 #include <scopira/tool/flow.h>
+#include <scopira/tool/random.h>  // for time_seed
+#include <scopira/tool/linconrandom.h>  // for lincon_core
 
-#if defined(PLATFORM_linux) || defined(PLATFORM_osx)
+#if (defined(PLATFORM_linux) || defined(PLATFORM_osx)) && !defined(PLATFORM_DONT_USE_LIBUUID)
 #define PLATFORM_E2UUID
 #endif
 
@@ -181,42 +183,50 @@ class scopira::tool::uuid                       // super-Win32 implementation
 class scopira::tool::uuid                       // lame non-Linux implementation[1]
 {
   private:
-    int dm_id;    // [1] This implementation will NEED to be synchronized with the Linux
+    int64_t dm_id[2];
+                  // [1] This implementation will NEED to be synchronized with the Linux
                   // one if there is to be any network communication/collabaration
                   // Under Win32, we'll use MS's GUID stuff, which is basicaly the same thing
                   // What to do for the (non-Linux) UNIXes though?
 
   public:
     /// Constructor. Builds a "zero" UUID (one with all zeros)
-    uuid(void) : dm_id(0) { }
+    SCOPIRA_EXPORT uuid(void);
+    /**
+     * Construct the UUID from the given string.
+     * Particularly useful in global, static, constant-like objects.
+     *
+     * @author Aleksander Demko
+     */
+    SCOPIRA_EXPORT uuid(const char *s);
 
     /**
      * Sets this uuid to be a zero UUID, the "null" of UUIDs.
      * @author Aleksander Demko
      */ 
-    void set_zero(void) { dm_id = 0; }
+    SCOPIRA_EXPORT void set_zero(void);
     /**
      * Is this UUID a "zero" uuid?
      * @author Aleksander Demko
      */ 
-    bool is_zero(void) const { return dm_id == 0; }
+    SCOPIRA_EXPORT bool is_zero(void) const;
 
     /// comparator
-    bool operator == (const uuid &rhs) const { return dm_id == rhs.dm_id; }
+    SCOPIRA_EXPORT bool operator == (const uuid &rhs) const;
     /// comparator
-    bool operator != (const uuid &rhs) const { return dm_id != rhs.dm_id; }
+    SCOPIRA_EXPORT bool operator != (const uuid &rhs) const;
     /// comparator
-    bool operator < (const uuid &rhs) const { return dm_id < rhs.dm_id; }
+    SCOPIRA_EXPORT bool operator < (const uuid &rhs) const;
 
     /// Serialization - yes, non-virtual
-    bool load(scopira::tool::itflow_i& in) { return in.read_int(dm_id); }
+    SCOPIRA_EXPORT bool load(scopira::tool::itflow_i& in);
     /// Serialization - yes, non-virtual
-    void save(scopira::tool::otflow_i& out) const { out.write_int(dm_id); }
+    SCOPIRA_EXPORT void save(scopira::tool::otflow_i& out) const;
 
     /// return a nice string representation
-    //SCOPIRA_EXPORT std::string as_string(void) const;   // for "int"s? i dunno...
+    SCOPIRA_EXPORT std::string as_string(void) const;
     /// parse the string into this object, return false if failed
-    //SCOPIRA_EXPORT bool parse_string(const std::string &s);
+    SCOPIRA_EXPORT bool parse_string(const std::string &s);
 
   public:
     friend class scopira::tool::uuid_generator;
@@ -233,8 +243,8 @@ class scopira::tool::uuid_generator
 {
   private:
 #if !defined(PLATFORM_E2UUID) && !defined(PLATFORM_win32)
-    volatile int dm_next;
     mutex dm_mut;
+    scopira::tool::lincon_core dm_core;
 #endif
   public:
     /// Constructor
