@@ -4,14 +4,15 @@ Intro
 
 Scopira is a C++ software development library that provides facilities for high performance
 numerical computing, visual application developement (2D and 3D) and parallel processing.
-Scopira may be used for a wide variety of scientific and engineering data analysis and visualization applications.
+Scopira may be used for a wide variety of scientific and engineering data analysis
+and visualization applications.
 
 See http://scopira.org/ for more info.
 
 License
 =======
 
-  Copyright (C) 2005-2011 Aleksander B. Demko
+  Copyright (C) 2000-2011 National Research Council Canada.
 
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
