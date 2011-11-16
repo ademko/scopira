@@ -555,7 +555,7 @@ template <class T>
         }
       
         a = u(i,i);
-        b = -svd_sign(sqrt(s),a);
+        b = -svd_sign<T>(sqrt(s),a);
         h = a * b - s;
         u(i,i)=a - b;
         
@@ -588,7 +588,7 @@ template <class T>
         }
    
         a=u(left,i);
-        b = -svd_sign(sqrt(s),a);
+        b = -svd_sign<T>(sqrt(s),a);
         h=a * b - s;
         u(left,i)= a-b;
         for (k=left;k<width;k++)
@@ -604,7 +604,7 @@ template <class T>
           u(k,i) = u(k,i) * scale;
       } 
     }
-    num_r=std::max(num_r,(fabs(w[i])+fabs(vec_t[i])));   
+    num_r=std::max<T>(num_r,(fabs(w[i])+fabs(vec_t[i])));   
   }
   
   //accumulation of right-hand transformations.
