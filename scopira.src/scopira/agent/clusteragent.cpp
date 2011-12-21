@@ -106,7 +106,7 @@ class cluster_agent::peer_hello_msg : public cluster_agent::network_msg
     virtual void save(scopira::tool::oobjflow_i& out) const;
     virtual const char * get_debug_name(void) const { return "peer_hello_msg"; }
     virtual short get_type(void) const { return type_tmp_c; }
-    virtual void execute_agent(cluster_agent &e, cluster_agent::link *lk);
+    virtual void execute_agent_link(cluster_agent &e, cluster_agent::link *lk);
 };
 
 class cluster_agent::nottmp_hello_msg : public cluster_agent::network_msg
@@ -115,7 +115,7 @@ class cluster_agent::nottmp_hello_msg : public cluster_agent::network_msg
     nottmp_hello_msg(void);
     virtual const char * get_debug_name(void) const { return "nottmp_hello_msg"; }
     virtual short get_type(void) const { return type_tmp_c; }
-    virtual void execute_agent(cluster_agent &e, cluster_agent::link *lk);
+    virtual void execute_agent_link(cluster_agent &e, cluster_agent::link *lk);
 };
 
 class cluster_agent::make_back_link_msg : public cluster_agent::network_msg
@@ -128,7 +128,7 @@ class cluster_agent::make_back_link_msg : public cluster_agent::network_msg
     virtual bool load(scopira::tool::iobjflow_i& in);
     virtual void save(scopira::tool::oobjflow_i& out) const;
     virtual const char * get_debug_name(void) const { return "make_back_link_msg"; }
-    virtual void execute_agent(cluster_agent &e, cluster_agent::link *lk);
+    virtual void execute_agent_link(cluster_agent &e, cluster_agent::link *lk);
 };
 
 class cluster_agent::all_quit_msg : public cluster_agent::network_msg
@@ -139,7 +139,7 @@ class cluster_agent::all_quit_msg : public cluster_agent::network_msg
     all_quit_msg(void);
     all_quit_msg(bool initter);
     virtual const char * get_debug_name(void) const { return "all_quit_msg"; }
-    virtual void execute_agent(cluster_agent &e, cluster_agent::link *lk);
+    virtual void execute_agent_link(cluster_agent &e, cluster_agent::link *lk);
 };
 
 class cluster_agent::resolve_agent_msg : public cluster_agent::network_msg
@@ -154,7 +154,7 @@ class cluster_agent::resolve_agent_msg : public cluster_agent::network_msg
     virtual void save(scopira::tool::oobjflow_i& out) const;
     virtual const char * get_debug_name(void) const { return "resolve_agent_msg"; }
     virtual short get_type(void) const { return type_instant_c; }
-    virtual void execute_agent(cluster_agent &e, cluster_agent::link *lk);
+    virtual void execute_agent_link(cluster_agent &e, cluster_agent::link *lk);
 };
 
 class cluster_agent::reply_resolve_agent_msg : public cluster_agent::reply_msg
@@ -183,7 +183,7 @@ class cluster_agent::routed_msg : public cluster_agent::network_msg
     virtual bool load(scopira::tool::iobjflow_i& in);
     virtual void save(scopira::tool::oobjflow_i& out) const;
     virtual const char * get_debug_name(void) const { return "routed_msg"; }
-    virtual void execute_agent(cluster_agent &e, cluster_agent::link *lk);
+    virtual void execute_agent_link(cluster_agent &e, cluster_agent::link *lk);
 };
 
 class cluster_agent::master_launch_task_msg : public cluster_agent::network_msg
@@ -203,7 +203,7 @@ class cluster_agent::master_launch_task_msg : public cluster_agent::network_msg
     virtual bool load(scopira::tool::iobjflow_i& in);
     virtual void save(scopira::tool::oobjflow_i& out) const;
     virtual const char * get_debug_name(void) const { return "master_launch_task_msg"; }
-    virtual void execute_agent(cluster_agent &e, cluster_agent::link *lk);
+    virtual void execute_agent_link(cluster_agent &e, cluster_agent::link *lk);
 };
 
 class cluster_agent::reply_master_launch_task_msg : public cluster_agent::reply_msg
@@ -233,7 +233,7 @@ class cluster_agent::make_task_msg : public cluster_agent::network_msg
     virtual void save(scopira::tool::oobjflow_i& out) const;
     virtual const char * get_debug_name(void) const { return "make_task_msg"; }
     virtual short get_type(void) const { return type_instant_c; }   // oh oh
-    virtual void execute_agent(cluster_agent &e, cluster_agent::link *lk);
+    virtual void execute_agent_link(cluster_agent &e, cluster_agent::link *lk);
 };
 
 class cluster_agent::client_wait_msg : public cluster_agent::network_msg
@@ -247,7 +247,7 @@ class cluster_agent::client_wait_msg : public cluster_agent::network_msg
     virtual bool load(scopira::tool::iobjflow_i& in);
     virtual void save(scopira::tool::oobjflow_i& out) const;
     virtual const char * get_debug_name(void) const { return "client_wait_msg"; }
-    virtual void execute_agent(cluster_agent &e, cluster_agent::link *lk);
+    virtual void execute_agent_link(cluster_agent &e, cluster_agent::link *lk);
 };
 
 class cluster_agent::client_wait_task : public agent_task_i
@@ -272,7 +272,7 @@ class cluster_agent::client_kill_msg : public cluster_agent::network_msg
     virtual bool load(scopira::tool::iobjflow_i& in);
     virtual void save(scopira::tool::oobjflow_i& out) const;
     virtual const char * get_debug_name(void) const { return "client_kill_msg"; }
-    virtual void execute_agent(cluster_agent &e, cluster_agent::link *lk);
+    virtual void execute_agent_link(cluster_agent &e, cluster_agent::link *lk);
 };
 
 class cluster_agent::client_is_alive_msg : public cluster_agent::network_msg
@@ -285,7 +285,7 @@ class cluster_agent::client_is_alive_msg : public cluster_agent::network_msg
     virtual bool load(scopira::tool::iobjflow_i& in);
     virtual void save(scopira::tool::oobjflow_i& out) const;
     virtual const char * get_debug_name(void) const { return "client_is_alive_msg"; }
-    virtual void execute_agent(cluster_agent &e, cluster_agent::link *lk);
+    virtual void execute_agent_link(cluster_agent &e, cluster_agent::link *lk);
 };
 
 class cluster_agent::send_data_msg : public cluster_agent::network_msg
@@ -300,7 +300,7 @@ class cluster_agent::send_data_msg : public cluster_agent::network_msg
     virtual void save(scopira::tool::oobjflow_i& out) const;
     virtual const char * get_debug_name(void) const { return "send_data_msg"; }
     virtual short get_type(void) const { return type_instant_c; }
-    virtual void execute_agent(cluster_agent &e, cluster_agent::link *lk);
+    virtual void execute_agent_link(cluster_agent &e, cluster_agent::link *lk);
 };
 
 class cluster_agent::bcast_data_msg : public cluster_agent::network_msg
@@ -314,7 +314,7 @@ class cluster_agent::bcast_data_msg : public cluster_agent::network_msg
     virtual bool load(scopira::tool::iobjflow_i& in);
     virtual void save(scopira::tool::oobjflow_i& out) const;
     virtual const char * get_debug_name(void) const { return "bcast_data_msg"; }
-    virtual void execute_agent(cluster_agent &e, cluster_agent::link *lk);
+    virtual void execute_agent_link(cluster_agent &e, cluster_agent::link *lk);
 };
 
 class cluster_agent::find_services_msg : public cluster_agent::network_msg
@@ -328,7 +328,7 @@ class cluster_agent::find_services_msg : public cluster_agent::network_msg
     virtual bool load(scopira::tool::iobjflow_i& in);
     virtual void save(scopira::tool::oobjflow_i& out) const;
     virtual const char * get_debug_name(void) const { return "find_services_msg"; }
-    virtual void execute_agent(cluster_agent &e, cluster_agent::link *lk);
+    virtual void execute_agent_link(cluster_agent &e, cluster_agent::link *lk);
 };
 
 class cluster_agent::reply_find_services_msg : public cluster_agent::reply_msg
@@ -355,7 +355,7 @@ class cluster_agent::reg_context_msg : public cluster_agent::network_msg
     virtual bool load(scopira::tool::iobjflow_i& in);
     virtual void save(scopira::tool::oobjflow_i& out) const;
     virtual const char * get_debug_name(void) const { return "reg_context_msg"; }
-    virtual void execute_agent(cluster_agent &e, cluster_agent::link *lk);
+    virtual void execute_agent_link(cluster_agent &e, cluster_agent::link *lk);
 };
 
 class cluster_agent::dead_task_msg : public cluster_agent::network_msg
@@ -368,7 +368,7 @@ class cluster_agent::dead_task_msg : public cluster_agent::network_msg
     virtual bool load(scopira::tool::iobjflow_i& in);
     virtual void save(scopira::tool::oobjflow_i& out) const;
     virtual const char * get_debug_name(void) const { return "dead_task_msg"; }
-    virtual void execute_agent(cluster_agent &e, cluster_agent::link *lk);
+    virtual void execute_agent_link(cluster_agent &e, cluster_agent::link *lk);
 };
 
 class cluster_agent::default_group_size_msg : public cluster_agent::network_msg
@@ -376,7 +376,7 @@ class cluster_agent::default_group_size_msg : public cluster_agent::network_msg
   public:
     default_group_size_msg(void);
     virtual const char * get_debug_name(void) const { return "default_group_size_msg"; }
-    virtual void execute_agent(cluster_agent &e, cluster_agent::link *lk);
+    virtual void execute_agent_link(cluster_agent &e, cluster_agent::link *lk);
 };
 
 //
@@ -1277,7 +1277,7 @@ struct udpmsg_t {
 
   /// as bytes
   byte_t * as_bytes(void) { return reinterpret_cast<byte_t*>(this); }
-  const byte_t * as_bytes(void) const { return reinterpret_cast<const byte_t*>(this); }
+  //const byte_t * as_bytes(void) const { return reinterpret_cast<const byte_t*>(this); } // never used
   size_t size(void) const { return sizeof(udpmsg_t); }
 };
 }//anonymous namespace
@@ -1497,7 +1497,7 @@ void cluster_agent::network_msg::execute_agent(cluster_agent &e)
     lk = L->pm_link;
   }
 
-  execute_agent(e, lk.get());
+  execute_agent_link(e, lk.get());
 }
 
 void cluster_agent::network_msg::set_net_link(net_link *l)
@@ -1530,7 +1530,7 @@ void cluster_agent::reply_msg::save(scopira::tool::oobjflow_i& out) const
   out.write_int(dm_errorcode);
 }
 
-void cluster_agent::reply_msg::execute_agent(cluster_agent &e, link *lk)
+void cluster_agent::reply_msg::execute_agent_link(cluster_agent &e, link *lk)
 {
   assert(!dm_xtion.pm_src.is_zero());
 
@@ -1828,7 +1828,7 @@ void cluster_agent::peer_hello_msg::save(scopira::tool::oobjflow_i& out) const
   out.write_bool(dm_senderistmp);
 }
 
-void cluster_agent::peer_hello_msg::execute_agent(cluster_agent &e, cluster_agent::link *lk)
+void cluster_agent::peer_hello_msg::execute_agent_link(cluster_agent &e, cluster_agent::link *lk)
 {
   count_ptr<net_link> netlk;
   count_ptr<link> srclk, destlk;
@@ -1968,7 +1968,7 @@ cluster_agent::nottmp_hello_msg::nottmp_hello_msg(void)
 {
 }
 
-void cluster_agent::nottmp_hello_msg::execute_agent(cluster_agent &e, cluster_agent::link *lk)
+void cluster_agent::nottmp_hello_msg::execute_agent_link(cluster_agent &e, cluster_agent::link *lk)
 {
   assert(lk);
   assert(lk->is_alive_object());
@@ -2011,7 +2011,7 @@ void cluster_agent::make_back_link_msg::save(scopira::tool::oobjflow_i& out) con
   dm_makelinkfrom.save(out);
 }
 
-void cluster_agent::make_back_link_msg::execute_agent(cluster_agent &e, cluster_agent::link *lk)
+void cluster_agent::make_back_link_msg::execute_agent_link(cluster_agent &e, cluster_agent::link *lk)
 {
   if (e.dm_nodespec.pm_uuid == dm_makelinkfrom)
     // I'm at the destination, lets make a link here
@@ -2038,7 +2038,7 @@ cluster_agent::all_quit_msg::all_quit_msg(bool initter)
 {
 }
 
-void cluster_agent::all_quit_msg::execute_agent(cluster_agent &e, cluster_agent::link *lk)
+void cluster_agent::all_quit_msg::execute_agent_link(cluster_agent &e, cluster_agent::link *lk)
 {
   if (e.dm_nodespec.pm_ismaster) {
     // we're the server, so distribute to everyone else
@@ -2097,7 +2097,7 @@ void cluster_agent::resolve_agent_msg::save(scopira::tool::oobjflow_i& out) cons
   out.write_bool(pm_dotask);
 }
 
-void cluster_agent::resolve_agent_msg::execute_agent(cluster_agent &e, cluster_agent::link *lk)
+void cluster_agent::resolve_agent_msg::execute_agent_link(cluster_agent &e, cluster_agent::link *lk)
 {
   uuid repid;
   url repurl;
@@ -2197,7 +2197,7 @@ void cluster_agent::routed_msg::save(scopira::tool::oobjflow_i& out) const
   out.write_object_type(dm_finalmsg);
 }
 
-void cluster_agent::routed_msg::execute_agent(cluster_agent &e, cluster_agent::link *lk)
+void cluster_agent::routed_msg::execute_agent_link(cluster_agent &e, cluster_agent::link *lk)
 {
   assert(e.dm_nodespec.pm_ismaster);
 
@@ -2242,7 +2242,7 @@ void cluster_agent::master_launch_task_msg::save(scopira::tool::oobjflow_i& out)
   dm_where.save(out);
 }
 
-void cluster_agent::master_launch_task_msg::execute_agent(cluster_agent &e, cluster_agent::link *lk)
+void cluster_agent::master_launch_task_msg::execute_agent_link(cluster_agent &e, cluster_agent::link *lk)
 {
   narray<uuid> ids, allocagent;
   int x, numps;
@@ -2478,7 +2478,7 @@ void cluster_agent::make_task_msg::save(scopira::tool::oobjflow_i& out) const
   out.write_string(dm_typestring);
 }
 
-void cluster_agent::make_task_msg::execute_agent(cluster_agent &e, cluster_agent::link *lk)
+void cluster_agent::make_task_msg::execute_agent_link(cluster_agent &e, cluster_agent::link *lk)
 {
   bool ok;
 
@@ -2519,7 +2519,7 @@ void cluster_agent::client_wait_msg::save(scopira::tool::oobjflow_i& out) const
   out.write_int(dm_msec);
 }
 
-void cluster_agent::client_wait_msg::execute_agent(cluster_agent &e, cluster_agent::link *lk)
+void cluster_agent::client_wait_msg::execute_agent_link(cluster_agent &e, cluster_agent::link *lk)
 {
   assert(!dm_taskid.is_zero());
   e.la_launch_proxy(new client_wait_task(&e, get_xtion(), dm_taskid, dm_msec));
@@ -2577,7 +2577,7 @@ void cluster_agent::client_kill_msg::save(scopira::tool::oobjflow_i& out) const
   dm_taskid.save(out);
 }
 
-void cluster_agent::client_kill_msg::execute_agent(cluster_agent &e, cluster_agent::link *lk)
+void cluster_agent::client_kill_msg::execute_agent_link(cluster_agent &e, cluster_agent::link *lk)
 {
   assert(!dm_taskid.is_zero());
 
@@ -2612,7 +2612,7 @@ void cluster_agent::client_is_alive_msg::save(scopira::tool::oobjflow_i& out) co
   dm_taskid.save(out);
 }
 
-void cluster_agent::client_is_alive_msg::execute_agent(cluster_agent &e, cluster_agent::link *lk)
+void cluster_agent::client_is_alive_msg::execute_agent_link(cluster_agent &e, cluster_agent::link *lk)
 {
   assert(!dm_taskid.is_zero());
 
@@ -2666,7 +2666,7 @@ void cluster_agent::send_data_msg::save(scopira::tool::oobjflow_i& out) const
     out.write(dm_buf->c_array(), dm_buf->size());
 }
 
-void cluster_agent::send_data_msg::execute_agent(cluster_agent &e, cluster_agent::link *lk)
+void cluster_agent::send_data_msg::execute_agent_link(cluster_agent &e, cluster_agent::link *lk)
 {
   // potensially recursive, but should never be so in practice
   e.send_msg(dm_src, dm_dest, dm_buf.get());
@@ -2715,7 +2715,7 @@ void cluster_agent::bcast_data_msg::save(scopira::tool::oobjflow_i& out) const
   out.write(dm_buf->c_array(), dm_buf->size());
 }
 
-void cluster_agent::bcast_data_msg::execute_agent(cluster_agent &e, cluster_agent::link *lk)
+void cluster_agent::bcast_data_msg::execute_agent_link(cluster_agent &e, cluster_agent::link *lk)
 {
   // ok, send a bcast_data_2_msg to ALL the nodes (if I'm the master
   if (e.dm_nodespec.pm_ismaster) {
@@ -2758,7 +2758,7 @@ void cluster_agent::find_services_msg::save(scopira::tool::oobjflow_i& out) cons
   out.write_bool(dm_subquery);
 }
 
-void cluster_agent::find_services_msg::execute_agent(cluster_agent &e, cluster_agent::link *lk)
+void cluster_agent::find_services_msg::execute_agent_link(cluster_agent &e, cluster_agent::link *lk)
 {
   count_ptr<reply_find_services_msg> myreply = new reply_find_services_msg; // both versions send this back as a reply
 
@@ -2908,7 +2908,7 @@ void cluster_agent::reg_context_msg::save(scopira::tool::oobjflow_i& out) const
   dm_agentid.save(out);
 }
 
-void cluster_agent::reg_context_msg::execute_agent(cluster_agent &e, cluster_agent::link *lk)
+void cluster_agent::reg_context_msg::execute_agent_link(cluster_agent &e, cluster_agent::link *lk)
 {
   assert(!dm_ctxid.is_zero());
   assert(!dm_agentid.is_zero());
@@ -2955,7 +2955,7 @@ void cluster_agent::dead_task_msg::save(scopira::tool::oobjflow_i& out) const
   dm_taskid.save(out);
 }
 
-void cluster_agent::dead_task_msg::execute_agent(cluster_agent &e, cluster_agent::link *lk)
+void cluster_agent::dead_task_msg::execute_agent_link(cluster_agent &e, cluster_agent::link *lk)
 {
   assert(!dm_taskid.is_zero());
   assert(e.dm_nodespec.pm_ismaster);
@@ -2995,7 +2995,7 @@ cluster_agent::default_group_size_msg::default_group_size_msg(void)
 {
 }
 
-void cluster_agent::default_group_size_msg::execute_agent(cluster_agent &e, cluster_agent::link *lk)
+void cluster_agent::default_group_size_msg::execute_agent_link(cluster_agent &e, cluster_agent::link *lk)
 {
   assert(e.dm_nodespec.pm_ismaster);
 

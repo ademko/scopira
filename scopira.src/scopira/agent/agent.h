@@ -14,6 +14,8 @@
 #ifndef __INCLUDED_SCOPIRA_AGENT_AGENT_H__
 #define __INCLUDED_SCOPIRA_AGENT_AGENT_H__
 
+#include <typeinfo>
+
 #include <scopira/basekit/narray.h>
 #include <scopira/tool/object.h>
 #include <scopira/tool/uuid.h>

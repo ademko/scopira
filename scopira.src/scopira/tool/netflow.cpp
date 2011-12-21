@@ -389,8 +389,6 @@ size_t netflow::write(const byte_t* _buf, size_t _size)
 #endif
 
   if (lastsent != _size) { // partial send, we didn't expect this..
-    if (lastsent < 0)
-      lastsent = 0;
     dm_fail = true;
   }
 

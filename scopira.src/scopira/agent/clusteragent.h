@@ -176,7 +176,7 @@ class scopira::agent::cluster_agent : public scopira::agent::local_agent
         virtual void save(scopira::tool::oobjflow_i& out) const;
 
         virtual void execute_agent(cluster_agent &e);
-        virtual void execute_agent(cluster_agent &e, link *lk) = 0;
+        virtual void execute_agent_link(cluster_agent &e, link *lk) = 0;
 
         void set_net_link(net_link *l);
 
@@ -215,7 +215,7 @@ class scopira::agent::cluster_agent : public scopira::agent::local_agent
         virtual const char * get_debug_name(void) const { return "reply_msg"; }
         virtual short get_type(void) const { return type_instant_c; }
 
-        virtual void execute_agent(cluster_agent &e, link *lk);
+        virtual void execute_agent_link(cluster_agent &e, link *lk);
 
         int get_code(void) const { return dm_errorcode; }
       private:
