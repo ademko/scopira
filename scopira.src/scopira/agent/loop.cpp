@@ -21,6 +21,7 @@
 
 #ifndef PLATFORM_win32
 #include <sys/wait.h>
+#include <unistd.h>
 #endif
 
 //BBtargets libscopira.so

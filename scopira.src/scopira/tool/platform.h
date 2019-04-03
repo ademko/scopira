@@ -92,7 +92,6 @@
 #define srandom srand
 #endif
 
-    // related to http://www.opengroup.org/onlinepubs/009695399/basedefs/stdint.h.html
 #ifdef PLATFORM_win32
 // make this up until VC supports stdint.h
 typedef signed __int8 int8_t;
@@ -134,7 +133,6 @@ typedef double float64_t;
 //
 // perhaps do -fvisibility=hidden and "__attribute__ ((visibility("default")))"
 // see:
-//   http://www.nedprod.com/programs/gccvisibility.html
 //   http://gcc.gnu.org/wiki/Visibility
 //
 // Dont use this yet (well, you can try but you'll see why its not a nice

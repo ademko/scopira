@@ -482,7 +482,6 @@ template <class T> class scopira::tool::const_area_ptr
  * similar to locker, but this also a "ptr" like class wrapper
  * around the given object. it removes the volatile modifier from
  * the given class for the duration of it's existance
- * see http://www.cuj.com/experts/1902/alexandr.htm?topic=experts
  *
  * @author Aleksander Demko
  */

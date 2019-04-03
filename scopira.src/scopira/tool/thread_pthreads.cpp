@@ -19,6 +19,7 @@
 // All but Windows
 #ifndef PLATFORM_win32
 #include <sys/time.h>
+#include <unistd.h>
 #endif
 
 #ifdef PLATFORM_osx
